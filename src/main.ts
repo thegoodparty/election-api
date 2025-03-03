@@ -7,12 +7,10 @@ import {
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
-import multipart from '@fastify/multipart'
 import { AppModule } from './app.module'
 import { Logger } from '@nestjs/common'
 import fastifyStatic from '@fastify/static'
 import { join } from 'path'
-import cookie from '@fastify/cookie'
 
 const APP_LISTEN_CONFIG = {
   port: Number(process.env.PORT) || 3000,
@@ -54,20 +52,6 @@ const bootstrap = async () => {
   await app.register(fastifyStatic, {
     root: join(__dirname, '..', 'public'),
     prefix: '/public/',
-  })
-
-  await app.register(cookie, {
-    secret: process.env.AUTH_SECRET,
-  })
-
-  await app.register(multipart, {
-    limits: {
-      // global default limits, can be overidden at handler level
-      fields: 100, // Max number of non-file fields
-      fileSize: 10_000_000, // For multipart forms, the max file size in bytes
-      files: 1, // Max number of file fields
-      parts: 100, // For multipart forms, the max number of parts (fields + files)
-    },
   })
 
   await app.listen(APP_LISTEN_CONFIG)
