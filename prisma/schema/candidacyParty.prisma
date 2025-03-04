@@ -1,0 +1,15 @@
+/**
+ * Join table for the many-to-many relationship between candidacy and party
+ */
+model candidacyParty {
+  id          Int       @id @default(autoincrement())
+  
+  candidacyId Int       @map("candidacy_id")
+  candidacy   candidacy @relation(fields: [candidacyId], references: [id])
+  
+  partyId     Int       @map("party_id")
+  party       party     @relation(fields: [partyId], references: [id])
+  
+  @@unique([candidacyId, partyId])
+  @@map("candidacy_party")
+} 

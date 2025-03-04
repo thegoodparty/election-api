@@ -1,0 +1,17 @@
+model stance {
+  id           Int     @id @default(autoincrement())
+  databaseId   Int?    @map("database_id")
+
+  issueId      Int     @map("issue_id")
+  issue        issue   @relation(fields: [issueId], references: [id])
+
+  locale       String?
+  referenceUrl String? @map("reference_url")
+  statement    String?
+
+  // Belongs to candidacy
+  candidacyId  Int     @map("candidacy_id")
+  candidacy    candidacy @relation(fields: [candidacyId], references: [id])
+  
+  @@map("stance")
+} 

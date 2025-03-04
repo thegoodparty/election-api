@@ -1,0 +1,79 @@
+enum positionLevel {
+  FEDERAL
+  STATE
+  COUNTY
+  MUNICIPAL
+  SMALL_TOWN
+  SCHOOL_BOARD
+  SPECIAL_DISTRICT
+  
+  @@map("positionlevel")
+}
+
+enum runningMate {
+  PRIMARY
+  GENERAL
+  
+  @@map("runningmate")
+}
+
+model position {
+  id                              Int                           @id @default(autoincrement())
+  databaseId                      Int?                          @map("database_id")
+  createdAt                       DateTime                      @map("created_at")
+  updatedAt                       DateTime                      @map("updated_at")
+  slug                            String?
+
+  appointed                       Boolean
+  description                     String?
+  eligibilityRequirements         String?                       @map("eligibility_requirements")
+  employmentType                  String?                       @map("employment_type")
+  filingAddress                   String?                       @map("filing_address")
+  filingPhone                     String?                       @map("filing_phone")
+  filingRequirements              String?                       @map("filing_requirements")
+  geoId                           String?                       @map("geo_id")
+  hasMajorityVotePrimary          Boolean                       @map("has_majority_vote_primary")
+  hasPrimary                      Boolean?                      @map("has_primary")
+  hasRankedChoiceGeneral          Boolean                       @map("has_ranked_choice_general")
+  hasRankedChoicePrimary          Boolean                       @map("has_ranked_choice_primary")
+  hasUnknownBoundaries            Boolean                       @map("has_unknown_boundaries")
+  judicial                        Boolean
+  level                           positionLevel
+  maximumFilingFee                Float?                        @map("maximum_filing_fee")
+  minimumAge                      Int?                          @map("minimum_age")
+  mtfcc                           String?
+  mustBeRegisteredVoter           Boolean?                      @map("must_be_registered_voter")
+  mustBeResident                  Boolean?                      @map("must_be_resident")
+  mustHaveProfessionalExperience  Boolean?                      @map("must_have_professional_experience")
+  name                            String
+  rowOrder                        Int                           @map("row_order")
+  runningMateStyle                runningMate?                  @map("running_mate_style")
+  salary                          String?
+  seats                           Int
+  selectionsAllowed               Int                           @map("selections_allowed")
+  staggeredTerm                   Boolean                       @map("staggered_term")
+  state                           String?
+  subAreaName                     String?                       @map("sub_area_name")
+  subAreaValue                    String?                       @map("sub_area_value")
+  tier                            Int
+
+  // 1-to-many with race
+  races               race[]
+
+  // 1-to-many with officeHolder
+  officeHolders       officeHolder[]
+
+  // 1-to-many with positionElectionFrequency
+  electionFrequencies positionElectionFrequency[]
+
+  // Many-to-many with issues through positionIssue join table
+  positionIssues      positionIssue[]
+  
+  // Many-to-many with places through placePosition join table
+  placePositions      placePosition[]
+  
+  // Relation fields for candidacy
+  candidacies candidacy[]
+  
+  @@map("position")
+} 

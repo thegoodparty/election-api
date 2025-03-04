@@ -1,0 +1,34 @@
+model race {
+  id           Int         @id @default(autoincrement())
+  databaseId   Int?        @map("database_id")
+  createdAt    DateTime    @map("created_at")
+  updatedAt    DateTime    @map("updated_at")
+
+  isDisabled   Boolean?    @map("is_disabled")
+  isPartisan   Boolean?    @map("is_partisan")
+  isPrimary    Boolean     @map("is_primary")
+  isRecall     Boolean     @map("is_recall")
+  isRunoff     Boolean     @map("is_runoff")
+  isUnexpired  Boolean     @map("is_unexpired")
+  seats        Int?
+
+  // Many-to-many with election through raceElection join table
+  raceElections raceElection[]
+
+  // One Race -> One Position
+  positionId   Int         @map("position_id")
+  position     position    @relation(fields: [positionId], references: [id])
+  
+  // County relationship (many-to-one)
+  countyId     Int?        @map("county_id")
+  county       county?     @relation(fields: [countyId], references: [id])
+  
+  // Municipality relationship (many-to-one)
+  municipalityId Int?      @map("municipality_id")
+  municipality   municipality? @relation(fields: [municipalityId], references: [id])
+
+  // One Race -> Many Candidacies
+  candidacies  candidacy[]
+  
+  @@map("race")
+} 

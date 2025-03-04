@@ -1,0 +1,25 @@
+model issue {
+  id            Int     @id @default(autoincrement())
+  databaseId    Int?    @map("database_id")
+  name          String
+  expandedText  String  @map("expanded_text")
+  key           String?
+  pluginEnabled Boolean? @map("plugin_enabled")
+  responseType  String? @map("response_type")
+  rowOrder      Int?    @map("row_order")
+
+  parentIssueId Int?    @map("parent_issue_id")
+  parentIssue   issue?  @relation("SubIssue", fields: [parentIssueId], references: [id])
+  subIssues     issue[] @relation("SubIssue")
+
+  // Many-to-many with position through positionIssue join table
+  positionIssues positionIssue[]
+
+  // One issue -> many stances
+  stances stance[]
+  
+  // One issue -> many organizations
+  organizations organization[]
+  
+  @@map("issue")
+} 

@@ -1,0 +1,22 @@
+/**
+ * URL
+ * (Implements DatabaseIdentifiable)
+ * Represents a URL associated with an organization
+ */
+model url {
+  id          Int           @id @default(autoincrement())
+  databaseId  Int?          @map("database_id")
+  
+  url         String
+  type        String
+  
+  // Organization relationship
+  organizationId  Int?          @map("organization_id")
+  organization    organization? @relation(fields: [organizationId], references: [id])
+  
+  // Place relationship
+  placeId         Int?          @map("place_id")
+  place           place?        @relation(fields: [placeId], references: [id])
+  
+  @@map("url")
+} 

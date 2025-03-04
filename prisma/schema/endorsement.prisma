@@ -1,0 +1,36 @@
+enum sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+  
+  @@map("sentiment")
+}
+
+enum endorsementStatusTypeField {
+  PENDING
+  APPROVED
+  REJECTED
+  
+  @@map("endorsement_status_type_field")
+}
+
+model endorsement {
+  id            Int                       @id @default(autoincrement())
+  databaseId    Int?                      @map("database_id")
+  createdAt     DateTime                  @map("created_at")
+  updatedAt     DateTime                  @map("updated_at")
+  
+  endorser      String?
+  recommendation sentiment?
+  status        endorsementStatusTypeField
+  
+  // Organization relationship (optional)
+  organizationId Int?                     @map("organization_id")
+  organization   organization?            @relation(fields: [organizationId], references: [id])
+  
+  // Candidacy relationship
+  candidacyId    Int?                     @map("candidacy_id")
+  candidacy      candidacy?               @relation(fields: [candidacyId], references: [id])
+  
+  @@map("endorsement")
+} 

@@ -1,0 +1,15 @@
+/**
+ * Join table for the many-to-many relationship between position and issue
+ */
+model positionIssue {
+  id         Int      @id @default(autoincrement())
+  
+  positionId Int      @map("position_id")
+  position   position @relation(fields: [positionId], references: [id])
+  
+  issueId    Int      @map("issue_id")
+  issue      issue    @relation(fields: [issueId], references: [id])
+  
+  @@unique([positionId, issueId])
+  @@map("position_issue")
+} 
