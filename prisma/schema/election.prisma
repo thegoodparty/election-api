@@ -1,0 +1,23 @@
+model Election {
+  id                                Int       @id @default(autoincrement())
+  databaseId                        Int?      @map("database_id")
+  createdAt                         DateTime  @map("created_at")
+  updatedAt                         DateTime  @map("updated_at")
+
+  name                              String
+  slug                              String
+  defaultTimeZone                   String    @map("default_time_zone")
+  electionDay                       DateTime  @map("election_day")
+  originalElectionDate              DateTime  @map("original_election_date")
+  state                             String?
+  ballotsSentOutBy                  DateTime? @map("ballots_sent_out_by")
+  candidateInformationPublishedAt   DateTime? @map("candidate_information_published_at")
+
+  // Many-to-many with race through raceElection join table
+  raceElections RaceElection[]
+  
+  // Relation fields for candidacy
+  candidacies Candidacy[]
+  
+  @@map("election")
+} 

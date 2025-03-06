@@ -1,0 +1,35 @@
+model Place {
+  id                              Int       @id @default(autoincrement())
+  databaseId                      Int?      @map("database_id")
+  createdAt                       DateTime  @map("created_at")
+  updatedAt                       DateTime  @map("updated_at")
+  slug                            String
+  
+  name                            String
+  state                           String
+  geoId                           String?   @map("geo_id")
+  mtfcc                           String?
+  timezone                        String?
+  primaryType                     String?   @map("primary_type")
+  
+  canVoteInPrimaryWhen18ByGeneral Boolean?  @map("can_vote_in_primary_when_18_by_general")
+  dissolved                       Boolean   @default(false)
+  hasVoteByMail                   Boolean   @map("has_vote_by_mail")
+  isPrintingEnabled               Boolean   @map("is_printing_enabled")
+  isReceiverOfVoteByMailRequests  Boolean   @map("is_receiver_of_vote_by_mail_requests")
+  
+  // Many-to-many with position through placePosition join table
+  placePositions                  PlacePosition[]
+  
+  // One place -> many contacts
+  contacts                        Contact[]
+  
+  // One place -> many URLs
+  urls                            Url[]
+  
+  // Forms and Addresses not implemented yet
+  // addresses                       address[]
+  // forms                           form[]
+  
+  @@map("place")
+} 

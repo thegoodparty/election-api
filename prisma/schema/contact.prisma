@@ -1,0 +1,18 @@
+model Contact {
+  id             Int          @id @default(autoincrement())
+  email          String?
+  fax            String?
+  phone          String?
+  type           String?
+
+  personId       Int?         @map("person_id")
+  person         Person?       @relation(fields: [personId], references: [id])
+
+  officeHolderId Int?         @map("office_holder_id")
+  officeHolder   OfficeHolder? @relation(fields: [officeHolderId], references: [id])
+  
+  placeId        Int?         @map("place_id")
+  place          Place?        @relation(fields: [placeId], references: [id])
+  
+  @@map("contact")
+} 

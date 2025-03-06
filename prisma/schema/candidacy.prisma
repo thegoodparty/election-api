@@ -1,0 +1,53 @@
+enum ElectionResult {
+  WON
+  LOST
+  RUNOFF
+  
+  @@map("election_result")
+}
+
+/** 
+ * CANDIDACY 
+ * (Implements DatabaseIdentifiable, Node, Timestamps)
+ * belongs to person (candidate), election, race, position
+ * many-to-many with party, has many stances
+ */
+model Candidacy {
+  id           Int            @id @default(autoincrement())
+  databaseId   Int?           @map("database_id")
+  createdAt    DateTime       @map("created_at")
+  updatedAt    DateTime       @map("updated_at")
+
+  isCertified  Boolean        @map("is_certified")
+  isHidden     Boolean        @map("is_hidden")
+  withdrawn    Boolean
+  // Election result is an enum; can be null if no result yet
+  result       ElectionResult?
+
+  // Person
+  candidateId  Int            @map("candidate_id")
+  candidate    Person         @relation(fields: [candidateId], references: [id])
+
+  // Election
+  electionId   Int            @map("election_id")
+  election     Election       @relation(fields: [electionId], references: [id])
+
+  // Race
+  raceId       Int            @map("race_id")
+  race         Race           @relation(fields: [raceId], references: [id])
+
+  // Position
+  positionId   Int            @map("position_id")
+  position     Position       @relation(fields: [positionId], references: [id])
+
+  // Many-to-many with party through candidacyParty join table
+  candidacyParties CandidacyParty[]
+
+  // One candidacy -> many stances
+  stances      Stance[]
+  
+  // One candidacy -> many endorsements
+  endorsements Endorsement[]
+  
+  @@map("candidacy")
+} 

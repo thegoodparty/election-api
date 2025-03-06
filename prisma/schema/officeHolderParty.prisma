@@ -1,0 +1,15 @@
+/**
+ * Join table for the many-to-many relationship between officeHolder and party
+ */
+model OfficeHolderParty {
+  id             Int          @id @default(autoincrement())
+  
+  officeHolderId Int          @map("office_holder_id")
+  officeHolder   OfficeHolder @relation(fields: [officeHolderId], references: [id])
+  
+  partyId        Int          @map("party_id")
+  party          Party        @relation(fields: [partyId], references: [id])
+  
+  @@unique([officeHolderId, partyId])
+  @@map("office_holder_party")
+} 

@@ -1,0 +1,35 @@
+/**
+ * ORGANIZATION
+ * (Implements DatabaseIdentifiable, Node, Timestamps)
+ * Represents an organization that can endorse candidates
+ */
+model Organization {
+  id          Int           @id @default(autoincrement())
+  databaseId  Int?          @map("database_id")
+  createdAt   DateTime      @map("created_at")
+  updatedAt   DateTime      @map("updated_at")
+  
+  name        String
+  description String?
+  color       String?
+  logoUrl     String?       @map("logo_url")
+  state       String?
+  retiredAt   DateTime?     @map("retired_at")
+  
+  // Parent-child relationship
+  parentId    Int?          @map("parent_id")
+  parent      Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id])
+  children    Organization[] @relation("OrganizationHierarchy")
+  
+  // Issue relationship
+  issueId     Int?          @map("issue_id")
+  issue       Issue?        @relation(fields: [issueId], references: [id])
+  
+  // One organization -> many endorsements
+  endorsements Endorsement[]
+  
+  // One organization -> many URLs
+  urls        Url[]
+  
+  @@map("organization")
+} 
