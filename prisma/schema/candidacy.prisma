@@ -1,4 +1,4 @@
-enum electionResult {
+enum ElectionResult {
   WON
   LOST
   RUNOFF
@@ -12,7 +12,7 @@ enum electionResult {
  * belongs to person (candidate), election, race, position
  * many-to-many with party, has many stances
  */
-model candidacy {
+model Candidacy {
   id           Int            @id @default(autoincrement())
   databaseId   Int?           @map("database_id")
   createdAt    DateTime       @map("created_at")
@@ -22,32 +22,32 @@ model candidacy {
   isHidden     Boolean        @map("is_hidden")
   withdrawn    Boolean
   // Election result is an enum; can be null if no result yet
-  result       electionResult?
+  result       ElectionResult?
 
   // Person
   candidateId  Int            @map("candidate_id")
-  candidate    person         @relation(fields: [candidateId], references: [id])
+  candidate    Person         @relation(fields: [candidateId], references: [id])
 
   // Election
   electionId   Int            @map("election_id")
-  election     election       @relation(fields: [electionId], references: [id])
+  election     Election       @relation(fields: [electionId], references: [id])
 
   // Race
   raceId       Int            @map("race_id")
-  race         race           @relation(fields: [raceId], references: [id])
+  race         Race           @relation(fields: [raceId], references: [id])
 
   // Position
   positionId   Int            @map("position_id")
-  position     position       @relation(fields: [positionId], references: [id])
+  position     Position       @relation(fields: [positionId], references: [id])
 
   // Many-to-many with party through candidacyParty join table
-  candidacyParties candidacyParty[]
+  candidacyParties CandidacyParty[]
 
   // One candidacy -> many stances
-  stances      stance[]
+  stances      Stance[]
   
   // One candidacy -> many endorsements
-  endorsements endorsement[]
+  endorsements Endorsement[]
   
   @@map("candidacy")
 } 

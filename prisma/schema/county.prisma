@@ -3,7 +3,7 @@
  * (Implements Slug)
  * Represents a county that can have municipalities and races
  */
-model county {
+model County {
   id          Int           @id @default(autoincrement())
   databaseId  Int?          @map("database_id")
   createdAt   DateTime      @map("created_at") @default(now())
@@ -15,10 +15,10 @@ model county {
   data        Json?
   
   // One county -> many municipalities
-  municipalities municipality[]
+  municipalities Municipality[]
   
   // One county -> many races
-  races       race[]
+  races       Race[]
   
   @@map("county")
 } 

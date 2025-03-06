@@ -1,4 +1,4 @@
-model positionElectionFrequency {
+model PositionElectionFrequency {
   id           Int     @id @default(autoincrement())
   databaseId   Int?    @map("database_id")
   referenceYear Int     @map("reference_year")
@@ -8,7 +8,7 @@ model positionElectionFrequency {
   validTo      DateTime? @map("valid_to")
 
   positionId   Int     @map("position_id")
-  position     position @relation(fields: [positionId], references: [id])
+  position     Position @relation(fields: [positionId], references: [id])
 
   @@map("position_election_frequency")
 } 

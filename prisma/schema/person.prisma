@@ -1,4 +1,4 @@
-model person {
+model Person {
   id            Int          @id @default(autoincrement())
   databaseId    Int?         @map("database_id")
   createdAt     DateTime     @map("created_at")
@@ -14,13 +14,13 @@ model person {
   suffix        String?
 
   // One Person -> Many Candidacies
-  candidacies   candidacy[]
+  candidacies   Candidacy[]
 
   // One Person -> Many OfficeHolders
-  officeHolders officeHolder[]
+  officeHolders OfficeHolder[]
 
   // One Person -> Many Contacts (polymorphic approach)
-  contacts      contact[]
+  contacts      Contact[]
   
   @@map("person")
 } 

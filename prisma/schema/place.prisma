@@ -1,4 +1,4 @@
-model place {
+model Place {
   id                              Int       @id @default(autoincrement())
   databaseId                      Int?      @map("database_id")
   createdAt                       DateTime  @map("created_at")
@@ -19,13 +19,13 @@ model place {
   isReceiverOfVoteByMailRequests  Boolean   @map("is_receiver_of_vote_by_mail_requests")
   
   // Many-to-many with position through placePosition join table
-  placePositions                  placePosition[]
+  placePositions                  PlacePosition[]
   
   // One place -> many contacts
-  contacts                        contact[]
+  contacts                        Contact[]
   
   // One place -> many URLs
-  urls                            url[]
+  urls                            Url[]
   
   // Forms and Addresses not implemented yet
   // addresses                       address[]

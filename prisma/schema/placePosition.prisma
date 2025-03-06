@@ -2,14 +2,14 @@
  * PLACE_POSITION
  * Join table for the many-to-many relationship between place and position
  */
-model placePosition {
+model PlacePosition {
   id         Int      @id @default(autoincrement())
   
   placeId    Int      @map("place_id")
-  place      place    @relation(fields: [placeId], references: [id])
+  place      Place    @relation(fields: [placeId], references: [id])
   
   positionId Int      @map("position_id")
-  position   position @relation(fields: [positionId], references: [id])
+  position   Position @relation(fields: [positionId], references: [id])
   
   @@unique([placeId, positionId])
   @@map("place_position")

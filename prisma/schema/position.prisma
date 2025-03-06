@@ -1,23 +1,23 @@
-enum positionLevel {
-  FEDERAL
-  STATE
+enum PositionLevel {
+  CITY
   COUNTY
-  MUNICIPAL
-  SMALL_TOWN
-  SCHOOL_BOARD
-  SPECIAL_DISTRICT
+  FEDERAL
+  LOCAL
+  REGIONAL
+  STATE
+  TOWNSHIP
   
   @@map("positionlevel")
 }
 
-enum runningMate {
+enum RunningMate {
   PRIMARY
   GENERAL
   
   @@map("runningmate")
 }
 
-model position {
+model Position {
   id                              Int                           @id @default(autoincrement())
   databaseId                      Int?                          @map("database_id")
   createdAt                       DateTime                      @map("created_at")
@@ -38,7 +38,7 @@ model position {
   hasRankedChoicePrimary          Boolean                       @map("has_ranked_choice_primary")
   hasUnknownBoundaries            Boolean                       @map("has_unknown_boundaries")
   judicial                        Boolean
-  level                           positionLevel
+  level                           PositionLevel
   maximumFilingFee                Float?                        @map("maximum_filing_fee")
   minimumAge                      Int?                          @map("minimum_age")
   mtfcc                           String?
@@ -47,7 +47,7 @@ model position {
   mustHaveProfessionalExperience  Boolean?                      @map("must_have_professional_experience")
   name                            String
   rowOrder                        Int                           @map("row_order")
-  runningMateStyle                runningMate?                  @map("running_mate_style")
+  runningMateStyle                RunningMate?                  @map("running_mate_style")
   salary                          String?
   seats                           Int
   selectionsAllowed               Int                           @map("selections_allowed")
@@ -58,22 +58,22 @@ model position {
   tier                            Int
 
   // 1-to-many with race
-  races               race[]
+  races               Race[]
 
   // 1-to-many with officeHolder
-  officeHolders       officeHolder[]
+  officeHolders       OfficeHolder[]
 
   // 1-to-many with positionElectionFrequency
-  electionFrequencies positionElectionFrequency[]
+  electionFrequencies PositionElectionFrequency[]
 
   // Many-to-many with issues through positionIssue join table
-  positionIssues      positionIssue[]
+  positionIssues      PositionIssue[]
   
   // Many-to-many with places through placePosition join table
-  placePositions      placePosition[]
+  placePositions      PlacePosition[]
   
   // Relation fields for candidacy
-  candidacies candidacy[]
+  candidacies Candidacy[]
   
   @@map("position")
 } 

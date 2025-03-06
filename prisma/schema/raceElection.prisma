@@ -1,14 +1,14 @@
 /**
  * Join table for the many-to-many relationship between race and election
  */
-model raceElection {
+model RaceElection {
   id         Int      @id @default(autoincrement())
   
   raceId     Int      @map("race_id")
-  race       race     @relation(fields: [raceId], references: [id])
+  race       Race     @relation(fields: [raceId], references: [id])
   
   electionId Int      @map("election_id")
-  election   election @relation(fields: [electionId], references: [id])
+  election   Election @relation(fields: [electionId], references: [id])
   
   @@unique([raceId, electionId])
   @@map("race_election")

@@ -1,4 +1,4 @@
-model election {
+model Election {
   id                                Int       @id @default(autoincrement())
   databaseId                        Int?      @map("database_id")
   createdAt                         DateTime  @map("created_at")
@@ -14,10 +14,10 @@ model election {
   candidateInformationPublishedAt   DateTime? @map("candidate_information_published_at")
 
   // Many-to-many with race through raceElection join table
-  raceElections raceElection[]
+  raceElections RaceElection[]
   
   // Relation fields for candidacy
-  candidacies candidacy[]
+  candidacies Candidacy[]
   
   @@map("election")
 } 

@@ -1,4 +1,4 @@
-model officeHolder {
+model OfficeHolder {
   id                   Int       @id @default(autoincrement())
   databaseId           Int?      @map("database_id")
   createdAt            DateTime  @map("created_at")
@@ -15,17 +15,17 @@ model officeHolder {
 
   // Position relationship
   positionId  Int      @map("position_id")
-  position    position @relation(fields: [positionId], references: [id])
+  position    Position @relation(fields: [positionId], references: [id])
 
   // Person relationship (can be null if vacant)
   personId    Int?     @map("person_id")
-  person      person?  @relation(fields: [personId], references: [id])
+  person      Person?  @relation(fields: [personId], references: [id])
 
   // Many-to-many with party through officeHolderParty join table
-  officeHolderParties officeHolderParty[]
+  officeHolderParties OfficeHolderParty[]
 
   // Polymorphic contact reference
-  contacts    contact[]
+  contacts    Contact[]
   
   @@map("office_holder")
 } 

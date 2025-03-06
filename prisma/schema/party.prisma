@@ -1,4 +1,4 @@
-model party {
+model Party {
   id          Int           @id @default(autoincrement())
   databaseId  Int?          @map("database_id")
   createdAt   DateTime      @map("created_at")
@@ -8,10 +8,10 @@ model party {
   shortName   String        @map("short_name")
 
   // Many-to-many with OfficeHolder through officeHolderParty join table
-  officeHolderParties officeHolderParty[]
+  officeHolderParties OfficeHolderParty[]
 
   // Many-to-many with Candidacy through candidacyParty join table
-  candidacyParties candidacyParty[]
+  candidacyParties CandidacyParty[]
   
   @@map("party")
 } 

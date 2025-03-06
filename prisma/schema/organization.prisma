@@ -3,7 +3,7 @@
  * (Implements DatabaseIdentifiable, Node, Timestamps)
  * Represents an organization that can endorse candidates
  */
-model organization {
+model Organization {
   id          Int           @id @default(autoincrement())
   databaseId  Int?          @map("database_id")
   createdAt   DateTime      @map("created_at")
@@ -18,18 +18,18 @@ model organization {
   
   // Parent-child relationship
   parentId    Int?          @map("parent_id")
-  parent      organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id])
-  children    organization[] @relation("OrganizationHierarchy")
+  parent      Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id])
+  children    Organization[] @relation("OrganizationHierarchy")
   
   // Issue relationship
   issueId     Int?          @map("issue_id")
-  issue       issue?        @relation(fields: [issueId], references: [id])
+  issue       Issue?        @relation(fields: [issueId], references: [id])
   
   // One organization -> many endorsements
-  endorsements endorsement[]
+  endorsements Endorsement[]
   
   // One organization -> many URLs
-  urls        url[]
+  urls        Url[]
   
   @@map("organization")
 } 

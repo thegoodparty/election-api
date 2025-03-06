@@ -1,4 +1,4 @@
-model race {
+model Race {
   id           Int         @id @default(autoincrement())
   databaseId   Int?        @map("database_id")
   createdAt    DateTime    @map("created_at")
@@ -13,22 +13,22 @@ model race {
   seats        Int?
 
   // Many-to-many with election through raceElection join table
-  raceElections raceElection[]
+  raceElections RaceElection[]
 
   // One Race -> One Position
   positionId   Int         @map("position_id")
-  position     position    @relation(fields: [positionId], references: [id])
+  position     Position    @relation(fields: [positionId], references: [id])
   
   // County relationship (many-to-one)
   countyId     Int?        @map("county_id")
-  county       county?     @relation(fields: [countyId], references: [id])
+  county       County?     @relation(fields: [countyId], references: [id])
   
   // Municipality relationship (many-to-one)
   municipalityId Int?      @map("municipality_id")
-  municipality   municipality? @relation(fields: [municipalityId], references: [id])
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
 
   // One Race -> Many Candidacies
-  candidacies  candidacy[]
+  candidacies  Candidacy[]
   
   @@map("race")
 } 

@@ -1,4 +1,4 @@
-model issue {
+model Issue {
   id            Int     @id @default(autoincrement())
   databaseId    Int?    @map("database_id")
   name          String
@@ -9,17 +9,17 @@ model issue {
   rowOrder      Int?    @map("row_order")
 
   parentIssueId Int?    @map("parent_issue_id")
-  parentIssue   issue?  @relation("SubIssue", fields: [parentIssueId], references: [id])
-  subIssues     issue[] @relation("SubIssue")
+  parentIssue   Issue?  @relation("SubIssue", fields: [parentIssueId], references: [id])
+  subIssues     Issue[] @relation("SubIssue")
 
   // Many-to-many with position through positionIssue join table
-  positionIssues positionIssue[]
+  positionIssues PositionIssue[]
 
   // One issue -> many stances
-  stances stance[]
+  stances Stance[]
   
   // One issue -> many organizations
-  organizations organization[]
+  organizations Organization[]
   
   @@map("issue")
 } 
