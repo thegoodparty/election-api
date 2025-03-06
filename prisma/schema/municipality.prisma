@@ -22,7 +22,6 @@ model Municipality {
   name        String
   type        MunicipalityType
   state       String?       @db.Char(2)
-  data        Json?
   
   // Belongs to county (many-to-one)
   countyId    Int?          @map("county_id")
