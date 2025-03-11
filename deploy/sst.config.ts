@@ -4,7 +4,7 @@ import * as aws from '@pulumi/aws'
 export default $config({
   app(input) {
     return {
-      name: 'gp',
+      name: 'election',
       removal: input?.stage === 'master' ? 'retain' : 'remove',
       home: 'aws',
       providers: {
@@ -16,14 +16,7 @@ export default $config({
     }
   },
   async run() {
-    const vpc =
-      $app.stage === 'master'
-        ? new sst.aws.Vpc('api', {
-            bastion: false,
-            nat: 'managed',
-            az: 2, // defaults to 2 availability zones and 2 NAT gateways
-          })
-        : sst.aws.Vpc.get('api', 'vpc-0763fa52c32ebcf6a') // other stages will use same vpc.
+    const vpc = sst.aws.Vpc.get('api', 'vpc-0763fa52c32ebcf6a')
 
     if ($app.stage !== 'master' && $app.stage !== 'develop') {
       throw new Error('Invalid stage. Only master and develop are supported.')
@@ -114,43 +107,32 @@ export default $config({
       throw new Error('DATABASE_URL, VPC_CIDR keys must be set in the secret.')
     }
 
-    // Create a Security Group for the RDS Cluster
-    const rdsSecurityGroup = new aws.ec2.SecurityGroup('rdsSecurityGroup', {
-      name:
-        $app.stage === 'develop'
-          ? 'api-rds-security-group'
-          : `api-${$app.stage}-rds-security-group`,
-      description: 'Allow traffic to RDS',
-      vpcId: 'vpc-0763fa52c32ebcf6a',
-      ingress: [
-        {
-          protocol: 'tcp',
-          fromPort: 5432,
-          toPort: 5432,
-          cidrBlocks: [vpcCidr],
-        },
-      ],
-      egress: [
-        {
-          protocol: '-1',
-          fromPort: 0,
-          toPort: 0,
-          cidrBlocks: ['0.0.0.0/0'],
-        },
-      ],
-    })
+    let rdsSecurityGroupName: string
+    let rdsSecurityGroupId: string
 
-    // Create a Subnet Group for the RDS Cluster (using our private subnets)
-    const subnetGroup = new aws.rds.SubnetGroup('subnetGroup', {
-      name:
-        $app.stage === 'develop'
-          ? 'api-rds-subnet-group'
-          : `api-${$app.stage}-rds-subnet-group`,
-      subnetIds: ['subnet-053357b931f0524d4', 'subnet-0bb591861f72dcb7f'],
-      tags: {
-        Name: `api-${$app.stage}-rds-subnet-group`,
-      },
-    })
+    if ($app.stage === 'develop') {
+      rdsSecurityGroupName = 'api-rds-security-group'
+      rdsSecurityGroupId = 'sg-0b834a3f7b64950d0'
+    } else if ($app.stage === 'master') {
+      rdsSecurityGroupName = 'api-master-rds-security-group'
+      rdsSecurityGroupId = 'sg-03783e4adbbee87dc'
+    } else if ($app.stage === 'qa') {
+      rdsSecurityGroupName = 'api-qa-rds-security-group'
+      rdsSecurityGroupId = 'sg-0b0a0d163267de5d5'
+    } else {
+      throw new Error('Unrecognized app stage')
+    }
+
+    const rdsSecurityGroup = aws.ec2.SecurityGroup.get(rdsSecurityGroupName, rdsSecurityGroupId)
+
+    if (!rdsSecurityGroup) {
+      throw new Error('RDS Security Group not found')
+    }
+    
+    const subnetGroupName = 
+      $app.stage === 'develop' ? 'api-rds-subnet-group' :
+      `api-${$app.stage}-rds-subnet-group`
+    const subnetGroup = await aws.rds.getSubnetGroup({name: subnetGroupName})
 
     // Warning: Do not change the clusterIdentifier.
     // The clusterIdentifier is used as a unique identifier for your RDS cluster.
