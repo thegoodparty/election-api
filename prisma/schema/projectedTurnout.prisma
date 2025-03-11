@@ -11,7 +11,7 @@ enum ElectionCode {
 }
 
 model ProjectedTurnout {
-  id             Int          @id @default(autoincrement())
+  id String @id @db.Uuid
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   state          String
@@ -23,6 +23,6 @@ model ProjectedTurnout {
   inferenceDate  DateTime     @map("inference_date")
   modelVersion   String?      @map("model_version")
 
-  @@unique([state, officeType, officeName, inferenceDate])
+  @@unique([state, officeType, officeName, year, electionCode])
   @@map("projected_turnout")
 }

@@ -1,6 +1,7 @@
 model Race {
-  id           Int         @id @default(autoincrement())
-  databaseId   Int?        @map("database_id")
+  id String @id @db.Uuid
+  brHashId     String?        @map("br_hash_id")
+  brDatabaseId Int?        @map("br_database_id")
   createdAt    DateTime    @map("created_at")
   updatedAt    DateTime    @map("updated_at")
 
@@ -16,15 +17,15 @@ model Race {
   raceElections RaceElection[]
 
   // One Race -> One Position
-  positionId   Int         @map("position_id")
+  positionId   String         @map("position_id") @db.Uuid
   position     Position    @relation(fields: [positionId], references: [id])
   
   // County relationship (many-to-one)
-  countyId     Int?        @map("county_id")
+  countyId     String?        @map("county_id") @db.Uuid
   county       County?     @relation(fields: [countyId], references: [id])
   
   // Municipality relationship (many-to-one)
-  municipalityId Int?      @map("municipality_id")
+  municipalityId String?      @map("municipality_id") @db.Uuid
   municipality   Municipality? @relation(fields: [municipalityId], references: [id])
 
   // One Race -> Many Candidacies

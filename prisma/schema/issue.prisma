@@ -1,6 +1,7 @@
 model Issue {
-  id            Int     @id @default(autoincrement())
-  databaseId    Int?    @map("database_id")
+  id String @id @db.Uuid
+  brHashId     String?        @map("br_hash_id")
+  brDatabaseId    Int?    @map("br_database_id")
   name          String
   expandedText  String  @map("expanded_text")
   key           String?
@@ -8,7 +9,7 @@ model Issue {
   responseType  String? @map("response_type")
   rowOrder      Int?    @map("row_order")
 
-  parentIssueId Int?    @map("parent_issue_id")
+  parentIssueId String?    @map("parent_issue_id") @db.Uuid
   parentIssue   Issue?  @relation("SubIssue", fields: [parentIssueId], references: [id])
   subIssues     Issue[] @relation("SubIssue")
 

@@ -4,8 +4,9 @@
  * Represents an organization that can endorse candidates
  */
 model Organization {
-  id          Int           @id @default(autoincrement())
-  databaseId  Int?          @map("database_id")
+  id String @id @db.Uuid
+  brHashId     String?        @map("br_hash_id")
+  brDatabaseId  Int?          @map("br_database_id")
   createdAt   DateTime      @map("created_at")
   updatedAt   DateTime      @map("updated_at")
   
@@ -17,12 +18,12 @@ model Organization {
   retiredAt   DateTime?     @map("retired_at")
   
   // Parent-child relationship
-  parentId    Int?          @map("parent_id")
+  parentId    String?          @map("parent_id") @db.Uuid
   parent      Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id])
   children    Organization[] @relation("OrganizationHierarchy")
   
   // Issue relationship
-  issueId     Int?          @map("issue_id")
+  issueId     String?          @map("issue_id") @db.Uuid
   issue       Issue?        @relation(fields: [issueId], references: [id])
   
   // One organization -> many endorsements

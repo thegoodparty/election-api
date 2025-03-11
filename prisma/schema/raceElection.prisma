@@ -2,12 +2,12 @@
  * Join table for the many-to-many relationship between race and election
  */
 model RaceElection {
-  id         Int      @id @default(autoincrement())
+  id           String @id @db.Uuid
   
-  raceId     Int      @map("race_id")
+  raceId     String      @map("race_id") @db.Uuid
   race       Race     @relation(fields: [raceId], references: [id])
   
-  electionId Int      @map("election_id")
+  electionId String      @map("election_id") @db.Uuid
   election   Election @relation(fields: [electionId], references: [id])
   
   @@unique([raceId, electionId])

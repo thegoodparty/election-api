@@ -1,8 +1,9 @@
 model Stance {
-  id           Int     @id @default(autoincrement())
-  databaseId   Int?    @map("database_id")
+  id           String @id @db.Uuid
+  brHashId     String?        @map("br_hash_id")
+  brDatabaseId Int?    @map("database_id")
 
-  issueId      Int     @map("issue_id")
+  issueId      String     @map("issue_id") @db.Uuid
   issue        Issue   @relation(fields: [issueId], references: [id])
 
   locale       String?
@@ -10,7 +11,7 @@ model Stance {
   statement    String?
 
   // Belongs to candidacy
-  candidacyId  Int     @map("candidacy_id")
+  candidacyId  String     @map("candidacy_id") @db.Uuid
   candidacy    Candidacy @relation(fields: [candidacyId], references: [id])
   
   @@map("stance")
