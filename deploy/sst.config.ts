@@ -114,58 +114,6 @@ export default $config({
       throw new Error('DATABASE_URL, VPC_CIDR keys must be set in the secret.')
     }
 
-    // todo: may need to add sqs queue policy to allow access from the vpc endpoint.
-    cluster.addService(`election-api-${$app.stage}`, {
-      loadBalancer: {
-        domain: apiDomain,
-        ports: [
-          { listen: '80/http' },
-          { listen: '443/https', forward: '80/http' },
-        ],
-        health: {
-          '80/http': {
-            path: '/v1/health',
-            interval: '30 seconds',
-          },
-        },
-      },
-      memory: '4 GB', // ie: 1 GB, 2 GB, 3 GB, 4 GB, 5 GB, 6 GB, 7 GB, 8 GB
-      cpu: '1 vCPU', // ie: 1 vCPU, 2 vCPU, 3 vCPU, 4 vCPU, 5 vCPU, 6 vCPU, 7 vCPU, 8 vCPU
-      scaling: {
-        min: $app.stage === 'master' ? 2 : 2,
-        max: $app.stage === 'master' ? 16 : 4,
-        cpuUtilization: 50,
-        memoryUtilization: 50,
-      },
-      environment: {
-        PORT: '80',
-        HOST: '0.0.0.0',
-        LOG_LEVEL: 'debug',
-        CORS_ORIGIN:
-          $app.stage === 'master' ? 'goodparty.org' : 'dev.goodparty.org',
-        AWS_REGION: 'us-west-2',
-        WEBAPP_ROOT_URL: webAppRootUrl,
-        ...secretsJson,
-      },
-      image: {
-        context: '../', // Set the context to the main app directory
-        dockerfile: './Dockerfile',
-        args: {
-          DOCKER_BUILDKIT: '1',
-          CACHEBUST: '1',
-          DOCKER_USERNAME: process.env.DOCKER_USERNAME || '',
-          DOCKER_PASSWORD: process.env.DOCKER_PASSWORD || '',
-          DATABASE_URL: dbUrl, // so we can run migrations.
-          STAGE: $app.stage,
-        },
-      },
-      transform: {
-        loadBalancer: {
-          idleTimeout: 120,
-        },
-      },
-    })
-
     // Create a Security Group for the RDS Cluster
     const rdsSecurityGroup = new aws.ec2.SecurityGroup('rdsSecurityGroup', {
       name:
