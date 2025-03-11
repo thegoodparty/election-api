@@ -1,7 +1,18 @@
 # compiled output
-/dist
-/node_modules
-/build
+dist/
+api/dist
+
+# Node.js runtime environment
+node_modules
+nestjs/node_modules
+sst/node_modules
+
+# SST specific
+.sst
+sst-env.d.ts
+deploy/sst-env.d.ts
+deploy/.sst
+.build
 
 # Logs
 logs
