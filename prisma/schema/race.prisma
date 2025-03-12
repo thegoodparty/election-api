@@ -8,6 +8,7 @@ model Race {
   positionSlug                      String
   // Position
   normalizedPositionName            String
+  positionName                      String
   positionDescription               String
   filingOfficeAddress               String
   filingPhoneNumber                 String

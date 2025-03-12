@@ -13,11 +13,11 @@ enum ElectionResult {
  * many-to-many with party, has many stances
  */
 model Candidacy {
-<<<<<<< HEAD
-  id         Int      @id @default(autoincrement())
-  databaseId Int?     @map("database_id")
-  createdAt  DateTime @map("created_at")
-  updatedAt  DateTime @map("updated_at")
+  id           String   @id @db.Uuid
+  brHashId     String?  @map("br_hash_id")
+  brDatabaseId Int?     @map("br_database_id")
+  createdAt    DateTime @map("created_at")
+  updatedAt    DateTime @map("updated_at")
 
   isCertified Boolean         @map("is_certified")
   isHidden    Boolean         @map("is_hidden")
@@ -26,64 +26,25 @@ model Candidacy {
   result      ElectionResult?
 
   // Person
-  candidateId Int    @map("candidate_id")
+  candidateId String @map("candidate_id") @db.Uuid
   candidate   Person @relation(fields: [candidateId], references: [id])
 
-  // Election
-  electionId Int      @map("election_id")
-  election   Election @relation(fields: [electionId], references: [id])
-
-  // Position
-  positionId Int      @map("position_id")
-  position   Position @relation(fields: [positionId], references: [id])
-=======
-  id               String          @id @db.Uuid
-  brHashId         String?         @map("br_hash_id")
-  brDatabaseId     Int?            @map("br_database_id")
-  createdAt        DateTime        @map("created_at")
-  updatedAt        DateTime        @map("updated_at")
-
-  isCertified      Boolean         @map("is_certified")
-  isHidden         Boolean         @map("is_hidden")
-  withdrawn        Boolean
-  // Election result is an enum; can be null if no result yet
-  result           ElectionResult?
-
-  // Person
-  candidateId      String          @map("candidate_id") @db.Uuid
-  candidate        Person          @relation(fields: [candidateId], references: [id])
-
-  // Election
-  electionId       String          @map("election_id") @db.Uuid
-  election         Election        @relation(fields: [electionId], references: [id])
-
   // Race
-  raceId           String          @map("race_id") @db.Uuid
-  race             Race            @relation(fields: [raceId], references: [id])
+  raceId String @map("race_id") @db.Uuid
+  race   Race   @relation(fields: [raceId], references: [id])
 
   // Position
-  positionId       String          @map("position_id") @db.Uuid
-  position         Position        @relation(fields: [positionId], references: [id])
->>>>>>> origin/develop
+  positionId String   @map("position_id") @db.Uuid
+  position   Position @relation(fields: [positionId], references: [id])
 
   // Many-to-many with party through candidacyParty join table
   candidacyParties CandidacyParty[]
 
   // One candidacy -> many stances
-<<<<<<< HEAD
   stances Stance[]
 
   // One candidacy -> many endorsements
   endorsements Endorsement[]
-  Race         Race?         @relation(fields: [raceId], references: [id])
-  raceId       String?       @db.Uuid
 
-=======
-  stances          Stance[]
-  
-  // One candidacy -> many endorsements
-  endorsements     Endorsement[]
-  
->>>>>>> origin/develop
   @@map("candidacy")
 }

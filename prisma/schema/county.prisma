@@ -4,19 +4,16 @@
  * Represents a county that can have municipalities and races
  */
 model County {
-  id            String          @id @default(uuid()) @db.Uuid
-  createdAt     DateTime        @map("created_at") @default(now())
-  updatedAt     DateTime        @map("updated_at") @updatedAt
-  
-  slug          String          @unique
-  name          String
-  state         String?         @db.Char(2)
-  
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  slug  String  @unique
+  name  String
+  state String? @db.Char(2)
+
   // One county -> many municipalities
   municipalities Municipality[]
-  
-  // One county -> many races
-  races         Race[]
-  
+
   @@map("county")
-} 
+}
