@@ -12,8 +12,3 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-generator case_format {
-  provider = "prisma-case-format"
-  output   = "./"
-}
