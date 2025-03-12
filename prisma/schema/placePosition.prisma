@@ -3,13 +3,13 @@
  * Join table for the many-to-many relationship between place and position
  */
 model PlacePosition {
-  id         Int      @id @default(autoincrement())
+  id         String    @id @db.Uuid
   
-  placeId    Int      @map("place_id")
-  place      Place    @relation(fields: [placeId], references: [id])
+  placeId    String    @map("place_id") @db.Uuid
+  place      Place     @relation(fields: [placeId], references: [id])
   
-  positionId Int      @map("position_id")
-  position   Position @relation(fields: [positionId], references: [id])
+  positionId String    @map("position_id") @db.Uuid
+  position   Position  @relation(fields: [positionId], references: [id])
   
   @@unique([placeId, positionId])
   @@map("place_position")

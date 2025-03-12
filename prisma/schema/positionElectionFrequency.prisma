@@ -1,14 +1,15 @@
 model PositionElectionFrequency {
-  id           Int     @id @default(autoincrement())
-  databaseId   Int?    @map("database_id")
-  referenceYear Int     @map("reference_year")
+  id           String    @id @db.Uuid
+  brHashId     String?   @map("br_hash_id")
+  brDatabaseId Int?      @map("br_database_id")
+  referenceYear Int      @map("reference_year")
   frequency    Int[]
   seats        Int[]
-  validFrom    DateTime @map("valid_from")
+  validFrom    DateTime  @map("valid_from")
   validTo      DateTime? @map("valid_to")
 
-  positionId   Int     @map("position_id")
-  position     Position @relation(fields: [positionId], references: [id])
+  positionId   String    @map("position_id") @db.Uuid
+  position     Position  @relation(fields: [positionId], references: [id])
 
   @@map("position_election_frequency")
 } 
