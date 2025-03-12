@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
 import { RacesService } from './races.service'
 
 @Controller('races')
@@ -7,6 +7,9 @@ export class RacesController {
   
   @Get('by-state')
   async racesByState(@Query('state') state: string) {
-    this.racesService.findMany({where: {state}})
+    if (state.trim().length !== 2) {
+      throw new BadRequestException('State must be a 2 letter abbreviation')
+    }
+    this.racesService.findMany({where: { state }})
   }
 }
