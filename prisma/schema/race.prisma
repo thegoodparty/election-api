@@ -24,48 +24,9 @@ model Race {
   state                             String // Two letter abbreviation
   countyName                        String
   municipalityName                  String
-
-  RaceElection   RaceElection[]
-  Candidacy      Candidacy[]
-  County         County?        @relation(fields: [countyId], references: [id])
-  countyId       Int?
-  Municipality   Municipality?  @relation(fields: [municipalityId], references: [id])
-  municipalityId Int?
-  Position       Position?      @relation(fields: [positionId], references: [id])
-  positionId     Int?
+  Candidacy                         Candidacy[]
+  County                            County?       @relation(fields: [countyId], references: [id])
+  countyId                          Int?
+  Municipality                      Municipality? @relation(fields: [municipalityId], references: [id])
+  municipalityId                    Int?
 }
-
-// model Race {
-//   id           Int         @id @default(autoincrement())
-//   databaseId   Int?        @map("database_id")
-//   createdAt    DateTime    @map("created_at")
-//   updatedAt    DateTime    @map("updated_at")
-
-//   isDisabled   Boolean?    @map("is_disabled")
-//   isPartisan   Boolean?    @map("is_partisan")
-//   isPrimary    Boolean     @map("is_primary")
-//   isRecall     Boolean     @map("is_recall")
-//   isRunoff     Boolean     @map("is_runoff")
-//   isUnexpired  Boolean     @map("is_unexpired")
-//   seats        Int?
-
-//   // Many-to-many with election through raceElection join table
-//   raceElections RaceElection[]
-
-//   // One Race -> One Position
-//   positionId   Int         @map("position_id")
-//   position     Position    @relation(fields: [positionId], references: [id])
-
-//   // County relationship (many-to-one)
-//   countyId     Int?        @map("county_id")
-//   county       County?     @relation(fields: [countyId], references: [id])
-
-//   // Municipality relationship (many-to-one)
-//   municipalityId Int?      @map("municipality_id")
-//   municipality   Municipality? @relation(fields: [municipalityId], references: [id])
-
-//   // One Race -> Many Candidacies
-//   candidacies  Candidacy[]
-
-//   @@map("race")
-// } 
