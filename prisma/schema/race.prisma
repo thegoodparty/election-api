@@ -1,35 +1,35 @@
 model Race {
-  id String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
-  brDatabaseId Int?        @map("br_database_id")
-  createdAt    DateTime    @map("created_at")
-  updatedAt    DateTime    @map("updated_at")
+  id               String         @id @db.Uuid
+  brHashId         String?        @map("br_hash_id")
+  brDatabaseId     Int?           @map("br_database_id")
+  createdAt        DateTime       @map("created_at")
+  updatedAt        DateTime       @map("updated_at")
 
-  isDisabled   Boolean?    @map("is_disabled")
-  isPartisan   Boolean?    @map("is_partisan")
-  isPrimary    Boolean     @map("is_primary")
-  isRecall     Boolean     @map("is_recall")
-  isRunoff     Boolean     @map("is_runoff")
-  isUnexpired  Boolean     @map("is_unexpired")
-  seats        Int?
+  isDisabled       Boolean?       @map("is_disabled")
+  isPartisan       Boolean?       @map("is_partisan")
+  isPrimary        Boolean        @map("is_primary")
+  isRecall         Boolean        @map("is_recall")
+  isRunoff         Boolean        @map("is_runoff")
+  isUnexpired      Boolean        @map("is_unexpired")
+  seats            Int?
 
   // Many-to-many with election through raceElection join table
-  raceElections RaceElection[]
+  raceElections    RaceElection[]
 
   // One Race -> One Position
-  positionId   String         @map("position_id") @db.Uuid
-  position     Position    @relation(fields: [positionId], references: [id])
+  positionId       String         @map("position_id") @db.Uuid
+  position         Position       @relation(fields: [positionId], references: [id])
   
   // County relationship (many-to-one)
-  countyId     String?        @map("county_id") @db.Uuid
-  county       County?     @relation(fields: [countyId], references: [id])
+  countyId         String?        @map("county_id") @db.Uuid
+  county           County?        @relation(fields: [countyId], references: [id])
   
   // Municipality relationship (many-to-one)
-  municipalityId String?      @map("municipality_id") @db.Uuid
-  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
+  municipalityId   String?        @map("municipality_id") @db.Uuid
+  municipality     Municipality?  @relation(fields: [municipalityId], references: [id])
 
   // One Race -> Many Candidacies
-  candidacies  Candidacy[]
+  candidacies      Candidacy[]
   
   @@map("race")
 } 

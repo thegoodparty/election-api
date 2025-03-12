@@ -2,11 +2,11 @@
  * Join table for the many-to-many relationship between officeHolder and party
  */
 model OfficeHolderParty {
-  id String @id @db.Uuid  
-  officeHolderId String          @map("office_holder_id") @db.Uuid
+  id             String       @id @db.Uuid  
+  officeHolderId String       @map("office_holder_id") @db.Uuid
   officeHolder   OfficeHolder @relation(fields: [officeHolderId], references: [id])
   
-  partyId        String          @map("party_id") @db.Uuid
+  partyId        String       @map("party_id") @db.Uuid
   party          Party        @relation(fields: [partyId], references: [id])
   
   @@unique([officeHolderId, partyId])

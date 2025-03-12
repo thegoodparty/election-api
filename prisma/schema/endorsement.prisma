@@ -13,23 +13,23 @@ enum EndorsementStatusTypeField {
 }
 
 model Endorsement {
-  id String @id @db.Uuid
-  brHashId     String?                    @map("br_hash_id")
-  brDatabaseId    Int?                    @map("br_database_id")
-  createdAt     DateTime                  @map("created_at")
-  updatedAt     DateTime                  @map("updated_at")
+  id             String                     @id @db.Uuid
+  brHashId       String?                    @map("br_hash_id")
+  brDatabaseId   Int?                       @map("br_database_id")
+  createdAt      DateTime                   @map("created_at")
+  updatedAt      DateTime                   @map("updated_at")
   
-  endorser      String?
+  endorser       String?
   recommendation Sentiment?
-  status        EndorsementStatusTypeField
+  status         EndorsementStatusTypeField
   
   // Organization relationship (optional)
-  organizationId String?                     @map("organization_id") @db.Uuid
-  organization   Organization?            @relation(fields: [organizationId], references: [id])
+  organizationId String?                    @map("organization_id") @db.Uuid
+  organization   Organization?              @relation(fields: [organizationId], references: [id])
   
   // Candidacy relationship
-  candidacyId    String?                     @map("candidacy_id") @db.Uuid
-  candidacy      Candidacy?               @relation(fields: [candidacyId], references: [id])
+  candidacyId    String?                    @map("candidacy_id") @db.Uuid
+  candidacy      Candidacy?                 @relation(fields: [candidacyId], references: [id])
   
   @@map("endorsement")
 } 

@@ -4,20 +4,20 @@
  * Represents a URL associated with an organization
  */
 model Url {
-  id           String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
-  brDatabaseId  Int?          @map("br_database_id")
+  id             String       @id @db.Uuid
+  brHashId       String?      @map("br_hash_id")
+  brDatabaseId   Int?         @map("br_database_id")
   
-  url         String
-  type        String
+  url            String
+  type           String
   
   // Organization relationship
-  organizationId  String?          @map("organization_id") @db.Uuid
-  organization    Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?      @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   
   // Place relationship
-  placeId         String?          @map("place_id") @db.Uuid
-  place           Place?        @relation(fields: [placeId], references: [id])
+  placeId        String?      @map("place_id") @db.Uuid
+  place          Place?       @relation(fields: [placeId], references: [id])
   
   @@map("url")
 } 

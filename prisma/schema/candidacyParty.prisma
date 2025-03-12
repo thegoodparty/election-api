@@ -2,14 +2,14 @@
  * Join table for the many-to-many relationship between candidacy and party
  */
 model CandidacyParty {
-  id String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
+  id           String    @id @db.Uuid
+  brHashId     String?   @map("br_hash_id")
   
-  candidacyId String       @map("candidacy_id") @db.Uuid
-  candidacy   Candidacy @relation(fields: [candidacyId], references: [id])
+  candidacyId  String    @map("candidacy_id") @db.Uuid
+  candidacy    Candidacy @relation(fields: [candidacyId], references: [id])
   
-  partyId     String       @map("party_id") @db.Uuid
-  party       Party     @relation(fields: [partyId], references: [id])
+  partyId      String    @map("party_id") @db.Uuid
+  party        Party     @relation(fields: [partyId], references: [id])
   
   @@unique([candidacyId, partyId])
   @@map("candidacy_party")

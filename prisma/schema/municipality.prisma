@@ -13,18 +13,18 @@ enum MunicipalityType {
 }
  
 model Municipality {
-  id          String  @id @default(uuid()) @db.Uuid
-  createdAt   DateTime      @map("created_at") @default(now())
-  updatedAt   DateTime      @map("updated_at") @updatedAt
+  id          String           @id @default(uuid()) @db.Uuid
+  createdAt   DateTime         @map("created_at") @default(now())
+  updatedAt   DateTime         @map("updated_at") @updatedAt
   
-  slug        String        @unique
+  slug        String           @unique
   name        String
   type        MunicipalityType
-  state       String?       @db.Char(2)
+  state       String?          @db.Char(2)
   
   // Belongs to county (many-to-one)
   countyId    String?          @map("county_id") @db.Uuid
-  county      County?       @relation(fields: [countyId], references: [id])
+  county      County?          @relation(fields: [countyId], references: [id])
   
   // One municipality -> many races
   races       Race[]

@@ -2,13 +2,13 @@
  * Join table for the many-to-many relationship between position and issue
  */
 model PositionIssue {
-  id String @id @db.Uuid
+  id         String    @id @db.Uuid
   
-  positionId String      @map("position_id") @db.Uuid
-  position   Position @relation(fields: [positionId], references: [id])
+  positionId String    @map("position_id") @db.Uuid
+  position   Position  @relation(fields: [positionId], references: [id])
   
-  issueId    String      @map("issue_id") @db.Uuid
-  issue      Issue    @relation(fields: [issueId], references: [id])
+  issueId    String    @map("issue_id") @db.Uuid
+  issue      Issue     @relation(fields: [issueId], references: [id])
   
   @@unique([positionId, issueId])
   @@map("position_issue")

@@ -1,26 +1,26 @@
 model Issue {
-  id String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
-  brDatabaseId    Int?    @map("br_database_id")
-  name          String
-  expandedText  String  @map("expanded_text")
-  key           String?
-  pluginEnabled Boolean? @map("plugin_enabled")
-  responseType  String? @map("response_type")
-  rowOrder      Int?    @map("row_order")
+  id             String     @id @db.Uuid
+  brHashId       String?    @map("br_hash_id")
+  brDatabaseId   Int?       @map("br_database_id")
+  name           String
+  expandedText   String     @map("expanded_text")
+  key            String?
+  pluginEnabled  Boolean?   @map("plugin_enabled")
+  responseType   String?    @map("response_type")
+  rowOrder       Int?       @map("row_order")
 
-  parentIssueId String?    @map("parent_issue_id") @db.Uuid
-  parentIssue   Issue?  @relation("SubIssue", fields: [parentIssueId], references: [id])
-  subIssues     Issue[] @relation("SubIssue")
+  parentIssueId  String?    @map("parent_issue_id") @db.Uuid
+  parentIssue    Issue?     @relation("SubIssue", fields: [parentIssueId], references: [id])
+  subIssues      Issue[]    @relation("SubIssue")
 
   // Many-to-many with position through positionIssue join table
   positionIssues PositionIssue[]
 
   // One issue -> many stances
-  stances Stance[]
+  stances        Stance[]
   
   // One issue -> many organizations
-  organizations Organization[]
+  organizations  Organization[]
   
   @@map("issue")
 } 

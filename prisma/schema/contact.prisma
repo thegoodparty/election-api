@@ -1,18 +1,18 @@
 model Contact {
-  id String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
+  id             String        @id @db.Uuid
+  brHashId       String?       @map("br_hash_id")
   email          String?
   fax            String?
   phone          String?
   type           String?
 
-  personId       String?         @map("person_id") @db.Uuid
+  personId       String?       @map("person_id") @db.Uuid
   person         Person?       @relation(fields: [personId], references: [id])
 
-  officeHolderId String?         @map("office_holder_id") @db.Uuid
+  officeHolderId String?       @map("office_holder_id") @db.Uuid
   officeHolder   OfficeHolder? @relation(fields: [officeHolderId], references: [id])
   
-  placeId        String?         @map("place_id") @db.Uuid
+  placeId        String?       @map("place_id") @db.Uuid
   place          Place?        @relation(fields: [placeId], references: [id])
   
   @@map("contact")

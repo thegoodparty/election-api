@@ -1,17 +1,17 @@
 model Stance {
-  id           String @id @db.Uuid
-  brHashId     String?        @map("br_hash_id")
-  brDatabaseId Int?    @map("database_id")
+  id           String    @id @db.Uuid
+  brHashId     String?   @map("br_hash_id")
+  brDatabaseId Int?      @map("database_id")
 
-  issueId      String     @map("issue_id") @db.Uuid
-  issue        Issue   @relation(fields: [issueId], references: [id])
+  issueId      String    @map("issue_id") @db.Uuid
+  issue        Issue     @relation(fields: [issueId], references: [id])
 
   locale       String?
-  referenceUrl String? @map("reference_url")
+  referenceUrl String?   @map("reference_url")
   statement    String?
 
   // Belongs to candidacy
-  candidacyId  String     @map("candidacy_id") @db.Uuid
+  candidacyId  String    @map("candidacy_id") @db.Uuid
   candidacy    Candidacy @relation(fields: [candidacyId], references: [id])
   
   @@map("stance")
