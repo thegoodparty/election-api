@@ -1,34 +1,55 @@
+enum PositionLevel {
+  CITY
+  COUNTY
+  FEDERAL
+  LOCAL
+  REGIONAL
+  STATE
+  TOWNSHIP
+}
+
 model Race {
-  id           Int         @id @default(autoincrement())
-  databaseId   Int?        @map("database_id")
-  createdAt    DateTime    @map("created_at")
-  updatedAt    DateTime    @map("updated_at")
-
-  isDisabled   Boolean?    @map("is_disabled")
-  isPartisan   Boolean?    @map("is_partisan")
-  isPrimary    Boolean     @map("is_primary")
-  isRecall     Boolean     @map("is_recall")
-  isRunoff     Boolean     @map("is_runoff")
-  isUnexpired  Boolean     @map("is_unexpired")
-  seats        Int?
-
-  // Many-to-many with election through raceElection join table
-  raceElections RaceElection[]
-
-  // One Race -> One Position
-  positionId   Int         @map("position_id")
-  position     Position    @relation(fields: [positionId], references: [id])
-  
-  // County relationship (many-to-one)
-  countyId     Int?        @map("county_id")
-  county       County?     @relation(fields: [countyId], references: [id])
-  
-  // Municipality relationship (many-to-one)
-  municipalityId Int?      @map("municipality_id")
-  municipality   Municipality? @relation(fields: [municipalityId], references: [id])
-
-  // One Race -> Many Candidacies
-  candidacies  Candidacy[]
-  
-  @@map("race")
-} 
+  id                                String        @id @map("id") @db.Uuid
+  brHashId                          String?       @map("br_hash_id")
+  brDatabaseId                      Int?          @map("br_database_id")
+  positionLevel                     PositionLevel @map("position_level")
+  electionDate                      DateTime      @map("election_date")
+  electionDay                       String        @map("election_day")
+  positionSlug                      String        @map("position_slug")
+  // Position
+  normalizedPositionName            String        @map("normalized_position_name")
+  positionName                      String        @map("position_name")
+  positionDescription               String        @map("position_description")
+  filingOfficeAddress               String        @map("filing_office_address")
+  filingPhoneNumber                 String        @map("filing_phone_number")
+  paperworkInstructions             String        @map("paperwork_instructions")
+  filingRequirements                String        @map("filing_requirements")
+  isRunoff                          Boolean       @map("is_runoff")
+  isPrimary                         Boolean       @map("is_primary")
+  partisanType                      String        @map("partisan_type")
+  locationName                      String        @map("location_name")
+  filingDateStart                   String        @map("filing_date_start")
+  filingDateEnd                     String        @map("filing_date_end")
+  employmentType                    String        @map("employment_type")
+  eligibilityRequirements           String        @map("eligibility_requirements")
+  salary                            String        @map("salary")
+  // City / Municipality Facts
+  municipalityPopluation            Int           @map("municipality_popluation")
+  municipalityDensity               Float         @map("municipality_density")
+  municipalityIncomeHouseholdMedian Int           @map("municipality_income_household_median")
+  municipalityUnemploymentRate      Float         @map("municipality_unemployment_rate")
+  municipalityHomeValue             Int           @map("municipality_home_value")
+  // County Facts
+  cityLargest                       String        @map("city_largest")
+  countyPopulation                  Int           @map("county_population")
+  countyDensity                     Float         @map("county_density")
+  countyIncomeHouseholdMedian       Int           @map("county_income_household_median")
+  countyUnemploymentRate            Float         @map("county_unemployment_rate")
+  countyHomeValue                   Int           @map("county_home_value")
+  state                             String        @map("state") // Two letter abbreviation
+  countyName                        String        @map("county_name")
+  municipalityName                  String        @map("municipality_name")
+  // PositionElection
+  frequency                         Int[]         @map("frequency")
+  Candidacy                         Candidacy[]
+}

@@ -1,9 +1,0 @@
-model mtfcc {
-  id         Int       @id @default(autoincrement())
-  databaseId Int?
-  createdAt  DateTime
-  updatedAt  DateTime
-
-  mtfcc      String
-  name       String?
-} 

@@ -1,0 +1,28 @@
+enum ElectionCode {
+  EP   // Primary Election
+  EG   // General Election
+  EPP  // Presidential Preference Primary
+  ECP  // Consolidated Primary Election
+  ECG  // Consolidated General Election
+  EL   // Local Election
+  ES   // Special Election    
+  ER   // Runoff Election
+  EPD  // Democratic Election Primary
+}
+
+model ProjectedTurnout {
+  id              String        @id @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  state           String
+  officeType      String        @map("office_type")
+  officeName      String        @map("office_name")
+  year            Int
+  electionCode    ElectionCode
+  turnoutEstimate Int?          @map("turnout_estimate")
+  inferenceDate   DateTime      @map("inference_date")
+  modelVersion    String?       @map("model_version")
+
+  @@unique([state, officeType, officeName, year, electionCode])
+  @@map("projected_turnout")
+}
