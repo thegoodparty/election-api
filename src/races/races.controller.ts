@@ -7,7 +7,7 @@ export class RacesController {
   constructor(private readonly racesService: RacesService) {}
   
   @Get('by-state')
-  async racesByState(@Query('state') state: string) {
+  async stateRacesByState(@Query('state') state: string) {
     if (state.trim().length !== 2) {
       throw new BadRequestException('State must be a 2 letter abbreviation')
     }
@@ -34,5 +34,13 @@ export class RacesController {
       distinct: ['positionSlug']
     })
     return races
+  }
+
+  @Get('all-state')
+  async allRacesByState(@Query('state') state: string) {
+    if (state.trim().length !== 2) {
+      throw new BadRequestException('State must be a 2 letter abbreviation')
+    }
+    state = state.toUpperCase()
   }
 }
