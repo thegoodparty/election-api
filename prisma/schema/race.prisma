@@ -25,8 +25,4 @@ model Race {
   countyName                        String
   municipalityName                  String
   Candidacy                         Candidacy[]
-  County                            County?       @relation(fields: [countyId], references: [id])
-  countyId                          Int?
-  Municipality                      Municipality? @relation(fields: [municipalityId], references: [id])
-  municipalityId                    Int?
 }
