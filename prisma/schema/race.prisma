@@ -4,10 +4,24 @@ model Race {
   brDatabaseId                      Int?
   positionLevel                     PositionLevel
   electionDate                      DateTime
+  electionDay                       String
   positionSlug                      String
-  // Data
+  // Position
   normalizedPositionName            String
   positionDescription               String
+  filingOfficeAddress               String
+  filingPhoneNumber                 String
+  paperworkInstructions             String
+  filingRequirements                String
+  isRunoff                          Boolean
+  isPrimary                         Boolean
+  partisanType                      String
+  locationName                      String
+  filingDateStart                   String
+  filingDateEnd                     String
+  employmentType                    String
+  eligibilityRequirements           String
+  salary                            String
   // City / Municipality Facts
   municipalityPopluation            Int
   municipalityDensity               Float
@@ -24,5 +38,7 @@ model Race {
   state                             String // Two letter abbreviation
   countyName                        String
   municipalityName                  String
+  // PositionElection
+  frequency                         Int[]
   Candidacy                         Candidacy[]
 }
