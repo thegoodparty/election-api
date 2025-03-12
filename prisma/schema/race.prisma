@@ -16,6 +16,7 @@ model Race {
   electionDate                      DateTime      @map("election_date")
   electionDay                       String        @map("election_day")
   positionSlug                      String        @map("position_slug")
+  stateSlug                         String?       @map("state_slug") // state-positionSlug
   // Position
   normalizedPositionName            String?       @map("normalized_position_name")
   positionName                      String?       @map("position_name")
@@ -34,12 +35,14 @@ model Race {
   eligibilityRequirements           String?       @map("eligibility_requirements")
   salary                            String?       @map("salary")
   // City / Municipality Facts
+  municipalitySlug                  String?       @map("municipality_slug") // state-county-municipality (tx-harris-houston)
   municipalityPopluation            Int?          @map("municipality_popluation")
   municipalityDensity               Float?        @map("municipality_density")
   municipalityIncomeHouseholdMedian Int?          @map("municipality_income_household_median")
   municipalityUnemploymentRate      Float?        @map("municipality_unemployment_rate")
   municipalityHomeValue             Int?          @map("municipality_home_value")
   // County Facts
+  countySlug                        String?       @map("county_slug") // county-municipality
   cityLargest                       String?       @map("city_largest")
   countyPopulation                  Int?          @map("county_population")
   countyDensity                     Float?        @map("county_density")
