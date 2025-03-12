@@ -13,19 +13,26 @@ export class RacesController {
     }
     state = state.toUpperCase()
 
-    const now = new Date()
-
     const startOfTwoYearsFromNow = new Date()
     startOfTwoYearsFromNow.setFullYear(startOfTwoYearsFromNow.getFullYear() + 2)
     startOfTwoYearsFromNow.setMonth(0) // Jan
     startOfTwoYearsFromNow.setDate(1) // First day
 
-
-    const races = this.racesService.findMany({
+    // TODO: Add in select statement to only grab what frontend needs
+    const races = await this.racesService.findMany({
       where: { 
         state,
         positionLevel: PositionLevel.STATE,
-
-      }})
+        electionDate: {
+          lt: startOfTwoYearsFromNow,
+          gt: new Date(),
+        }
+      },
+      orderBy: {
+        electionDate: 'asc'
+      },
+      distinct: ['positionSlug']
+    })
+    return races
   }
 }
