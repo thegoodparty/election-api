@@ -7,10 +7,9 @@ model County {
   id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-
-  slug  String  @unique
-  name  String
-  state String? @db.Char(2)
+  slug      String   @unique
+  name      String
+  state     String?  @db.Char(2)
 
   // One county -> many municipalities
   municipalities Municipality[]

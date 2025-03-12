@@ -1,3 +1,13 @@
+enum PositionLevel {
+  CITY
+  COUNTY
+  FEDERAL
+  LOCAL
+  REGIONAL
+  STATE
+  TOWNSHIP
+}
+
 model Race {
   id                                String        @id @db.Uuid
   brHashId                          String?
