@@ -4,15 +4,23 @@
  * Represents a county that can have municipalities and races
  */
 model County {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  slug      String   @unique
-  name      String
-  state     String?  @db.Char(2)
+  id                          String   @id @default(uuid()) @db.Uuid
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
+  slug                        String   @unique // stateAbbr-county (tx-harris)
+  name                        String
+  state                       String?  @db.Char(2)
+  cityLargest                 String?  @map("city_largest")
+  countyPopulation            Int?     @map("county_population")
+  countyDensity               Float?   @map("county_density")
+  countyIncomeHouseholdMedian Int?     @map("county_income_household_median")
+  countyUnemploymentRate      Float?   @map("county_unemployment_rate")
+  countyHomeValue             Int?     @map("county_home_value")
+  countyName                  String?  @map("county_name")
 
   // One county -> many municipalities
   municipalities Municipality[]
+  Race           Race[]
 
   @@map("county")
 }
