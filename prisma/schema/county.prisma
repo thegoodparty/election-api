@@ -20,7 +20,7 @@ model County {
 
   // One county -> many municipalities
   municipalities Municipality[]
-  Race           Race[]
+  races          Race[]
 
   @@map("county")
 }

@@ -39,7 +39,7 @@ model Race {
   frequency               Int[]         @map("frequency")
   county                  County?       @relation(fields: [countyId], references: [id])
   municipality            Municipality? @relation(fields: [municipalityId], references: [id])
-  Candidacy               Candidacy[]
+  candidacies             Candidacy[]
   countyId                String?       @db.Uuid
   municipalityId          String?       @db.Uuid
 }

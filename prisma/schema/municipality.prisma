@@ -29,7 +29,7 @@ model Municipality {
   // Belongs to county (many-to-one)
   countyId String? @map("county_id") @db.Uuid
   county   County? @relation(fields: [countyId], references: [id])
-  Race     Race[]
+  races    Race[]
 
   @@map("municipality")
 }
