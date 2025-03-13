@@ -9,50 +9,37 @@ enum PositionLevel {
 }
 
 model Race {
-  id                                String        @id @map("id") @db.Uuid
-  brHashId                          String?       @map("br_hash_id")
-  brDatabaseId                      Int?          @map("br_database_id")
-  positionLevel                     PositionLevel @map("position_level")
-  electionDate                      DateTime      @map("election_date")
-  electionDay                       String        @map("election_day")
-  positionSlug                      String        @map("position_slug")
-  stateSlug                         String?       @map("state_slug") // state-positionSlug
+  id                      String        @id @map("id") @db.Uuid
+  brHashId                String?       @map("br_hash_id")
+  brDatabaseId            Int?          @map("br_database_id")
+  electionDate            DateTime      @map("election_date")
+  electionDay             String        @map("election_day")
+  positionSlug            String        @map("position_slug")
+  stateSlug               String?       @map("state_slug") // state-positionSlug
+  state                   String?       @db.Char(2)
   // Position
-  normalizedPositionName            String?       @map("normalized_position_name")
-  positionName                      String?       @map("position_name")
-  positionDescription               String?       @map("position_description")
-  filingOfficeAddress               String?       @map("filing_office_address")
-  filingPhoneNumber                 String?       @map("filing_phone_number")
-  paperworkInstructions             String?       @map("paperwork_instructions")
-  filingRequirements                String?       @map("filing_requirements")
-  isRunoff                          Boolean?      @map("is_runoff")
-  isPrimary                         Boolean?      @map("is_primary")
-  partisanType                      String?       @map("partisan_type")
-  locationName                      String?       @map("location_name")
-  filingDateStart                   String?       @map("filing_date_start")
-  filingDateEnd                     String?       @map("filing_date_end")
-  employmentType                    String?       @map("employment_type")
-  eligibilityRequirements           String?       @map("eligibility_requirements")
-  salary                            String?       @map("salary")
-  // City / Municipality Facts
-  municipalitySlug                  String?       @map("municipality_slug") // state-county-municipality (tx-harris-houston)
-  municipalityPopluation            Int?          @map("municipality_popluation")
-  municipalityDensity               Float?        @map("municipality_density")
-  municipalityIncomeHouseholdMedian Int?          @map("municipality_income_household_median")
-  municipalityUnemploymentRate      Float?        @map("municipality_unemployment_rate")
-  municipalityHomeValue             Int?          @map("municipality_home_value")
-  // County Facts
-  countySlug                        String?       @map("county_slug") // county-municipality
-  cityLargest                       String?       @map("city_largest")
-  countyPopulation                  Int?          @map("county_population")
-  countyDensity                     Float?        @map("county_density")
-  countyIncomeHouseholdMedian       Int?          @map("county_income_household_median")
-  countyUnemploymentRate            Float?        @map("county_unemployment_rate")
-  countyHomeValue                   Int?          @map("county_home_value")
-  state                             String?       @map("state") // Two letter abbreviation
-  countyName                        String?       @map("county_name")
-  municipalityName                  String?       @map("municipality_name")
+  positionLevel           PositionLevel @map("position_level")
+  normalizedPositionName  String?       @map("normalized_position_name")
+  positionName            String?       @map("position_name")
+  positionDescription     String?       @map("position_description")
+  filingOfficeAddress     String?       @map("filing_office_address")
+  filingPhoneNumber       String?       @map("filing_phone_number")
+  paperworkInstructions   String?       @map("paperwork_instructions")
+  filingRequirements      String?       @map("filing_requirements")
+  isRunoff                Boolean?      @map("is_runoff")
+  isPrimary               Boolean?      @map("is_primary")
+  partisanType            String?       @map("partisan_type")
+  locationName            String?       @map("location_name")
+  filingDateStart         String?       @map("filing_date_start")
+  filingDateEnd           String?       @map("filing_date_end")
+  employmentType          String?       @map("employment_type")
+  eligibilityRequirements String?       @map("eligibility_requirements")
+  salary                  String?       @map("salary")
   // PositionElection
-  frequency                         Int[]         @map("frequency")
-  Candidacy                         Candidacy[]
+  frequency               Int[]         @map("frequency")
+  county                  County?       @relation(fields: [countyId], references: [id])
+  municipality            Municipality? @relation(fields: [municipalityId], references: [id])
+  candidacies             Candidacy[]
+  countyId                String?       @db.Uuid
+  municipalityId          String?       @db.Uuid
 }

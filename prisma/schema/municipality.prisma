@@ -13,18 +13,23 @@ enum MunicipalityType {
 }
 
 model Municipality {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  slug  String           @unique
-  name  String
-  type  MunicipalityType
-  state String?          @db.Char(2)
+  id                                String           @id @default(uuid()) @db.Uuid
+  createdAt                         DateTime         @default(now()) @map("created_at")
+  updatedAt                         DateTime         @updatedAt @map("updated_at")
+  slug                              String           @unique // state-county-municipality (tx-harris-houston)
+  name                              String
+  type                              MunicipalityType
+  state                             String?          @db.Char(2)
+  municipalityPopluation            Int?             @map("municipality_popluation")
+  municipalityDensity               Float?           @map("municipality_density")
+  municipalityIncomeHouseholdMedian Int?             @map("municipality_income_household_median")
+  municipalityUnemploymentRate      Float?           @map("municipality_unemployment_rate")
+  municipalityHomeValue             Int?             @map("municipality_home_value")
 
   // Belongs to county (many-to-one)
   countyId String? @map("county_id") @db.Uuid
   county   County? @relation(fields: [countyId], references: [id])
+  races    Race[]
 
   @@map("municipality")
 }
