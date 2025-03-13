@@ -30,11 +30,13 @@
     "@prisma/client": "^6.5.0",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
+    "nestjs-zod": "^4.3.1",
     "prisma": "^6.4.1",
     "prisma-json-types-generator": "^3.2.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "slugify": "^1.6.6"
+    "slugify": "^1.6.6",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

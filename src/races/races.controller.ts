@@ -143,5 +143,7 @@ export class RacesController {
       races,
       shortCity
     }
-  } 
+  }
+  
+  async racesByRace
 }
