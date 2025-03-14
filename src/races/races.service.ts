@@ -5,6 +5,7 @@ import { getStartOfTwoYearsFromNow } from 'src/shared/util/dates.util';
 import { ByCountyRaceDto, ByMunicipalityRaceDto, ByStateRaceDto, RacesByRaceDto } from './races.schema';
 import slugify from 'slugify'
 import { PrismaService } from 'src/prisma/prisma.service';
+import { extractLocation } from './util/extractLocation.util';
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
@@ -202,6 +203,75 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
           break
         }
       }
+    
+    const positions = races.map(r => r.positionName)
+
+    const { name, level } = await extractLocation(race)
+
+    // Find other races within the same municipality or county.
+    let otherRaces: Array<{ name: string; slug: string }> = [];
+    let fetchedOtherRaces: any[] = [];
+    if (race.municipality) {
+      fetchedOtherRaces = await this.model.findMany({
+        where: { municipalityId: race.municipality.id },
+      });
+    } else if (race.county) {
+      fetchedOtherRaces = await this.model.findMany({
+        where: { countyId: race.county.id },
+      });
     }
+
+    const dedups: Record<string, boolean> = {};
+    otherRaces = fetchedOtherRaces
+      .map((otherRace) => {
+        if (!dedups[otherRace.positionSlug]) {
+          dedups[otherRace.positionSlug] = true;
+          return {
+            name: otherRace.data.normalized_position_name,
+            slug: otherRace.positionSlug,
+          };
+        }
+        return null;
+      })
+      .filter((r): r is { name: string; slug: string } => r !== null);
+
+    // Build the filtered race object.
+    const filtered = {
+      hashId: race.brHashId,
+      positionName: race.positionName,
+      locationName: name,
+      electionDate: race.electionDay,
+      state: race.state,
+      level: race.positionLevel,
+      partisanType: race.partisanType,
+      salary: race.salary,
+      employmentType: race.employmentType,
+      filingDateStart: race.filingDateStart,
+      filingDateEnd: race.filingDateEnd,
+      normalizedPositionName: race.normalizedPositionName,
+      positionDescription: race.positionDescription,
+      frequency: race.frequency,
+      subAreaName: race.subAreaName,
+      subAreaValue: race.subAreaValue,
+      filingOfficeAddress: race.filingOfficeAddress,
+      filingPhoneNumber: race.filingPhoneNumber,
+      paperworkInstructions: race.paperworkInstructions,
+      filingRequirements: race.filingRequirements,
+      eligibilityRequirements: race.eligibilityRequirements,
+      isRunoff: race.isRunoff,
+      isPrimary: race.isPrimary,
+      municipality: race.municipality
+        ? { name: race.municipality.name, slug: race.municipality.slug }
+        : null,
+      county: race.county
+        ? { name: race.county.name, slug: race.county.slug }
+        : null,
+    }
+
+    return {
+      race: filtered,
+      otherRaces,
+      positions,
+    };
   }
 }
