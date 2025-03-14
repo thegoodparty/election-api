@@ -17,7 +17,7 @@ const baseRaceInputSchema = z
 export const byStateRaceSchema = baseRaceInputSchema.pick({state: true})
 export const byCountyRaceSchema = baseRaceInputSchema.pick({state: true, county: true})
 export const byMunicipalityRaceSchema = baseRaceInputSchema.omit({positionSlug: true})
-export const racesByRaceSchema = baseRaceInputSchema.partial()
+export const racesByRaceSchema = baseRaceInputSchema.extend({id: z.string()}).partial()
 
 export class ByStateRaceDto extends createZodDto(byStateRaceSchema) {}
 export class ByCountyRaceDto extends createZodDto(byCountyRaceSchema) {}

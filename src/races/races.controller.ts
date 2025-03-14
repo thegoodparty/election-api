@@ -10,41 +10,12 @@ export class RacesController {
   
   @Get('by-state')
   async stateRacesByState(@Body() dto: ByStateRaceDto) {
-    let { state } = dto
-    if (state.trim().length !== 2) {
-      throw new BadRequestException('State must be a 2 letter abbreviation')
-    }
-    state = state.toUpperCase()
-
-    const startOfTwoYearsFromNow = new Date()
-    startOfTwoYearsFromNow.setFullYear(startOfTwoYearsFromNow.getFullYear() + 2)
-    startOfTwoYearsFromNow.setMonth(0) // Jan
-    startOfTwoYearsFromNow.setDate(1) // First day
-
-    // TODO: Add in select statement to only grab what frontend needs
-    const races = await this.racesService.findMany({
-      where: { 
-        state,
-        positionLevel: PositionLevel.STATE,
-        electionDate: {
-          lt: startOfTwoYearsFromNow,
-          gt: new Date(),
-        }
-      },
-      orderBy: {
-        electionDate: 'asc'
-      },
-      distinct: ['positionSlug']
-    })
-    return races
+    return this.racesService.getStateRacesByState(dto)
   }
 
   @Get('all-state')
   async allRacesByState(@Body() dto: ByStateRaceDto) {
     let { state } = dto
-    if (state.trim().length !== 2) {
-      throw new BadRequestException('State must be a 2 letter abbreviation')
-    }
     state = state.toUpperCase()
 
     const startOfTwoYearsFromNow = new Date()
@@ -72,9 +43,6 @@ export class RacesController {
   @Get('by-county')
   async racesByCounty(@Body() dto: ByCountyRaceDto) {
     let { state, county } = dto
-    if (state.trim().length !== 2) {
-      throw new BadRequestException('State must be a 2 letter abbreviation')
-    }
     state = state.toUpperCase()
 
     const startOfTwoYearsFromNow = new Date()
@@ -105,9 +73,6 @@ export class RacesController {
   @Get('by-municipality')
   async racesByMunicipality(@Body() dto: ByMunicipalityRaceDto) {
     let { state, county, municipality } = dto
-    if (state.trim().length !== 2) {
-      throw new BadRequestException('State must be a 2 letter abbreviation')
-    }
     state = state.toUpperCase()
     
     const municipalitySlug = `${slugify(state, { lower: true })}/${slugify(county, {
