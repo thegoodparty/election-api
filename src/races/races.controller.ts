@@ -1,14 +1,16 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Get, Query } from '@nestjs/common'
 import { RacesService } from './races.service'
 import { PositionLevel } from '@prisma/client'
 import slugify from 'slugify'
+import { ByCountyRaceDto, ByMunicipalityRaceDto, ByStateRaceDto, RacesByRaceDto } from './races.schema'
 
 @Controller('races')
 export class RacesController {
   constructor(private readonly racesService: RacesService) {}
   
   @Get('by-state')
-  async stateRacesByState(@Query('state') state: string) {
+  async stateRacesByState(@Body() dto: ByStateRaceDto) {
+    let { state } = dto
     if (state.trim().length !== 2) {
       throw new BadRequestException('State must be a 2 letter abbreviation')
     }
@@ -38,7 +40,8 @@ export class RacesController {
   }
 
   @Get('all-state')
-  async allRacesByState(@Query('state') state: string) {
+  async allRacesByState(@Body() dto: ByStateRaceDto) {
+    let { state } = dto
     if (state.trim().length !== 2) {
       throw new BadRequestException('State must be a 2 letter abbreviation')
     }
@@ -67,7 +70,8 @@ export class RacesController {
   }
 
   @Get('by-county')
-  async racesByCounty(@Query('state', 'county') state: string, county: string) {
+  async racesByCounty(@Body() dto: ByCountyRaceDto) {
+    let { state, county } = dto
     if (state.trim().length !== 2) {
       throw new BadRequestException('State must be a 2 letter abbreviation')
     }
@@ -99,7 +103,8 @@ export class RacesController {
   }
 
   @Get('by-municipality')
-  async racesByMunicipality(@Query('state', 'county', 'municipality') state: string, county: string, municipality: string) {
+  async racesByMunicipality(@Body() dto: ByMunicipalityRaceDto) {
+    let { state, county, municipality } = dto
     if (state.trim().length !== 2) {
       throw new BadRequestException('State must be a 2 letter abbreviation')
     }
@@ -144,6 +149,8 @@ export class RacesController {
       shortCity
     }
   }
-  
-  async racesByRace
+
+  async racesByRace(@Body() dto: RacesByRaceDto) {
+
+  }
 }
