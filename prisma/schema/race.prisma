@@ -35,6 +35,8 @@ model Race {
   employmentType          String?       @map("employment_type")
   eligibilityRequirements String?       @map("eligibility_requirements")
   salary                  String?       @map("salary")
+  subAreaName             String?       @map("sub_area_name")
+  subAreaValue            String?       @map("sub_area_value")
   // PositionElection
   frequency               Int[]         @map("frequency")
   county                  County?       @relation(fields: [countyId], references: [id])
