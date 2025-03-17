@@ -1,8 +1,8 @@
 export interface LocationRow {
   level: string;
-  state: string;
   positionName: string;
-  subAreaValue: string;
+  state?: string;
+  subAreaValue?: string;
 }
 
 export interface LocationResult {

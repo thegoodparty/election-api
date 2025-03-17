@@ -206,7 +206,9 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
     
     const positions = races.map(r => r.positionName)
 
-    const { name, level } = await extractLocation(race)
+    const rowResult = extractLocation({level: race.positionLevel, state: race.state, positionName: race.positionName, subAreaValue: race.subAreaValue})
+    if (!rowResult) return
+    const { name, level } = rowResult
 
     // Find other races within the same municipality or county.
     let otherRaces: Array<{ name: string; slug: string }> = [];
@@ -274,4 +276,5 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       positions,
     };
   }
+}
 }

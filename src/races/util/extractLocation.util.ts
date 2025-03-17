@@ -2,7 +2,7 @@ import { LocationResult, LocationRow } from "../races.types";
 
 export function extractLocation(
   row: LocationRow
-): LocationResult | false {
+): LocationResult {
   const { level, positionName } = row
   let locationName = ''
   let locationLevel = level
@@ -10,14 +10,14 @@ export function extractLocation(
 
   switch (locationLevel) {
     case 'state':
-      locationName = row.state
+      locationName = row.state || ''
       break
     case 'county':
-      locationName = extractCountyName(row)
+      locationName = extractCountyName(positionName, row.subAreaValue)
       break
     case 'city':
     case 'local':
-      locationName = extractCityName(row)
+      locationName = extractCityName(positionName, row.subAreaValue)
       locationLevel = positionNameLower.includes('village')
         ? 'village'
         : positionNameLower.includes('township')
@@ -35,8 +35,10 @@ export function extractLocation(
   return { name: locationName, level: locationLevel}
 }
 
-function extractCountyName(row: LocationRow): string {
-  const { positionName, subAreaValue } = row
+function extractCountyName(
+  positionName: string,
+  subAreaValue: string = ''
+): string {
   const positionNameLower = positionName.toLowerCase().trim()
   const candidate = positionNameLower.includes('county')
     ? positionNameLower.split(' county')[0].trim()
@@ -78,43 +80,45 @@ function extractCountyName(row: LocationRow): string {
   }
 
   if (positionNameLower.includes('city')) {
-    return extractCityName(row)
+    return extractCityName(positionName, subAreaValue)
   }
 
   return name
 }
 
-function extractCityName(row: LocationRow): string {
-  const { positionName, subAreaValue } = row
+function extractCityName(
+  positionName: string,
+  subAreaValue: string = ''
+): string {
   const positionNameLower = positionName.toLowerCase().trim()
 
   const specialCases = [
-    'Village',
-    'Town',
-    'County Multi-Jurisdictional Municipal Judge',
-    'Borough ',
-    'School Board',
-    'Neighborhood Council',
-    'Registrar of Voters',
-    'Justice of the Peace',
-    'Planning Area Board',
-    'City ',
-    'Municipal ',
-    'Mayor',
-    'Housing Authority Board',
-    'Scholarship',
-    'Board of ',
-    'Trustee',
-    'Library Board',
-    'Parks and Recreation Commission',
-    'Supervisor of the Checklist',
-    'Charter Review Commission',
-    'Commissioner',
+    'village',
+    'town',
+    'county multi-jurisdictional municipal judge',
+    'borough ',
+    'school board',
+    'neighborhood council',
+    'registrar of voters',
+    'justice of the peace',
+    'planning area board',
+    'city ',
+    'municipal ',
+    'mayor',
+    'housing authority board',
+    'scholarship',
+    'board of ',
+    'trustee',
+    'library board',
+    'parks and recreation commission',
+    'supervisor of the checklist',
+    'charter review commission',
+    'commissioner',
   ]
 
   const specialCase = specialCases.find((sc) => positionNameLower.includes(sc))
   if (specialCase) {
-    return positionName.split(` ${specialCase}`)[0].trim()
+    return positionNameLower.split(` ${specialCase}`)[0].trim()
   }
 
   return subAreaValue
