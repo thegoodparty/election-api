@@ -24,9 +24,5 @@ model Candidacy {
   // Election result is an enum; can be null if no result yet
   result       ElectionResult?
 
-  // Race
-  raceId String @map("race_id") @db.Uuid
-  race   Race   @relation(fields: [raceId], references: [id])
-
   @@map("candidacy")
 }

@@ -10,6 +10,8 @@ enum PositionLevel {
 
 model Race {
   id                      String        @id @map("id") @db.Uuid
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
   brHashId                String?       @map("br_hash_id")
   brDatabaseId            Int?          @map("br_database_id")
   electionDate            DateTime      @map("election_date")
@@ -39,9 +41,6 @@ model Race {
   subAreaValue            String?       @map("sub_area_value")
   // PositionElection
   frequency               Int[]         @map("frequency")
-  county                  County?       @relation(fields: [countyId], references: [id])
-  municipality            Municipality? @relation(fields: [municipalityId], references: [id])
-  candidacies             Candidacy[]
-  countyId                String?       @db.Uuid
-  municipalityId          String?       @db.Uuid
+  Place                   Place?        @relation(fields: [placeId], references: [id])
+  placeId                 String?       @db.Uuid
 }
