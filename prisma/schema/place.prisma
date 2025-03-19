@@ -7,7 +7,7 @@ model Place {
     slug         String   @map("slug") // This is each component of the geoId joined by hyphens city-county-state or district-state , where state is 2 chars
     geoId        String   @map("geoid")
     mtfcc        String?  @map("mtfcc")
-    state        String?  @db.Char(2)
+    state        String   @db.Char(2)
 
     // Fun Facts
     cityLargest           String? @map("city_largest")
