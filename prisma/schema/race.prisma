@@ -17,7 +17,7 @@ model Race {
   electionDate            DateTime      @map("election_date")
   electionDay             String        @map("election_day")
   positionSlug            String        @map("position_slug") // Slugify normalizedPosition.name
-  stateSlug               String?       @map("state_slug") // state-positionSlug
+  stateSlug               String        @map("state_slug") // state-positionSlug
   state                   String        @db.Char(2)
   // Position
   positionLevel           PositionLevel @map("position_level")
