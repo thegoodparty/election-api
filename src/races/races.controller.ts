@@ -7,29 +7,32 @@ import { ByCountyRaceDto, ByMunicipalityRaceDto, ByStateRaceDto, RacesByRaceDto 
 @Controller('races')
 export class RacesController {
   constructor(private readonly racesService: RacesService) {}
+
+  @Get()
+  async getRaces()
   
-  @Get('by-state')
-  async stateRacesByState(@Body() dto: ByStateRaceDto) {
-    return this.racesService.getStateRacesByState(dto)
-  }
+  // @Get('by-state')
+  // async stateRacesByState(@Body() dto: ByStateRaceDto) {
+  //   return this.racesService.getStateRacesByState(dto)
+  // }
 
-  @Get('all-state')
-  async allRacesByState(@Body() dto: ByStateRaceDto) {
-    return this.racesService.getAllRacesByState(dto)
-  }
+  // @Get('all-state')
+  // async allRacesByState(@Body() dto: ByStateRaceDto) {
+  //   return this.racesService.getAllRacesByState(dto)
+  // }
 
-  @Get('by-county')
-  async racesByCounty(@Body() dto: ByCountyRaceDto) {
-    return this.racesService.getRacesByCounty(dto)
-  }
+  // @Get('by-county')
+  // async racesByCounty(@Body() dto: ByCountyRaceDto) {
+  //   return this.racesService.getRacesByCounty(dto)
+  // }
 
-  @Get('by-municipality')
-  async racesByMunicipality(@Body() dto: ByMunicipalityRaceDto) {
-    return this.racesService.getRacesByMunicipality(dto)
-  }
+  // @Get('by-municipality')
+  // async racesByMunicipality(@Body() dto: ByMunicipalityRaceDto) {
+  //   return this.racesService.getRacesByMunicipality(dto)
+  // }
 
-  @Get('race')
-  async racesByRace(@Body() dto: RacesByRaceDto) {
-    return this.racesService.findRace(dto)
-  }
+  // @Get('race')
+  // async racesByRace(@Body() dto: RacesByRaceDto) {
+  //   return this.racesService.findRace(dto)
+  // }
 }

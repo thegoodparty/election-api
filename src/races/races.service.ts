@@ -10,271 +10,273 @@ import { extractLocation } from './util/extractLocation.util';
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
   constructor(private readonly prisma: PrismaService) { super() }
+
   
-  async getStateRacesByState(dto: ByStateRaceDto) {
-    const { state } = dto
-    const uppercaseState = state.toUpperCase()
+  
+//   async getStateRacesByState(dto: ByStateRaceDto) {
+//     const { state } = dto
+//     const uppercaseState = state.toUpperCase()
 
-    return this.model.findMany({
-      where: {
-        state: uppercaseState,
-        positionLevel: PositionLevel.STATE,
-        electionDate: {
-          lt: getStartOfTwoYearsFromNow(),
-          gt: new Date(),
-        }
-      },
-      orderBy: {
-        electionDate: 'asc'
-      },
-      distinct: ['positionSlug']
-    })
-  }
+//     return this.model.findMany({
+//       where: {
+//         state: uppercaseState,
+//         positionLevel: PositionLevel.STATE,
+//         electionDate: {
+//           lt: getStartOfTwoYearsFromNow(),
+//           gt: new Date(),
+//         }
+//       },
+//       orderBy: {
+//         electionDate: 'asc'
+//       },
+//       distinct: ['positionSlug']
+//     })
+//   }
 
-  async getAllRacesByState(dto: ByStateRaceDto) {
-    const { state } = dto
-    const upperState = state.toUpperCase()
+//   async getAllRacesByState(dto: ByStateRaceDto) {
+//     const { state } = dto
+//     const upperState = state.toUpperCase()
 
-    // Get all races regardless of positionLevel of the input state
-    return this.model.findMany({
-      where: {
-        state: upperState,
-        electionDate: {
-          lt: getStartOfTwoYearsFromNow(),
-          gt: new Date(),
-        },
-      },
-      orderBy: {
-        electionDate: 'asc'
-      },
-      distinct: ['positionSlug']
-    })
-  }
+//     // Get all races regardless of positionLevel of the input state
+//     return this.model.findMany({
+//       where: {
+//         state: upperState,
+//         electionDate: {
+//           lt: getStartOfTwoYearsFromNow(),
+//           gt: new Date(),
+//         },
+//       },
+//       orderBy: {
+//         electionDate: 'asc'
+//       },
+//       distinct: ['positionSlug']
+//     })
+//   }
 
-  async getRacesByCounty(dto: ByCountyRaceDto) {
-    const { state, county } = dto
-    const upperState = state.toUpperCase()
+//   async getRacesByCounty(dto: ByCountyRaceDto) {
+//     const { state, county } = dto
+//     const upperState = state.toUpperCase()
 
-    const countySlug = `${slugify(upperState, {lower: true})}-${slugify(county, {lower: true})}`
+//     const countySlug = `${slugify(upperState, {lower: true})}-${slugify(county, {lower: true})}`
 
-    const countyEntity = await this.prisma.county.findUnique({
-      where: { slug: countySlug}
-    })
+//     const countyEntity = await this.prisma.county.findUnique({
+//       where: { slug: countySlug}
+//     })
 
-    if (!countyEntity) {
-      throw new NotFoundException(`County with slug ${countySlug} not found`)
-    }
+//     if (!countyEntity) {
+//       throw new NotFoundException(`County with slug ${countySlug} not found`)
+//     }
 
-    return this.model.findMany({
-      where: {
-        countyId: countyEntity.id,
-        electionDate: {
-          lt: getStartOfTwoYearsFromNow(),
-          gt: new Date(),
-        },
-        positionLevel: PositionLevel.COUNTY
-      },
-      orderBy: {
-        electionDate: 'asc'
-      },
-      distinct: ['positionSlug'],
-      include: { county: true }
-    })
-  }
+//     return this.model.findMany({
+//       where: {
+//         countyId: countyEntity.id,
+//         electionDate: {
+//           lt: getStartOfTwoYearsFromNow(),
+//           gt: new Date(),
+//         },
+//         positionLevel: PositionLevel.COUNTY
+//       },
+//       orderBy: {
+//         electionDate: 'asc'
+//       },
+//       distinct: ['positionSlug'],
+//       include: { county: true }
+//     })
+//   }
 
-  async getRacesByMunicipality(dto: ByMunicipalityRaceDto) {
-    const { state, county, municipality } = dto
-    const upperState = state.toUpperCase()
+//   async getRacesByMunicipality(dto: ByMunicipalityRaceDto) {
+//     const { state, county, municipality } = dto
+//     const upperState = state.toUpperCase()
 
-    const municipalitySlug = `${slugify(upperState, { lower: true })}-${slugify(county, {
-      lower: true,
-    })}-${slugify(municipality, {
-      lower: true,
-    })}`
+//     const municipalitySlug = `${slugify(upperState, { lower: true })}-${slugify(county, {
+//       lower: true,
+//     })}-${slugify(municipality, {
+//       lower: true,
+//     })}`
 
-    const municipalityEntity = await this.prisma.municipality.findUnique({
-      where: { slug: municipalitySlug },
-      include: { county: true }
-    })
+//     const municipalityEntity = await this.prisma.municipality.findUnique({
+//       where: { slug: municipalitySlug },
+//       include: { county: true }
+//     })
 
-    if (!municipalityEntity) {
-      throw new NotFoundException(`Municipality with slug ${municipalitySlug} not found`)
-    }
+//     if (!municipalityEntity) {
+//       throw new NotFoundException(`Municipality with slug ${municipalitySlug} not found`)
+//     }
 
-    const races = await this.model.findMany({
-      where: {
-        municipalityId: municipalityEntity.id,
-        electionDate: {
-          lt: getStartOfTwoYearsFromNow(),
-          gt: new Date(),
-        },
-      },
-      orderBy: {
-        electionDate: 'asc'
-      },
-      distinct: ['positionSlug'],
-      include: { municipality: { include: { county: true } } }
-    })
+//     const races = await this.model.findMany({
+//       where: {
+//         municipalityId: municipalityEntity.id,
+//         electionDate: {
+//           lt: getStartOfTwoYearsFromNow(),
+//           gt: new Date(),
+//         },
+//       },
+//       orderBy: {
+//         electionDate: 'asc'
+//       },
+//       distinct: ['positionSlug'],
+//       include: { municipality: { include: { county: true } } }
+//     })
 
-    const shortCity = {
-      population: municipalityEntity.municipalityPopluation,
-      density: municipalityEntity.municipalityDensity,
-      incomeHouseholdMedian: municipalityEntity.municipalityIncomeHouseholdMedian,
-      unemploymentRate: municipalityEntity.municipalityUnemploymentRate,
-      homeValue: municipalityEntity.municipalityHomeValue,
-      countyName: municipalityEntity.county?.name
-    };
+//     const shortCity = {
+//       population: municipalityEntity.municipalityPopluation,
+//       density: municipalityEntity.municipalityDensity,
+//       incomeHouseholdMedian: municipalityEntity.municipalityIncomeHouseholdMedian,
+//       unemploymentRate: municipalityEntity.municipalityUnemploymentRate,
+//       homeValue: municipalityEntity.municipalityHomeValue,
+//       countyName: municipalityEntity.county?.name
+//     };
     
-    return {
-      races,
-      shortCity
-    }
-  }
+//     return {
+//       races,
+//       shortCity
+//     }
+//   }
 
-  async findRace(dto: RacesByRaceDto) {
-    const { state, county, municipality, positionSlug, id } = dto
+//   async findRace(dto: RacesByRaceDto) {
+//     const { state, county, municipality, positionSlug, id } = dto
 
-    if (id) {
-      const race = await this.model.findUnique({
-        where: { brHashId: id },
-        select: {
-          positionSlug: true,
-          positionName: true,
-          municipality: true,
-          county: true,
-          state: true,
-        }
-      })
+//     if (id) {
+//       const race = await this.model.findUnique({
+//         where: { brHashId: id },
+//         select: {
+//           positionSlug: true,
+//           positionName: true,
+//           municipality: true,
+//           county: true,
+//           state: true,
+//         }
+//       })
 
-      if (!race) {
-        throw new NotFoundException(`Race with id ${id} not found`)
-      }
+//       if (!race) {
+//         throw new NotFoundException(`Race with id ${id} not found`)
+//       }
 
-      return { race }
-    }
+//       return { race }
+//     }
 
-    let countyRecord: County | null = null
-    let municipalityRecord: Municipality | null = null
+//     let countyRecord: County | null = null
+//     let municipalityRecord: Municipality | null = null
 
-    if (county && state) {
-      const countySlug = `${slugify(state, { lower: true })}-${slugify(county, { lower: true })}`
-      countyRecord = await this.prisma.county.findUnique({
-        where: { slug: countySlug }
-      })
-    }
+//     if (county && state) {
+//       const countySlug = `${slugify(state, { lower: true })}-${slugify(county, { lower: true })}`
+//       countyRecord = await this.prisma.county.findUnique({
+//         where: { slug: countySlug }
+//       })
+//     }
 
-    if (municipality && countyRecord && state && county) {
-      const municipalitySlug = `${slugify(state, { lower: true })}-${slugify(county, { lower: true })}-${slugify(municipality, { lower: true })}`
-      municipalityRecord = await this.prisma.municipality.findUnique({
-        where: { slug: municipalitySlug}
-      })
-    }
+//     if (municipality && countyRecord && state && county) {
+//       const municipalitySlug = `${slugify(state, { lower: true })}-${slugify(county, { lower: true })}-${slugify(municipality, { lower: true })}`
+//       municipalityRecord = await this.prisma.municipality.findUnique({
+//         where: { slug: municipalitySlug}
+//       })
+//     }
 
-    const query: Prisma.RaceWhereInput = {
-      state: state?.toUpperCase(),
-      positionSlug,
-      electionDate: {
-        lt: getStartOfTwoYearsFromNow(),
-        gt: new Date()
-      }
-    }
-    if (municipalityRecord) {
-      query.municipalityId = municipalityRecord.id
-    } else if (countyRecord) {
-      query.countyId = countyRecord.id
-    }
+//     const query: Prisma.RaceWhereInput = {
+//       state: state?.toUpperCase(),
+//       positionSlug,
+//       electionDate: {
+//         lt: getStartOfTwoYearsFromNow(),
+//         gt: new Date()
+//       }
+//     }
+//     if (municipalityRecord) {
+//       query.municipalityId = municipalityRecord.id
+//     } else if (countyRecord) {
+//       query.countyId = countyRecord.id
+//     }
 
-    const races = await this.model.findMany({
-      where: query,
-      orderBy: { electionDate: 'asc'},
-      include: { municipality: true, county: true}
-    })
-    if (races.length === 0) {
-      return { race: null}
-    }
+//     const races = await this.model.findMany({
+//       where: query,
+//       orderBy: { electionDate: 'asc'},
+//       include: { municipality: true, county: true}
+//     })
+//     if (races.length === 0) {
+//       return { race: null}
+//     }
 
-    // We're choosing the first race, is this the best way? Somewhat arbitary?
-    let race = races[0]
-    // Probably should look for more than just local
-    if (race.positionLevel === PositionLevel.LOCAL && !race.locationName) {
-      for (const r of races) {
-        if (r.locationName) {
-          race = r
-          break
-        }
-      }
+//     // We're choosing the first race, is this the best way? Somewhat arbitary?
+//     let race = races[0]
+//     // Probably should look for more than just local
+//     if (race.positionLevel === PositionLevel.LOCAL && !race.locationName) {
+//       for (const r of races) {
+//         if (r.locationName) {
+//           race = r
+//           break
+//         }
+//       }
     
-    const positions = races.map(r => r.positionName)
+//     const positions = races.map(r => r.positionName)
 
-    const rowResult = extractLocation({level: race.positionLevel, state: race.state, positionName: race.positionName, subAreaValue: race.subAreaValue})
-    if (!rowResult) return
-    const { name, level } = rowResult
+//     const rowResult = extractLocation({level: race.positionLevel, state: race.state, positionName: race.positionName, subAreaValue: race.subAreaValue})
+//     if (!rowResult) return
+//     const { name, level } = rowResult
 
-    // Find other races within the same municipality or county.
-    let otherRaces: Array<{ name: string; slug: string }> = [];
-    let fetchedOtherRaces: any[] = [];
-    if (race.municipality) {
-      fetchedOtherRaces = await this.model.findMany({
-        where: { municipalityId: race.municipality.id },
-      });
-    } else if (race.county) {
-      fetchedOtherRaces = await this.model.findMany({
-        where: { countyId: race.county.id },
-      });
-    }
+//     // Find other races within the same municipality or county.
+//     let otherRaces: Array<{ name: string; slug: string }> = [];
+//     let fetchedOtherRaces: any[] = [];
+//     if (race.municipality) {
+//       fetchedOtherRaces = await this.model.findMany({
+//         where: { municipalityId: race.municipality.id },
+//       });
+//     } else if (race.county) {
+//       fetchedOtherRaces = await this.model.findMany({
+//         where: { countyId: race.county.id },
+//       });
+//     }
 
-    const dedups: Record<string, boolean> = {};
-    otherRaces = fetchedOtherRaces
-      .map((otherRace) => {
-        if (!dedups[otherRace.positionSlug]) {
-          dedups[otherRace.positionSlug] = true;
-          return {
-            name: otherRace.data.normalized_position_name,
-            slug: otherRace.positionSlug,
-          };
-        }
-        return null;
-      })
-      .filter((r): r is { name: string; slug: string } => r !== null);
+//     const dedups: Record<string, boolean> = {};
+//     otherRaces = fetchedOtherRaces
+//       .map((otherRace) => {
+//         if (!dedups[otherRace.positionSlug]) {
+//           dedups[otherRace.positionSlug] = true;
+//           return {
+//             name: otherRace.data.normalized_position_name,
+//             slug: otherRace.positionSlug,
+//           };
+//         }
+//         return null;
+//       })
+//       .filter((r): r is { name: string; slug: string } => r !== null);
 
-    // Build the filtered race object.
-    const filtered = {
-      hashId: race.brHashId,
-      positionName: race.positionName,
-      locationName: name,
-      electionDate: race.electionDay,
-      state: race.state,
-      level: race.positionLevel,
-      partisanType: race.partisanType,
-      salary: race.salary,
-      employmentType: race.employmentType,
-      filingDateStart: race.filingDateStart,
-      filingDateEnd: race.filingDateEnd,
-      normalizedPositionName: race.normalizedPositionName,
-      positionDescription: race.positionDescription,
-      frequency: race.frequency,
-      subAreaName: race.subAreaName,
-      subAreaValue: race.subAreaValue,
-      filingOfficeAddress: race.filingOfficeAddress,
-      filingPhoneNumber: race.filingPhoneNumber,
-      paperworkInstructions: race.paperworkInstructions,
-      filingRequirements: race.filingRequirements,
-      eligibilityRequirements: race.eligibilityRequirements,
-      isRunoff: race.isRunoff,
-      isPrimary: race.isPrimary,
-      municipality: race.municipality
-        ? { name: race.municipality.name, slug: race.municipality.slug }
-        : null,
-      county: race.county
-        ? { name: race.county.name, slug: race.county.slug }
-        : null,
-    }
+//     // Build the filtered race object.
+//     const filtered = {
+//       hashId: race.brHashId,
+//       positionName: race.positionName,
+//       locationName: name,
+//       electionDate: race.electionDay,
+//       state: race.state,
+//       level: race.positionLevel,
+//       partisanType: race.partisanType,
+//       salary: race.salary,
+//       employmentType: race.employmentType,
+//       filingDateStart: race.filingDateStart,
+//       filingDateEnd: race.filingDateEnd,
+//       normalizedPositionName: race.normalizedPositionName,
+//       positionDescription: race.positionDescription,
+//       frequency: race.frequency,
+//       subAreaName: race.subAreaName,
+//       subAreaValue: race.subAreaValue,
+//       filingOfficeAddress: race.filingOfficeAddress,
+//       filingPhoneNumber: race.filingPhoneNumber,
+//       paperworkInstructions: race.paperworkInstructions,
+//       filingRequirements: race.filingRequirements,
+//       eligibilityRequirements: race.eligibilityRequirements,
+//       isRunoff: race.isRunoff,
+//       isPrimary: race.isPrimary,
+//       municipality: race.municipality
+//         ? { name: race.municipality.name, slug: race.municipality.slug }
+//         : null,
+//       county: race.county
+//         ? { name: race.county.name, slug: race.county.slug }
+//         : null,
+//     }
 
-    return {
-      race: filtered,
-      otherRaces,
-      positions,
-    };
-  }
-}
+//     return {
+//       race: filtered,
+//       otherRaces,
+//       positions,
+//     };
+//   }
+// }
 }
