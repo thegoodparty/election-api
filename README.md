@@ -35,3 +35,6 @@ Check out a few resources that may come in handy when working with NestJS:
 - Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
 - To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
 - Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+### Resources
+https://github.com/kjhealy/fips-codes/tree/master
