@@ -16,7 +16,7 @@ export class RacesController {
     @Param('id') id: string,
     @Query('includePlace') includePlace: boolean = false
   ) {
-    return this.racesService.findRaceById(id, { includePlace })
+    return this.racesService.findRaceById(id, includePlace )
   }
   
   // @Get('by-state')

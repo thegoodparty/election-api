@@ -19,8 +19,10 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
   }
 
   async findRaceById(id: string, includePlace: boolean) {
-
-    return this.model.findFirst({ where: { id } })
+    const race = includePlace 
+      ? this.model.findFirst({ where: { id } })
+      : this.model.findFirst({ where: { id } }, include: Place)
+    
   }
   
 //   async getStateRacesByState(dto: ByStateRaceDto) {
