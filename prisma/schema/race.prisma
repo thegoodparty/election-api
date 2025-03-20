@@ -30,7 +30,6 @@ model Race {
   isRunoff                Boolean?      @map("is_runoff")
   isPrimary               Boolean?      @map("is_primary")
   partisanType            String?       @map("partisan_type")
-  locationName            String?       @map("location_name")
   filingDateStart         String?       @map("filing_date_start")
   filingDateEnd           String?       @map("filing_date_end")
   employmentType          String?       @map("employment_type")
