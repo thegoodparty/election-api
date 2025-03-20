@@ -1,15 +1,23 @@
-import { BadRequestException, Body, Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { RacesService } from './races.service'
-import { PositionLevel } from '@prisma/client'
-import slugify from 'slugify'
-import { ByCountyRaceDto, ByMunicipalityRaceDto, ByStateRaceDto, RacesByRaceDto } from './races.schema'
+import { RaceFilterDto } from './races.schema'
 
 @Controller('races')
 export class RacesController {
   constructor(private readonly racesService: RacesService) {}
 
   @Get()
-  async getRaces()
+  async getRaces(@Query() filterDto: RaceFilterDto) {
+    return this.racesService.findRaces(filterDto)
+  }
+
+  @Get(':id')
+  async getRaceById(
+    @Param('id') id: string,
+    @Query('includePlace') includePlace: boolean = false
+  ) {
+    return this.racesService.findRaceById(id, { includePlace })
+  }
   
   // @Get('by-state')
   // async stateRacesByState(@Body() dto: ByStateRaceDto) {

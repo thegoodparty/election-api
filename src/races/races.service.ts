@@ -1,17 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { County, Municipality, PositionLevel, Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util';
-import { getStartOfTwoYearsFromNow } from 'src/shared/util/dates.util';
-import { ByCountyRaceDto, ByMunicipalityRaceDto, ByStateRaceDto, RacesByRaceDto } from './races.schema';
-import slugify from 'slugify'
+import { RaceFilterDto } from './races.schema';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { extractLocation } from './util/extractLocation.util';
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
   constructor(private readonly prisma: PrismaService) { super() }
 
-  
+  async findRaces(filterDto: RaceFilterDto) {
+    const { 
+      includePlace, 
+      state, 
+      placeId, placeSlug, positionLevel, positionSlug, 
+      electionDateStart, electionDateEnd, isPrimary, isRunoff 
+    } = filterDto
+
+    
+  }
+
+  async findRaceById(id: string, includePlace: boolean) {
+
+    return this.model.findFirst({ where: { id } })
+  }
   
 //   async getStateRacesByState(dto: ByStateRaceDto) {
 //     const { state } = dto
