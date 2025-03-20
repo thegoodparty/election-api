@@ -15,7 +15,6 @@ model Race {
   brHashId                String?       @map("br_hash_id")
   brDatabaseId            Int?          @map("br_database_id")
   electionDate            DateTime      @map("election_date")
-  electionDay             String        @map("election_day")
   positionSlug            String        @map("position_slug") // Slugify normalizedPosition.name
   stateSlug               String        @map("state_slug") // state-positionSlug
   state                   String        @db.Char(2)
@@ -31,7 +30,6 @@ model Race {
   isRunoff                Boolean?      @map("is_runoff")
   isPrimary               Boolean?      @map("is_primary")
   partisanType            String?       @map("partisan_type")
-  locationName            String?       @map("location_name")
   filingDateStart         String?       @map("filing_date_start")
   filingDateEnd           String?       @map("filing_date_end")
   employmentType          String?       @map("employment_type")
