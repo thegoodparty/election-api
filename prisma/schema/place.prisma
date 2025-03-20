@@ -19,9 +19,9 @@ model Place {
     homeValue             Int?    @map("home_value")
 
     // Relations
-    Race    Race[]
+    Race     Race[]
     // Recursive relationships
-    lower   Place[] @relation("PlaceHierarchy")
-    upper   Place?  @relation("PlaceHierarchy", fields: [upperId], references: [id])
-    upperId String? @db.Uuid
+    children Place[] @relation("PlaceHierarchy")
+    parent   Place?  @relation("PlaceHierarchy", fields: [parentId], references: [id])
+    parentId String? @db.Uuid
 }
