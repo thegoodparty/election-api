@@ -1,36 +1,27 @@
 model Place {
-  id                              String    @id @db.Uuid
-  brHashId                        String?   @map("br_hash_id")
-  brDatabaseId                    Int?      @map("br_database_id")
-  createdAt                       DateTime  @map("created_at")
-  updatedAt                       DateTime  @map("updated_at")
-  slug                            String
-  
-  name                            String
-  state                           String
-  geoId                           String?   @map("geo_id")
-  mtfcc                           String?
-  timezone                        String?
-  primaryType                     String?   @map("primary_type")
-  
-  canVoteInPrimaryWhen18ByGeneral Boolean?  @map("can_vote_in_primary_when_18_by_general")
-  dissolved                       Boolean   @default(false)
-  hasVoteByMail                   Boolean   @map("has_vote_by_mail")
-  isPrintingEnabled               Boolean   @map("is_printing_enabled")
-  isReceiverOfVoteByMailRequests  Boolean   @map("is_receiver_of_vote_by_mail_requests")
-  
-  // Many-to-many with position through placePosition join table
-  placePositions                  PlacePosition[]
-  
-  // One place -> many contacts
-  contacts                        Contact[]
-  
-  // One place -> many URLs
-  urls                            Url[]
-  
-  // Forms and Addresses not implemented yet
-  // addresses                       address[]
-  // forms                           form[]
-  
-  @@map("place")
-} 
+    id           String   @id @map("id") @db.Uuid
+    createdAt    DateTime @default(now()) @map("created_at")
+    updatedAt    DateTime @updatedAt @map("updated_at")
+    brDatabaseId Int      @map("br_database_id")
+    name         String   @map("name")
+    slug         String   @map("slug") // This is each component of the geoId joined by hyphens city-county-state or district-state , where state is 2 chars
+    geoId        String   @map("geoid")
+    mtfcc        String?  @map("mtfcc")
+    state        String   @db.Char(2)
+
+    // Fun Facts
+    cityLargest           String? @map("city_largest")
+    countyName            String? @map("county_name")
+    popluation            Int?    @map("popluation")
+    density               Float?  @map("density")
+    incomeHouseholdMedian Int?    @map("income_household_median")
+    unemploymentRate      Float?  @map("unemployment_rate")
+    homeValue             Int?    @map("home_value")
+
+    // Relations
+    Race     Race[]
+    // Recursive relationships
+    children Place[] @relation("PlaceHierarchy")
+    parent   Place?  @relation("PlaceHierarchy", fields: [parentId], references: [id])
+    parentId String? @db.Uuid
+}
