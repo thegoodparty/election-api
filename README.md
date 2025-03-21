@@ -8,9 +8,9 @@ This is our API to serve the [GoodParty.org](https://goodparty.org) public elect
 
 ```bash
 $ npm install
+```
 
 Install the [node-gyp](https://github.com/nodejs/node-gyp#on-unix) prerequisites for your operating system
-```
 
 ## Compile and run the project
 

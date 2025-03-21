@@ -14,8 +14,8 @@ export class RacesController {
   @Get(':id')
   async getRaceById(
     @Param('id') id: string,
-    @Query('includePlace') includePlace: boolean = false
+    @Query('includePlace') includePlace: boolean = false,
   ) {
-    return this.racesService.findRaceById(id, includePlace )
+    return this.racesService.findRaceById(id, includePlace)
   }
 }

@@ -33,7 +33,7 @@ const bootstrap = async () => {
     },
   )
   app.setGlobalPrefix('v1')
-  app.useGlobalPipes(new ZodValidationPipe)
+  app.useGlobalPipes(new ZodValidationPipe())
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -66,4 +66,3 @@ bootstrap().then(() => {
     `App bootstrap successful => ${APP_LISTEN_CONFIG.host}:${APP_LISTEN_CONFIG.port}`,
   )
 })
-

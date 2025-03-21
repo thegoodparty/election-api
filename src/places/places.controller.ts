@@ -1,6 +1,6 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
-import { PlaceFilterDto } from "./places.schema";
-import { PlacesService } from "./places.service";
+import { Controller, Get, Param, Query } from '@nestjs/common'
+import { PlaceFilterDto } from './places.schema'
+import { PlacesService } from './places.service'
 
 @Controller('places')
 export class PlaceController {
@@ -14,8 +14,6 @@ export class PlaceController {
   @Get(':id')
   async getPlaceById(
     @Param('id') id: string,
-    @Query('includeRace') includeRace: boolean = false
-  ) {
-
-  }
+    @Query('includeRace') includeRace: boolean = false,
+  ) {}
 }
