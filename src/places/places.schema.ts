@@ -28,7 +28,8 @@ const placeFilterSchema = z.object({
     (val) => (val === undefined ? undefined : parseInt(String(val), 10)),
     z.number().optional().default(1),
   ),
-  columns: z.string().optional(),
+  placeColumns: z.string().optional(),
+  raceColumns: z.string().optional()
 })
 
 export class PlaceFilterDto extends createZodDto(placeFilterSchema) {}
