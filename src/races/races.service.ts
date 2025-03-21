@@ -20,6 +20,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
 
     const where: Prisma.RaceWhereInput = {
       ...(state ? { state } : {}),
+      // TODO: Do I really need a separate findbyid endpoint? Or should I remove placeId from the dto?
       ...(placeId ? { placeId } : {}),
       ...(placeSlug ? { placeSlug } : {}),
       ...(positionLevel ? { positionLevel } : {}),
@@ -40,8 +41,8 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
 
   async findRaceById(id: string, includePlace: boolean) {
     const race = includePlace 
-      ? this.model.findFirst({ where: { id } })
-      : this.model.findFirst({ where: { id }, include: {Place: true} })
+      ? this.model.findFirst({ where: { id }, include: { Place: true } })
+      : this.model.findFirst({ where: { id } })
     return race
   } 
 }
