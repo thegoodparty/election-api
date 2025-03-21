@@ -1,6 +1,12 @@
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import unusedImports from 'eslint-plugin-unused-imports';
+import safeql from '@ts-safeql/eslint-plugin/config'
+
+const DATABASE_URL = process.env.DATABASE_URL
+if (!DATABASE_URL) {
+  throw new Error('Please set a DATABASE_URL in your .env')
+}
 
 export default tseslint.config(
   {
@@ -39,4 +45,8 @@ export default tseslint.config(
     },
     ignores: ['node_modules/**', 'dist/**'],
   },
-);
+  safeql.configs.connections({
+    databaseUrl: DATABASE_URL,
+    targets: [{ tag: 'sql' }]
+  })
+)
