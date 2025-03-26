@@ -64,4 +64,3 @@ bootstrap().then(() => {
     `App bootstrap successful => ${APP_LISTEN_CONFIG.host}:${APP_LISTEN_CONFIG.port}`,
   )
 })
-
