@@ -29,7 +29,7 @@ ENV DATABASE_URL=$DATABASE_URL
 
 # Note: the CodeBuild project must be configured to be on the VPC.
 # Run the migrations for the database
-RUN npm run migrate:deploy
+# RUN npm run migrate:deploy
 
 # Generate Prisma client
 RUN npm run generate
@@ -56,8 +56,12 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
+# Copy the entrypoint script and ensure it's executable
+COPY deploy/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Set the NODE_ENV to production
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["node", "dist/src/main"]
+# Use the entrypoint script as the container's entrypoint
+ENTRYPOINT [ "/app/entrypoint.sh" ]

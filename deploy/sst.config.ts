@@ -25,7 +25,7 @@ export default $config({
       $app.stage !== 'develop'
     ) {
       throw new Error(
-        'Invalid stage. Only master, QA, and develop are supported.',
+        'Invalid stage. Only master, qa, and develop are supported.',
       )
     }
 
@@ -154,7 +154,13 @@ export default $config({
         HOST: '0.0.0.0',
         LOG_LEVEL: 'debug',
         CORS_ORIGIN:
-          $app.stage === 'master' ? 'goodparty.org' : 'dev.goodparty.org',
+          $app.stage === 'master'
+            ? 'goodparty.org'
+            : $app.stage === 'develop'
+              ? 'dev.goodparty.org'
+              : $app.stage === 'qa'
+                ? 'qa.goodparty.org'
+                : '',
         AWS_REGION: 'us-west-2',
         WEBAPP_ROOT_URL: webAppRootUrl,
         ...secretsJson,
@@ -165,8 +171,6 @@ export default $config({
         args: {
           DOCKER_BUILDKIT: '1',
           CACHEBUST: '1',
-          DOCKER_USERNAME: process.env.DOCKER_USERNAME || '',
-          DOCKER_PASSWORD: process.env.DOCKER_PASSWORD || '',
           DATABASE_URL: dbUrl,
           STAGE: $app.stage,
         },
@@ -214,10 +218,22 @@ export default $config({
     // Changing it will cause Pulumi/SST to try to create a new RDS cluster and delete the old one
     // which would result in data loss. This is because the clusterIdentifier is part of the cluster's
     // identity and cannot be modified in place.
-    let rdsCluster: aws.rds.Cluster | undefined
-    if ($app.stage === 'master') {
+    let rdsCluster: aws.rds.Cluster
+    if (
+      $app.stage === 'master' ||
+      $app.stage === 'qa' ||
+      $app.stage === 'develop'
+    ) {
+      // Create a new cluster for each stage
+      const clusterIdentifier =
+        $app.stage === 'master'
+          ? 'election-api-db-prod'
+          : $app.stage === 'qa'
+            ? 'election-api-db-qa'
+            : 'election-api-db-develop'
+
       rdsCluster = new aws.rds.Cluster('rdsCluster', {
-        clusterIdentifier: 'election-api-db-prod',
+        clusterIdentifier,
         engine: aws.rds.EngineType.AuroraPostgresql,
         engineMode: aws.rds.EngineMode.Provisioned,
         engineVersion: '16.2',
@@ -234,27 +250,8 @@ export default $config({
           minCapacity: $app.stage === 'master' ? 1.0 : 0.5,
         },
       })
-    } else if ($app.stage === 'qa') {
-      rdsCluster = new aws.rds.Cluster('rdsCluster', {
-        clusterIdentifier: 'election-api-db-qa',
-        engine: aws.rds.EngineType.AuroraPostgresql,
-        engineMode: aws.rds.EngineMode.Provisioned,
-        engineVersion: '16.2',
-        databaseName: dbName,
-        masterUsername: dbUser,
-        masterPassword: dbPassword,
-        dbSubnetGroupName: subnetGroup.name,
-        vpcSecurityGroupIds: [rdsSecurityGroup.id],
-        storageEncrypted: true,
-        deletionProtection: true,
-        finalSnapshotIdentifier: `gp-api-db-${$app.stage}-final-snapshot`,
-        serverlessv2ScalingConfiguration: {
-          maxCapacity: 64,
-          minCapacity: 0.5,
-        },
-      })
     } else {
-      rdsCluster = aws.rds.Cluster.get('rdsCluster', 'election-api-db')
+      throw new Error('Unsupported stage')
     }
 
     new aws.rds.ClusterInstance('rdsInstance', {
@@ -272,7 +269,7 @@ export default $config({
     })
 
     new aws.codebuild.Project('election-api-deploy-build', {
-      name: `election-api-deploy-build${$app.stage}`,
+      name: `election-api-deploy-build-${$app.stage}`,
       serviceRole: codeBuildRole.arn,
       environment: {
         computeType: 'BUILD_GENERAL1_LARGE',
@@ -324,7 +321,6 @@ export default $config({
               'codebuild:BatchGetBuilds',
               'codebuild:ListBuildsForProject',
             ],
-            // TODO: What is this hard coded number and what should it be for the new API?
             Resource: 'arn:aws:codebuild:us-west:333022194791:project/',
           },
           {
@@ -335,7 +331,6 @@ export default $config({
           {
             Effect: 'Allow',
             Action: ['logs:GetLogEvents', 'logs:FilterLogEvents'],
-            // TODO: Again, what is this hardcoded number
             Resource: pulumi.interpolate`arn:aws:logs:us-west-2:333022194791:log-group:/aws/codebuild/*`,
           },
         ],
