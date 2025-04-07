@@ -53,7 +53,7 @@ export default $config({
     }
 
     // Each stage will get its own Cluster.
-    const cluster = new sst.aws.Cluster('fargate', { vpc })
+    const cluster = new sst.aws.Cluster('fargateCluster', { vpc })
 
     let dbUrl: string | undefined
     let dbName: string | undefined
