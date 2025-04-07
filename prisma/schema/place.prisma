@@ -1,13 +1,13 @@
 model Place {
-    id           String   @id @map("id") @db.Uuid
-    createdAt    DateTime @default(now()) @map("created_at")
-    updatedAt    DateTime @updatedAt @map("updated_at")
-    brDatabaseId Int      @map("br_database_id")
-    name         String   @map("name")
-    slug         String   @map("slug") // This is each component of the geoId joined by hyphens city-county-state or district-state , where state is 2 chars
-    geoId        String   @map("geoid")
-    mtfcc        String?  @map("mtfcc")
-    state        String   @db.Char(2)
+    id                   String   @id @map("id") @db.Uuid
+    createdAt            DateTime @default(now()) @map("created_at")
+    updatedAt            DateTime @updatedAt @map("updated_at")
+    brPositionDatabaseId Int      @map("br_position_database_id")
+    name                 String   @map("name")
+    slug                 String   @map("slug") // This is each component of the geoId joined by hyphens city-county-state or district-state , where state is 2 chars
+    geoId                String   @map("geoid")
+    mtfcc                String?  @map("mtfcc")
+    state                String   @db.Char(2)
 
     // Fun Facts
     cityLargest           String? @map("city_largest")
@@ -19,7 +19,7 @@ model Place {
     homeValue             Int?    @map("home_value")
 
     // Relations
-    Race     Race[]
+    Races    Race[]
     // Recursive relationships
     children Place[] @relation("PlaceHierarchy")
     parent   Place?  @relation("PlaceHierarchy", fields: [parentId], references: [id])
