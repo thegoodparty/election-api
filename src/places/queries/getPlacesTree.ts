@@ -1,7 +1,8 @@
 import { sql } from '@ts-safeql/sql-tag'
 import { PlaceFilterDto } from '../places.schema'
+import { joinSqlTags, SqlFragment } from 'src/shared/util/joinSqlTags.util'
 
-export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto) {
+export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto): SqlFragment {
   const {
     includeChildren = true,
     includeParent = false,
@@ -11,27 +12,33 @@ export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto) {
     name,
     mtfcc,
     placeColumns,
-    raceColumns
+    raceColumns,
   } = filterDto
 
-  const additionalPlaceColumns = placeColumns ? placeColumns.split(',').map(col => col.trim()) : []
-  const raceColumnsArray = raceColumns ? raceColumns.split(',').map(col => col.trim()) : []
+  const additionalPlaceColumns = placeColumns
+    ? placeColumns.split(',').map((col) => col.trim())
+    : []
+  const raceColumnsArray = raceColumns
+    ? raceColumns.split(',').map((col) => col.trim())
+    : []
 
   const baseColumns = ['id', 'name', 'slug']
-  const columnsToSelect = [...new Set([...baseColumns, ...additionalPlaceColumns])]
+  const columnsToSelect = [
+    ...new Set([...baseColumns, ...additionalPlaceColumns]),
+  ]
   const columnString = columnsToSelect.join(', ')
   const recursiveColumnString = columnsToSelect
     .map((col) => `p.${col}`)
     .join(', ')
-  
-  const conditions = [
-    state ? `state = '${state}'` : null,
-    name ? `name LIKE '${name}'` : null,
-    mtfcc ? `mtfcc = '${mtfcc}'` : null
-  ].filter(Boolean)
-  const whereConditions = conditions.join(' AND ') || 'true'
 
-  const fragments: any = []
+  const conditions = [
+    state ? sql`state = ${state}` : null,
+    name ? sql`name LIKE ${name}` : null,
+    mtfcc ? sql`mtfcc = ${mtfcc}` : null,
+  ].filter(Boolean)
+  const whereConditions = joinSqlTags(conditions, ' AND ') || sql`true`
+
+  const fragments: SqlFragment[] = []
 
   // Base clause
   fragments.push(sql`
@@ -59,15 +66,18 @@ export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto) {
   }
 
   let query = sql`WITH RECURSIVE place_hierarchy AS (
-    ${sql.join(fragments, sql` UNION ALL `)}
+    ${joinSqlTags(fragments, sql` UNION ALL `)}
   )`
 
   const finalSelectColumns = `${columnString}, depth, relation_type`
 
   if (includeRaces) {
     const defaultRaceColumns = ['id', 'positionSlug']
-    const selectedRaceColumns = raceColumnsArray.length > 0 ? raceColumnsArray : defaultRaceColumns
-    const raceSelectColumns = selectedRaceColumns.map(col => `r.${col}`).join(', ')
+    const selectedRaceColumns =
+      raceColumnsArray.length > 0 ? raceColumnsArray : defaultRaceColumns
+    const raceSelectColumns = selectedRaceColumns
+      .map((col) => `r.${col}`)
+      .join(', ')
     query = sql`${query}
       SELECT ${finalSelectColumns}, ${raceSelectColumns}
       FROM place_hierarchy ph

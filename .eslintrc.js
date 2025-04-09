@@ -53,8 +53,8 @@ module.exports = {
               // this will lint syntax that matches
               // `prisma.$queryRaw` or `prisma.$executeRaw`
               {
-                "tag": ["prisma.+($queryRaw|$executeRaw)"],
-                //"tag": "sql",
+                //"tag": ["prisma.+($queryRaw|$executeRaw)"],
+                "tag": ["sql", "prisma.+($queryRaw|$executeRaw)"],
                 "transform": "{type}[]"
               }
             ]
