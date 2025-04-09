@@ -1,6 +1,4 @@
 ///  <reference types="./.sst/platform/config.d.ts" />
-import * as aws from '@pulumi/aws'
-import * as pulumi from '@pulumi/pulumi'
 
 export default $config({
   app(input) {
@@ -17,6 +15,8 @@ export default $config({
     }
   },
   async run() {
+    const aws = await import('@pulumi/aws')
+    const pulumi = await import('@pulumi/pulumi')
     const vpc = sst.aws.Vpc.get('api', 'vpc-0763fa52c32ebcf6a')
 
     if (
@@ -53,7 +53,14 @@ export default $config({
     }
 
     // Each stage will get its own Cluster.
-    const cluster = new sst.aws.Cluster('fargate', { vpc })
+    const cluster = new sst.aws.Cluster('fargate', {
+      vpc,
+      transform: {
+        cluster: (clusterArgs, opts, name) => {
+          clusterArgs.name = `election-api-${$app.stage}-fargateCluster`
+        },
+      },
+    })
 
     let dbUrl: string | undefined
     let dbName: string | undefined
