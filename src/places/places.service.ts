@@ -18,6 +18,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       depth,
       state,
       name,
+      slug,
       mtfcc,
     } = filterDto
 
@@ -30,6 +31,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
         ...(state ? { state } : {}),
         ...(name ? { name } : {}),
         ...(mtfcc ? { mtfcc } : {}),
+        ...(slug ? { slug } : {})
       }
 
       const include: Prisma.PlaceInclude = includeRaces ? { Races: true } : {}

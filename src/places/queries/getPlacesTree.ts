@@ -10,6 +10,7 @@ export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto): SqlFragment 
     depth = 1,
     state,
     name,
+    slug,
     mtfcc,
     placeColumns,
     raceColumns,
@@ -35,6 +36,7 @@ export function buildGetPlacesTreeQuery(filterDto: PlaceFilterDto): SqlFragment 
     state ? sql`state = ${state}` : null,
     name ? sql`name LIKE ${name}` : null,
     mtfcc ? sql`mtfcc = ${mtfcc}` : null,
+    slug ? sql`slug = ${slug}` : null,
   ].filter(Boolean)
   const whereConditions = joinSqlTags(conditions, ' AND ') || sql`true`
 
