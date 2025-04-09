@@ -6,5 +6,8 @@
     "deleteOutDir": true,
     "assets": ["prisma/**/*"],
     "watchAssets": true
+  },
+  "generateOptions": {
+    "spec": false
   }
 }

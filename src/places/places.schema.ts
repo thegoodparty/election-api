@@ -11,6 +11,7 @@ const placeFilterSchema = z.object({
       return STATE_CODES.includes(val.toUpperCase())
     }, 'Invalid state code'),
   name: z.string().optional(),
+  slug: z.string().optional(),
   mtfcc: z.string().optional(),
   includeChildren: z.preprocess(
     (val) => val === 'true' || val === '1' || val === true,

@@ -1,3 +1,4 @@
+import '../../module-alias'
 import './configrc'
 import { NestFactory } from '@nestjs/core'
 import {
