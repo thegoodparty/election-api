@@ -27,7 +27,7 @@ CREATE TABLE "Place" (
     "id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "br_database_id" INTEGER NOT NULL,
+    "br_position_database_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "geoid" TEXT NOT NULL,
@@ -35,12 +35,12 @@ CREATE TABLE "Place" (
     "state" CHAR(2) NOT NULL,
     "city_largest" TEXT,
     "county_name" TEXT,
-    "popluation" INTEGER,
+    "population" INTEGER,
     "density" DOUBLE PRECISION,
     "income_household_median" INTEGER,
     "unemployment_rate" DOUBLE PRECISION,
     "home_value" INTEGER,
-    "parentId" UUID,
+    "parent_id" UUID,
 
     CONSTRAINT "Place_pkey" PRIMARY KEY ("id")
 );
@@ -101,7 +101,7 @@ CREATE TABLE "Race" (
 CREATE UNIQUE INDEX "projected_turnout_state_office_type_office_name_year_electi_key" ON "projected_turnout"("state", "office_type", "office_name", "year", "electionCode");
 
 -- AddForeignKey
-ALTER TABLE "Place" ADD CONSTRAINT "Place_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Place"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Place" ADD CONSTRAINT "Place_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "Place"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Race" ADD CONSTRAINT "Race_placeId_fkey" FOREIGN KEY ("placeId") REFERENCES "Place"("id") ON DELETE SET NULL ON UPDATE CASCADE;
