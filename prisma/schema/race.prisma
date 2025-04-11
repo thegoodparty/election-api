@@ -41,4 +41,5 @@ model Race {
   frequency               Int[]         @map("frequency")
   Place                   Place?        @relation(fields: [placeId], references: [id])
   placeId                 String?       @db.Uuid
+  candidacy               Candidacy?
 }
