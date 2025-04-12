@@ -22,13 +22,11 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       electionDateEnd,
       isPrimary,
       isRunoff,
+      raceColumns,
     } = filterDto
-
-    const include: Prisma.RaceInclude = includePlace ? { Place: true } : {}
 
     const where: Prisma.RaceWhereInput = {
       ...(state ? { state } : {}),
-      // TODO: Do I really need a separate findbyid endpoint? Or should I remove placeId from the dto?
       ...(placeId ? { placeId } : {}),
       ...(placeSlug ? { placeSlug } : {}),
       ...(positionLevel ? { positionLevel } : {}),
@@ -47,13 +45,24 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         : {}),
     }
 
-    return this.model.findMany({ where, include })
-  }
+    if (raceColumns) {
+      const select: Prisma.RaceSelect = {}
+      raceColumns.split(',').map(col => col.trim()).forEach(col => {
+        select[col] = true
+      })
 
-  async findRaceById(id: string, includePlace: boolean) {
-    const race = includePlace
-      ? this.model.findFirst({ where: { id }, include: { Place: true } })
-      : this.model.findFirst({ where: { id } })
-    return race
+      if (includePlace) {
+        select.Place = true
+      }
+
+      return this.model.findMany({ where, select })
+    } else {
+      const include: Prisma.RaceInclude = {}
+
+      if (includePlace) {
+        include.Place = true
+      }
+      return this.model.findMany({ where, include })
+    }
   }
 }

@@ -10,10 +10,4 @@ export class PlaceController {
   async getPlaces(@Query() filterDto: PlaceFilterDto) {
     return this.placesService.getPlaces(filterDto)
   }
-
-  // @Get(':id')
-  // async getPlaceById(
-  //   @Param('id') id: string,
-  //   @Query('includeRace') includeRace: boolean = false,
-  // ) {}
 }

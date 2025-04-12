@@ -10,12 +10,4 @@ export class RacesController {
   async getRaces(@Query() filterDto: RaceFilterDto) {
     return this.racesService.findRaces(filterDto)
   }
-
-  @Get(':id')
-  async getRaceById(
-    @Param('id') id: string,
-    @Query('includePlace') includePlace: boolean = false,
-  ) {
-    return this.racesService.findRaceById(id, includePlace)
-  }
 }

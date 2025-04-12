@@ -1,6 +1,9 @@
+import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { z } from 'zod'
+
+const raceColumns = Object.values(Prisma.RaceScalarFieldEnum) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 
 const positionLevelEnum = z.enum([
   'CITY',
@@ -38,6 +41,14 @@ const raceFilterSchema = z.object({
     (val) => val === 'true' || val === '1' || val === true,
     z.boolean().optional(),
   ),
+  raceColumns: z.string().optional().refine(
+      val => {
+        if (!val) return true
+        const columns = val.split(',').map(col => col.trim())
+        return columns.every(col => raceColumns.includes(col as keyof typeof Prisma.RaceScalarFieldEnum))
+      },
+      { message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`}
+    )
 }).strict()
 
 export class RaceFilterDto extends createZodDto(raceFilterSchema) {}
