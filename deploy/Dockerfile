@@ -27,6 +27,7 @@ RUN apk add --no-cache \
 ENV PYTHON=/usr/bin/python3
 ENV PYTHONPATH=/usr/lib/python3.10/site-packages
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 WORKDIR /app
 
