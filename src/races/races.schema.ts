@@ -38,6 +38,6 @@ const raceFilterSchema = z.object({
     (val) => val === 'true' || val === '1' || val === true,
     z.boolean().optional(),
   ),
-})
+}).strict()
 
 export class RaceFilterDto extends createZodDto(raceFilterSchema) {}

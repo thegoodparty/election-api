@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common'
+import { Controller, Get, Query } from '@nestjs/common'
 import { PlaceFilterDto } from './places.schema'
 import { PlacesService } from './places.service'
 
@@ -11,9 +11,9 @@ export class PlaceController {
     return this.placesService.getPlaces(filterDto)
   }
 
-  @Get(':id')
-  async getPlaceById(
-    @Param('id') id: string,
-    @Query('includeRace') includeRace: boolean = false,
-  ) {}
+  // @Get(':id')
+  // async getPlaceById(
+  //   @Param('id') id: string,
+  //   @Query('includeRace') includeRace: boolean = false,
+  // ) {}
 }

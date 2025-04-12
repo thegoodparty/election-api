@@ -49,6 +49,6 @@ const placeFilterSchema = z.object({
     },
     { message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`}
   )
-})
+}).strict()
 
 export class PlaceFilterDto extends createZodDto(placeFilterSchema) {}
