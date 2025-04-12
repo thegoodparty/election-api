@@ -15,7 +15,6 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       includeChildren,
       includeParent,
       includeRaces,
-      // We no longer use depth for recursive queries; one level only.
       state,
       name,
       slug,
