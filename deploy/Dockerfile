@@ -46,8 +46,7 @@ RUN apk add --no-cache \
     libxscrnsaver \
     libxtst \
     at-spi2-core \
-    at-spi2-atk \
-    gtk+3.0 \
+    gtk3 \
     gdk-pixbuf \
     glib \
     dbus-glib \
