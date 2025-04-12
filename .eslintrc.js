@@ -1,3 +1,12 @@
+const dotenv = require('dotenv')
+dotenv.config()
+
+const DATABASE_URL = process.env.DATABASE_URL
+
+if (!DATABASE_URL) {
+  throw new Error('Please set DATABASE_URL in your .env')
+}
+
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -34,5 +43,5 @@ module.exports = {
         varsIgnorePattern: '^_',
       },
     ],
-  },
+  }
 }
