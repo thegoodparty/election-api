@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
-  constructor(private readonly prisma: PrismaService) {
+  constructor() {
     super()
   }
 
@@ -26,7 +26,6 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     this.logger.debug(`includeChildren: ${includeChildren}`)
     this.logger.debug(`includeParent: ${includeParent}`)
 
-    // Build the basic filtering criteria.
     const where: Prisma.PlaceWhereInput = {
       ...(state ? { state } : {}),
       ...(name ? { name } : {}),
@@ -34,7 +33,6 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       ...(slug ? { slug } : {})
     }
 
-    // In the absence of tree-related includes, we can build a query with an optional "select" or just include Races.
     if (!includeChildren && !includeParent) {
       if (placeColumns) {
         const select: Prisma.PlaceSelect = {}
@@ -76,15 +74,14 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
         return this.model.findMany({ where, include })
       }
     } else {
-      // When tree-related flags are passed, include one level of children and/or parent.
       const include: Prisma.PlaceInclude = {}
 
       if (includeChildren) {
-        include.children = true  // One depth: only the direct children.
+        include.children = true
       }
       
       if (includeParent) {
-        include.parent = true    // One depth: only the direct parent.
+        include.parent = true
       }
 
       if (includeRaces) {
