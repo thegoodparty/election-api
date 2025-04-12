@@ -12,7 +12,7 @@ model Place {
     // Fun Facts
     cityLargest           String? @map("city_largest")
     countyName            String? @map("county_name")
-    popluation            Int?    @map("popluation")
+    population            Int?    @map("population")
     density               Float?  @map("density")
     incomeHouseholdMedian Int?    @map("income_household_median")
     unemploymentRate      Float?  @map("unemployment_rate")
@@ -23,5 +23,5 @@ model Place {
     // Recursive relationships
     children Place[] @relation("PlaceHierarchy")
     parent   Place?  @relation("PlaceHierarchy", fields: [parentId], references: [id])
-    parentId String? @db.Uuid
+    parentId String? @map("parent_id") @db.Uuid
 }
