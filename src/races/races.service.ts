@@ -47,9 +47,12 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
 
     if (raceColumns) {
       const select: Prisma.RaceSelect = {}
-      raceColumns.split(',').map(col => col.trim()).forEach(col => {
-        select[col] = true
-      })
+      raceColumns
+        .split(',')
+        .map((col) => col.trim())
+        .forEach((col) => {
+          select[col] = true
+        })
 
       if (includePlace) {
         select.Place = true

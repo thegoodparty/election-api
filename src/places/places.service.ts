@@ -1,5 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { PrismaService } from 'src/prisma/prisma.service'
+import { Injectable } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
@@ -20,7 +19,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       slug,
       mtfcc,
       placeColumns,
-      raceColumns
+      raceColumns,
     } = filterDto
 
     this.logger.debug(`includeChildren: ${includeChildren}`)
@@ -30,15 +29,18 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       ...(state ? { state } : {}),
       ...(name ? { name } : {}),
       ...(mtfcc ? { mtfcc } : {}),
-      ...(slug ? { slug } : {})
+      ...(slug ? { slug } : {}),
     }
 
     if (!includeChildren && !includeParent) {
       if (placeColumns) {
         const select: Prisma.PlaceSelect = {}
-        placeColumns.split(',').map((col) => col.trim()).forEach((col) => {
-          select[col] = true
-        })
+        placeColumns
+          .split(',')
+          .map((col) => col.trim())
+          .forEach((col) => {
+            select[col] = true
+          })
 
         if (includeRaces) {
           if (raceColumns) {
@@ -79,7 +81,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       if (includeChildren) {
         include.children = true
       }
-      
+
       if (includeParent) {
         include.parent = true
       }
