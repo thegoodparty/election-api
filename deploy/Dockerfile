@@ -21,12 +21,49 @@ RUN apk add --no-cache \
     autoconf \
     automake \
     libtool \
-    pkgconfig
+    pkgconfig \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    xvfb \
+    x11vnc \
+    xterm \
+    xorg-server \
+    xf86-video-dummy \
+    dbus \
+    udev \
+    libx11 \
+    libxcomposite \
+    libxdamage \
+    libxext \
+    libxfixes \
+    libxrandr \
+    libxrender \
+    libxscrnsaver \
+    libxtst \
+    at-spi2-core \
+    atk \
+    gtk+3.0 \
+    gdk-pixbuf \
+    glib \
+    dbus-glib \
+    cups-libs \
+    libdrm \
+    mesa \
+    mesa-gbm \
+    mesa-egl \
+    mesa-gles
 
 # Set Python path and other build variables
 ENV PYTHON=/usr/bin/python3
 ENV PYTHONPATH=/usr/lib/python3.10/site-packages
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
