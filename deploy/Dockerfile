@@ -27,7 +27,10 @@ RUN apk add --no-cache \
 ENV PYTHON=/usr/bin/python3
 ENV PYTHONPATH=/usr/lib/python3.10/site-packages
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Prevent Puppeteer from downloading Chrome
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/dev/null
 
 WORKDIR /app
 
@@ -41,9 +44,9 @@ COPY package.json package-lock.json tsconfig.json tsconfig.build.json ./
 COPY src/ ./src
 COPY prisma/ ./prisma
 
-# Clear npm cache and install dependencies
+# Clear npm cache and install dependencies with --ignore-scripts
 RUN npm cache clean --force && \
-    npm install --build-from-source
+    npm install --build-from-source --ignore-scripts
 
 # Set the docker build args into environment variables on runner.
 ARG STAGE
@@ -67,8 +70,8 @@ WORKDIR /app
 
 # Copy package files for production dependencies
 COPY package.json package-lock.json ./
-# Install only production dependencies
-RUN npm ci --only=production
+# Install only production dependencies with --ignore-scripts
+RUN npm ci --only=production --ignore-scripts
 
 # Copy only necessary files to the runtime image
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
