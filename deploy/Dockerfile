@@ -10,7 +10,16 @@ RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    gcc
+    gcc \
+    postgresql-dev \
+    postgresql-client \
+    linux-headers \
+    musl-dev
+
+# Set Python path and other build variables
+ENV PYTHON=/usr/bin/python3
+ENV PYTHONPATH=/usr/lib/python3.10/site-packages
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /app
 
@@ -24,7 +33,9 @@ COPY package.json package-lock.json tsconfig.json tsconfig.build.json ./
 COPY src/ ./src
 COPY prisma/ ./prisma
 
-RUN npm install
+# Clear npm cache and install dependencies
+RUN npm cache clean --force && \
+    npm install --build-from-source
 
 # Set the docker build args into environment variables on runner.
 ARG STAGE
