@@ -6,7 +6,11 @@ FROM public.ecr.aws/docker/library/node:22-alpine AS builder
 
 RUN apk add --no-cache \
     libc6-compat \
-    openssl
+    openssl \
+    python3 \
+    make \
+    g++ \
+    gcc
 
 WORKDIR /app
 
