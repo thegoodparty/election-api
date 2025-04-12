@@ -134,7 +134,7 @@ export default $config({
         ],
         health: {
           '80/http': {
-            path: '/v1',
+            path: '/v1/health',
             interval: '30 seconds',
           },
         },
