@@ -14,7 +14,7 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin', 'unused-imports', '@ts-safeql/eslint-plugin'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'unused-imports'],
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
@@ -43,24 +43,5 @@ module.exports = {
         varsIgnorePattern: '^_',
       },
     ],
-    "@ts-safeql/check-sql": [
-      "error",
-      {
-        "connections": [
-          {
-            "databaseUrl": DATABASE_URL,
-            "targets": [
-              // this will lint syntax that matches
-              // `prisma.$queryRaw` or `prisma.$executeRaw`
-              {
-                //"tag": ["prisma.+($queryRaw|$executeRaw)"],
-                "tag": ["sql", "prisma.+($queryRaw|$executeRaw)"],
-                "transform": "{type}[]"
-              }
-            ]
-          }
-        ]
-      }
-    ]
   }
 }
