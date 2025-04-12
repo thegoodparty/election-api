@@ -14,7 +14,14 @@ RUN apk add --no-cache \
     postgresql-dev \
     postgresql-client \
     linux-headers \
-    musl-dev
+    musl-dev \
+    bash \
+    git \
+    curl \
+    autoconf \
+    automake \
+    libtool \
+    pkgconfig
 
 # Set Python path and other build variables
 ENV PYTHON=/usr/bin/python3
