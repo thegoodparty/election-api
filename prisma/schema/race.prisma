@@ -20,7 +20,7 @@ model Race {
   // Position
   positionLevel           PositionLevel @map("position_level")
   normalizedPositionName  String?       @map("normalized_position_name")
-  positionName            String?       @map("position_name")
+  positionNames           String[]      @map("position_names")
   positionDescription     String?       @map("position_description")
   filingOfficeAddress     String?       @map("filing_office_address")
   filingPhoneNumber       String?       @map("filing_phone_number")
