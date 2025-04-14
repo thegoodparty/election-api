@@ -15,8 +15,6 @@ model Race {
   brHashId                String?       @map("br_hash_id")
   brDatabaseId            Int?          @map("br_database_id")
   electionDate            DateTime      @map("election_date")
-  // positionSlug            String        @unique@map("position_slug") // Slugify normalizedPosition.name
-  // stateSlug               String        @map("state_slug") // state/positionSlug
   slug                    String        @unique @map("slug") // This is the slug of the place combined with normalizedPositionName slugified, ex: tx/hidalgo/mission/county-sheriff
   state                   String        @db.Char(2)
   // Position
