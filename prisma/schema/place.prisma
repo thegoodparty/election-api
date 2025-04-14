@@ -5,7 +5,7 @@ model Place {
     brPositionDatabaseId Int      @map("br_position_database_id")
     name                 String   @map("name")
     slug                 String   @unique @map("slug") // This is each component of the geoId slugified joined by forward slashes ex: state/county-name/city-name, where state is 2 chars
-    geoId                String   @map("geoid")
+    geoId                String   @unique @map("geoid")
     mtfcc                String?  @map("mtfcc")
     state                String   @db.Char(2)
 
