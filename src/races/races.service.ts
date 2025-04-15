@@ -16,7 +16,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       state,
       placeSlug,
       positionLevel,
-      positionSlug,
+      raceSlug,
       electionDateStart,
       electionDateEnd,
       isPrimary,
@@ -28,7 +28,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       ...(state ? { state } : {}),
       ...(placeSlug ? { Place: { slug: placeSlug } } : {}),
       ...(positionLevel ? { positionLevel } : {}),
-      ...(positionSlug ? { slug: positionSlug } : {}),
+      ...(raceSlug ? { slug: raceSlug } : {}),
       ...(isPrimary !== undefined ? { isPrimary } : {}),
       ...(isRunoff !== undefined ? { isRunoff } : {}),
       ...(electionDateStart || electionDateEnd

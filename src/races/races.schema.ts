@@ -28,7 +28,7 @@ const raceFilterSchema = z
       }, 'Invalid state code'),
     placeSlug: z.string().optional(),
     positionLevel: positionLevelEnum.optional(),
-    positionSlug: z.string().optional(),
+    raceSlug: z.string().optional(),
     electionDateStart: z.string().optional(),
     electionDateEnd: z.string().optional(),
     includePlace: z.preprocess(
