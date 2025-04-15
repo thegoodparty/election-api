@@ -164,7 +164,7 @@ export default $config({
           $app.stage === 'master'
             ? 'goodparty.org'
             : $app.stage === 'develop'
-              ? 'dev.goodparty.org,localhost:4000,gp-ui-git-web-3862-election-api-integration-good-party.vercel.app'
+              ? '*' // TODO revert back to dev.goodparty.org
               : $app.stage === 'qa'
                 ? 'qa.goodparty.org'
                 : '',
