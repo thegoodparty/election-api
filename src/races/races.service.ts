@@ -14,7 +14,6 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
     const {
       includePlace,
       state,
-      placeId,
       placeSlug,
       positionLevel,
       positionSlug,
@@ -27,10 +26,9 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
 
     const where: Prisma.RaceWhereInput = {
       ...(state ? { state } : {}),
-      ...(placeId ? { placeId } : {}),
-      ...(placeSlug ? { placeSlug } : {}),
+      ...(placeSlug ? { Place: { slug: placeSlug } } : {}),
       ...(positionLevel ? { positionLevel } : {}),
-      ...(positionSlug ? { positionSlug } : {}),
+      ...(positionSlug ? { slug: positionSlug } : {}),
       ...(isPrimary !== undefined ? { isPrimary } : {}),
       ...(isRunoff !== undefined ? { isRunoff } : {}),
       ...(electionDateStart || electionDateEnd
