@@ -43,6 +43,10 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         : {}),
     }
 
+    let races:
+      | Prisma.RaceGetPayload<{ select: Prisma.RaceSelect }>[]
+      | Prisma.RaceGetPayload<{ include: Prisma.RaceInclude }>[] = []
+
     if (raceColumns) {
       const select: Prisma.RaceSelect = {}
       raceColumns
@@ -56,14 +60,36 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         select.Place = true
       }
 
-      return this.model.findMany({ where, select })
+      races = await this.model.findMany({
+        where,
+        select,
+        orderBy: { electionDate: 'asc' },
+      })
     } else {
       const include: Prisma.RaceInclude = {}
 
       if (includePlace) {
         include.Place = true
       }
-      return this.model.findMany({ where, include })
+      races = await this.model.findMany({
+        where,
+        include,
+        orderBy: { electionDate: 'asc' },
+      })
     }
+    if (!races[0].positionNames || !races[0].slug) {
+      return races
+    }
+    const uniqueRaces = new Map()
+    for (const race of races) {
+      if (!uniqueRaces.has(race.slug)) {
+        uniqueRaces.set(race.slug, race)
+      } else {
+        // We add the positionName to the unique race according to its slug
+        const existingRace = uniqueRaces.get(race.slug)
+        existingRace.positionNames.push(race.positionNames[0])
+      }
+    }
+    return Array.from(uniqueRaces.values())
   }
 }
