@@ -26,10 +26,9 @@ const raceFilterSchema = z
         if (!val) return true
         return STATE_CODES.includes(val.toUpperCase())
       }, 'Invalid state code'),
-    placeId: z.string().uuid().optional(),
     placeSlug: z.string().optional(),
     positionLevel: positionLevelEnum.optional(),
-    positionSlug: z.string().optional(),
+    raceSlug: z.string().optional(),
     electionDateStart: z.string().optional(),
     electionDateEnd: z.string().optional(),
     includePlace: z.preprocess(
