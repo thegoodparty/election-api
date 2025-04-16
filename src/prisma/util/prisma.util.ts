@@ -22,6 +22,7 @@ const PASSTHROUGH_MODEL_METHODS = [
 ] satisfies PrismaMethods[]
 
 export function createPrismaBase<T extends Prisma.ModelName>(modelName: T) {
+  /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
   const lowerModelName = lowerFirst(modelName)
 
   @Injectable()
@@ -49,7 +50,7 @@ export function createPrismaBase<T extends Prisma.ModelName>(modelName: T) {
   }
 
   // This interface merges with the class type to apply the prisma method types to the class def
-
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface BasePrismaService
     extends Pick<
       PrismaClient[Uncapitalize<T>],
@@ -57,4 +58,14 @@ export function createPrismaBase<T extends Prisma.ModelName>(modelName: T) {
     > {}
 
   return BasePrismaService
+}
+
+export function buildColumnSelect(columns: string) {
+  return columns
+    .split(',')
+    .map((col) => col.trim())
+    .reduce((acc, col) => {
+      acc[col] = true
+      return acc
+    }, {})
 }
