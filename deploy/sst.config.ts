@@ -164,7 +164,7 @@ export default $config({
           $app.stage === 'master'
             ? 'goodparty.org'
             : $app.stage === 'develop'
-              ? '*' // TODO revert back to dev.goodparty.org
+              ? 'localhost:4000' // TODO revert back to dev.goodparty.org
               : $app.stage === 'qa'
                 ? 'qa.goodparty.org'
                 : '',
