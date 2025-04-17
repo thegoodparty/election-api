@@ -6,6 +6,8 @@ import {
 } from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
+import { hasRaces } from './place.types'
+import { getDedupedRacesBySlug } from 'src/races/races.util'
 
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
@@ -90,26 +92,25 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       places = await this.model.findMany({ where, include })
     }
 
-    if (
-      !includeRaces ||
-      !places[0]?.Races[0]?.positionNames ||
-      !places[0]?.Races[0]?.slug
-    ) {
+    if (!includeRaces) {
       return places
     }
-    const uniqueRaces = new Map()
+
     for (const place of places) {
-      const races = place.Races
-      for (const race of races) {
-        if (!uniqueRaces.has(race.slug)) {
-          uniqueRaces.set(race.slug, race)
-        } else {
-          // We add the positionName to the unique race according to its slug
-          const existingRace = uniqueRaces.get(race.slug)
-          existingRace.positionNames.push(race.positionNames[0])
+      place.Races = getDedupedRacesBySlug(place.Races)
+
+      if (includeChildren) {
+        for (const child of place.children) {
+          if (hasRaces(child)) {
+            child.Races = getDedupedRacesBySlug(child.Races)
+          }
         }
       }
-      place.Races = Array.from(uniqueRaces.values())
+      if (includeParent && place?.parent) {
+        if (hasRaces(place.parent)) {
+          place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+        }
+      }
     }
     return places
   }
