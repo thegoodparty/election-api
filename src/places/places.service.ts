@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
+import {
+  buildColumnSelect,
+  createPrismaBase,
+  MODELS,
+} from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
+import { hasRaces } from './place.types'
+import { getDedupedRacesBySlug } from 'src/races/races.util'
 
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
@@ -32,76 +38,80 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       ...(slug ? { slug } : {}),
     }
 
+    let places: (
+      | Prisma.PlaceGetPayload<{ select: Prisma.PlaceSelect }>
+      | Prisma.PlaceGetPayload<{ include: Prisma.PlaceInclude }>
+    )[]
+
+    const buildRaceInclude = () => {
+      if (raceColumns) {
+        const raceSelect = buildColumnSelect(raceColumns) as Prisma.RaceSelect
+        return { select: raceSelect }
+      } else {
+        return true
+      }
+    }
+
     if (!includeChildren && !includeParent) {
+      // Just get one level of place(s)
       if (placeColumns) {
-        const select: Prisma.PlaceSelect = {}
-        placeColumns
-          .split(',')
-          .map((col) => col.trim())
-          .forEach((col) => {
-            select[col] = true
-          })
+        const select = buildColumnSelect(placeColumns) as Prisma.PlaceSelect
 
         if (includeRaces) {
-          if (raceColumns) {
-            const raceSelect = raceColumns
-              .split(',')
-              .map((col) => col.trim())
-              .reduce((acc, col) => {
-                acc[col] = true
-                return acc
-              }, {} as Prisma.RaceSelect)
-            select.Races = { select: raceSelect }
-          } else {
-            select.Races = true
-          }
+          select.Races = buildRaceInclude()
         }
-        return this.model.findMany({ where, select })
+
+        places = await this.model.findMany({ where, select })
       } else {
         const include: Prisma.PlaceInclude = {}
         if (includeRaces) {
-          if (raceColumns) {
-            const raceSelect = raceColumns
-              .split(',')
-              .map((col) => col.trim())
-              .reduce((acc, col) => {
-                acc[col] = true
-                return acc
-              }, {} as Prisma.RaceSelect)
-            include.Races = { select: raceSelect }
-          } else {
-            include.Races = true
-          }
+          include.Races = buildRaceInclude()
         }
-        return this.model.findMany({ where, include })
+        places = await this.model.findMany({ where, include })
       }
     } else {
+      // Get multiple levels of places
       const include: Prisma.PlaceInclude = {}
 
       if (includeChildren) {
-        include.children = true
+        include.children = includeRaces
+          ? { include: { Races: buildRaceInclude() } }
+          : true
       }
 
       if (includeParent) {
-        include.parent = true
+        include.parent = includeRaces
+          ? { include: { Races: buildRaceInclude() } }
+          : true
       }
 
       if (includeRaces) {
-        if (raceColumns) {
-          const raceSelect = raceColumns
-            .split(',')
-            .map((col) => col.trim())
-            .reduce((acc, col) => {
-              acc[col] = true
-              return acc
-            }, {} as Prisma.RaceSelect)
-          include.Races = { select: raceSelect }
-        } else {
-          include.Races = true
-        }
+        include.Races = buildRaceInclude()
       }
 
-      return this.model.findMany({ where, include })
+      places = await this.model.findMany({ where, include })
     }
+
+    if (!includeRaces) {
+      return places
+    }
+
+    for (const place of places) {
+      place.Races = getDedupedRacesBySlug(place.Races)
+
+      if (includeChildren) {
+        for (const child of place.children) {
+          if (hasRaces(child)) {
+            child.Races = getDedupedRacesBySlug(child.Races)
+          }
+        }
+      }
+      if (includeParent && place?.parent) {
+        if (hasRaces(place.parent)) {
+          place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+        }
+      }
+    }
+    return places
   }
 }
