@@ -162,11 +162,11 @@ export default $config({
         LOG_LEVEL: 'debug',
         CORS_ORIGIN:
           $app.stage === 'master'
-            ? 'goodparty.org'
+            ? 'https://goodparty.org'
             : $app.stage === 'develop'
-              ? 'dev.goodparty.org'
+              ? 'https://gp-ui-git-web-3862-election-api-integration-good-party.vercel.app' // TODO revert back to dev.goodparty.org
               : $app.stage === 'qa'
-                ? 'qa.goodparty.org'
+                ? 'https://qa.goodparty.org'
                 : '',
         AWS_REGION: 'us-west-2',
         WEBAPP_ROOT_URL: webAppRootUrl,

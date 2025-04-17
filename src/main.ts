@@ -1,3 +1,4 @@
+import '../../module-alias'
 import './configrc'
 import { NestFactory } from '@nestjs/core'
 import {
@@ -11,6 +12,7 @@ import { AppModule } from './app.module'
 import { Logger } from '@nestjs/common'
 import fastifyStatic from '@fastify/static'
 import { join } from 'path'
+import { ZodValidationPipe } from 'nestjs-zod'
 
 const APP_LISTEN_CONFIG = {
   port: Number(process.env.PORT) || 3000,
@@ -32,6 +34,7 @@ const bootstrap = async () => {
     },
   )
   app.setGlobalPrefix('v1')
+  app.useGlobalPipes(new ZodValidationPipe())
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Documentation')

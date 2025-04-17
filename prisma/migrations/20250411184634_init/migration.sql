@@ -1,0 +1,1 @@
+ALTER TABLE "Place" RENAME COLUMN "br_database_id" to "br_position_database_id";
