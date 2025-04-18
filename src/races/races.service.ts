@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
+import {
+  buildColumnSelect,
+  createPrismaBase,
+  MODELS,
+} from 'src/prisma/util/prisma.util'
 import { RaceFilterDto } from './races.schema'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { Prisma } from '@prisma/client'
+import { getDedupedRacesBySlug } from './races.util'
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
@@ -48,13 +53,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       | Prisma.RaceGetPayload<{ include: Prisma.RaceInclude }>[] = []
 
     if (raceColumns) {
-      const select: Prisma.RaceSelect = {}
-      raceColumns
-        .split(',')
-        .map((col) => col.trim())
-        .forEach((col) => {
-          select[col] = true
-        })
+      const select: Prisma.RaceSelect = buildColumnSelect(raceColumns)
 
       if (includePlace) {
         select.Place = true
@@ -77,19 +76,9 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         orderBy: { electionDate: 'asc' },
       })
     }
-    if (!races[0].positionNames || !races[0].slug) {
+    if (!races[0]?.positionNames || !races[0]?.slug) {
       return races
     }
-    const uniqueRaces = new Map()
-    for (const race of races) {
-      if (!uniqueRaces.has(race.slug)) {
-        uniqueRaces.set(race.slug, race)
-      } else {
-        // We add the positionName to the unique race according to its slug
-        const existingRace = uniqueRaces.get(race.slug)
-        existingRace.positionNames.push(race.positionNames[0])
-      }
-    }
-    return Array.from(uniqueRaces.values())
+    return getDedupedRacesBySlug(races)
   }
 }

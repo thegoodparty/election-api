@@ -17,14 +17,17 @@ const positionLevelEnum = z.enum([
   'TOWNSHIP',
 ])
 
+const toUpper = (val: unknown) =>
+  typeof val === 'string' ? val.toUpperCase() : val
+
 const raceFilterSchema = z
   .object({
     state: z
-      .string()
+      .preprocess(toUpper, z.string())
       .optional()
       .refine((val) => {
         if (!val) return true
-        return STATE_CODES.includes(val.toUpperCase())
+        return STATE_CODES.includes(val)
       }, 'Invalid state code'),
     placeSlug: z.string().optional(),
     positionLevel: positionLevelEnum.optional(),
