@@ -62,7 +62,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         select,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
       if (!races || races.length === 0) {
         throw new NotFoundException(
@@ -78,7 +78,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         include,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
       if (!races || races.length === 0) {
         throw new NotFoundException(
