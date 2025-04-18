@@ -1,6 +1,8 @@
-import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common'
-import { PlaceFilterDto } from './places.schema'
+import { Controller, Get, Query } from '@nestjs/common'
+import { MostElectionsDto, PlaceFilterDto } from './places.schema'
 import { PlacesService } from './places.service'
+
+const MIN_RACES = 100
 
 @Controller('places')
 export class PlaceController {
@@ -13,8 +15,11 @@ export class PlaceController {
 
   @Get('most-elections')
   async getPlacesWithMostElections(
-    @Query('count', ParseIntPipe) count: number,
+    @Query() mostElectionsDto: MostElectionsDto,
   ) {
-    return this.placesService.getPlacesWithMostElections(100, count)
+    return this.placesService.getPlacesWithMostElections(
+      MIN_RACES,
+      mostElectionsDto.count,
+    )
   }
 }
