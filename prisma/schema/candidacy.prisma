@@ -27,7 +27,7 @@ model Candidacy {
 
   // Formerly presentation data
   raceSlug String @map("race_slug")
-  office   String @map("office") // This is normalizedPositionName?
+  office   String @map("office") // This is normalizedPositionName
 
   // Election result is an enum; can be null if no result yet
   result ElectionResult?
