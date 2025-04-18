@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import {
   buildColumnSelect,
   createPrismaBase,
@@ -6,7 +6,7 @@ import {
 } from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
-import { hasRaces } from './place.types'
+import { hasChildren, hasParent, hasRaces } from './place.types'
 import { getDedupedRacesBySlug } from 'src/races/races.util'
 
 @Injectable()
@@ -38,77 +38,88 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       ...(slug ? { slug } : {}),
     }
 
-    let places: (
-      | Prisma.PlaceGetPayload<{ select: Prisma.PlaceSelect }>
-      | Prisma.PlaceGetPayload<{ include: Prisma.PlaceInclude }>
-    )[]
+    const placeSelectBase: Prisma.PlaceSelect | undefined = placeColumns
+      ? (buildColumnSelect(placeColumns) as Prisma.PlaceSelect)
+      : undefined
 
     const buildRaceInclude = () => {
-      if (raceColumns) {
-        const raceSelect = buildColumnSelect(raceColumns) as Prisma.RaceSelect
-        return { select: raceSelect }
-      } else {
-        return true
+      if (!raceColumns) return true
+      if (!includeRaces) return true
+
+      // Force add slug and positionNames so we can dedupe by slug
+      const cols = Array.from(
+        new Set([...raceColumns.split(','), 'slug', 'positionNames']),
+      ).join(',')
+
+      return {
+        select: buildColumnSelect(cols) as Prisma.RaceSelect,
       }
     }
 
-    if (!includeChildren && !includeParent) {
-      // Just get one level of place(s)
-      if (placeColumns) {
-        const select = buildColumnSelect(placeColumns) as Prisma.PlaceSelect
+    const makePlaceSelection = (withRaces: boolean) => {
+      if (!placeSelectBase) {
+        if (!withRaces) return true
 
-        if (includeRaces) {
-          select.Races = buildRaceInclude()
+        return {
+          include: {
+            Races: buildRaceInclude(),
+          },
         }
-
-        places = await this.model.findMany({ where, select })
-      } else {
-        const include: Prisma.PlaceInclude = {}
-        if (includeRaces) {
-          include.Races = buildRaceInclude()
-        }
-        places = await this.model.findMany({ where, include })
       }
+      const sel: Prisma.PlaceSelect = { ...placeSelectBase }
+      if (withRaces) sel.Races = buildRaceInclude()
+      return { select: sel }
+    }
+
+    let queryArgs: Prisma.PlaceFindManyArgs
+
+    if (placeSelectBase) {
+      const rootSelect: Prisma.PlaceSelect = {
+        ...placeSelectBase,
+        ...(includeRaces && { Races: buildRaceInclude() }),
+        ...(includeChildren && { children: makePlaceSelection(includeRaces) }),
+        ...(includeParent && { parent: makePlaceSelection(includeRaces) }),
+      }
+
+      queryArgs = { where, select: rootSelect }
     } else {
-      // Get multiple levels of places
-      const include: Prisma.PlaceInclude = {}
-
-      if (includeChildren) {
-        include.children = includeRaces
-          ? { include: { Races: buildRaceInclude() } }
-          : true
+      queryArgs = {
+        where,
+        include: {
+          ...(includeRaces && { Races: buildRaceInclude() }),
+          ...(includeChildren && {
+            children: makePlaceSelection(includeRaces),
+          }),
+          ...(includeParent && { parent: makePlaceSelection(includeRaces) }),
+        },
       }
-
-      if (includeParent) {
-        include.parent = includeRaces
-          ? { include: { Races: buildRaceInclude() } }
-          : true
-      }
-
-      if (includeRaces) {
-        include.Races = buildRaceInclude()
-      }
-
-      places = await this.model.findMany({ where, include })
+    }
+    this.logger.debug(queryArgs)
+    const places = await this.model.findMany(queryArgs)
+    if (!places || places.length === 0) {
+      throw new NotFoundException(
+        `No places found for query: ${JSON.stringify(where)}`,
+      )
     }
 
-    if (!includeRaces) {
-      return places
-    }
+    if (includeRaces) {
+      for (const place of places) {
+        if (includeRaces && hasRaces(place)) {
+          place.Races = getDedupedRacesBySlug(place.Races)
+        }
 
-    for (const place of places) {
-      place.Races = getDedupedRacesBySlug(place.Races)
-
-      if (includeChildren) {
-        for (const child of place.children) {
-          if (hasRaces(child)) {
-            child.Races = getDedupedRacesBySlug(child.Races)
+        if (includeChildren && hasChildren(place)) {
+          for (const child of place.children ?? []) {
+            if (hasRaces(child)) {
+              child.Races = getDedupedRacesBySlug(child.Races)
+            }
           }
         }
-      }
-      if (includeParent && place?.parent) {
-        if (hasRaces(place.parent)) {
-          place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+
+        if (includeParent && hasParent(place) && hasRaces(place.parent)) {
+          if (hasRaces(place.parent)) {
+            place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+          }
         }
       }
     }
