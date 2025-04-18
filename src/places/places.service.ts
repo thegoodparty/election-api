@@ -48,64 +48,31 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       ? (buildColumnSelect(placeColumns) as Prisma.PlaceSelect)
       : undefined
 
-    const buildRaceInclude = () => {
-      if (!raceColumns) return true
-      if (!includeRaces) return true
+    const raceInclude = this.buildRaceInclude(raceColumns, includeRaces)
+    const placeSelection = this.makePlaceSelection(
+      includeRaces,
+      placeSelectBase,
+      raceInclude,
+    )
 
-      // Force add slug and positionNames so we can dedupe by slug
-      const cols = Array.from(
-        new Set([
-          ...raceColumns.split(','),
-          SLUG_COLUMN_NAME,
-          POSITION_NAMES_COLUMN_NAME,
-        ]),
-      ).join(',')
-
-      return {
-        select: buildColumnSelect(cols) as Prisma.RaceSelect,
-      }
+    const placeQueryObj = {
+      ...(placeSelectBase ?? {}),
+      ...(includeRaces && { Races: raceInclude }),
+      ...(includeChildren && { children: placeSelection }),
+      ...(includeParent && { parent: placeSelection }),
     }
 
-    const makePlaceSelection = (withRaces: boolean) => {
-      if (!placeSelectBase) {
-        if (!withRaces) return true
+    this.logger.debug(placeQueryObj)
+    const places = placeSelectBase
+      ? await this.model.findMany({
+          where,
+          select: placeQueryObj,
+        })
+      : await this.model.findMany({
+          where,
+          include: placeQueryObj,
+        })
 
-        return {
-          include: {
-            Races: buildRaceInclude(),
-          },
-        }
-      }
-      const sel: Prisma.PlaceSelect = { ...placeSelectBase }
-      if (withRaces) sel.Races = buildRaceInclude()
-      return { select: sel }
-    }
-
-    let queryArgs: Prisma.PlaceFindManyArgs
-
-    if (placeSelectBase) {
-      const rootSelect: Prisma.PlaceSelect = {
-        ...placeSelectBase,
-        ...(includeRaces && { Races: buildRaceInclude() }),
-        ...(includeChildren && { children: makePlaceSelection(includeRaces) }),
-        ...(includeParent && { parent: makePlaceSelection(includeRaces) }),
-      }
-
-      queryArgs = { where, select: rootSelect }
-    } else {
-      queryArgs = {
-        where,
-        include: {
-          ...(includeRaces && { Races: buildRaceInclude() }),
-          ...(includeChildren && {
-            children: makePlaceSelection(includeRaces),
-          }),
-          ...(includeParent && { parent: makePlaceSelection(includeRaces) }),
-        },
-      }
-    }
-    this.logger.debug(queryArgs)
-    const places = await this.model.findMany(queryArgs)
     if (!places || places.length === 0) {
       throw new NotFoundException(
         `No places found for query: ${JSON.stringify(where)}`,
@@ -134,5 +101,67 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       }
     }
     return places
+  }
+
+  async getPlacesWithMostElections(minRaces: number, count: number) {
+    const places = await this.client.$queryRaw<
+      { slug: string; name: string; race_count: number }[]
+    >`
+    SELECT   p.slug,
+             p.name,
+             COUNT(r.id)::int AS race_count
+    FROM     "Place" p
+    LEFT JOIN "Race" r ON r."place_id" = p.id
+    WHERE    p."mtfcc" <> 'G4000'
+    GROUP BY p.id
+    HAVING   COUNT(r.id) > ${minRaces}
+    ORDER BY race_count DESC;
+  `
+    const topPlaces = places.slice(0, count)
+    return topPlaces
+  }
+
+  private buildRaceInclude(
+    raceColumns: string | undefined | null,
+    includeRaces: boolean | undefined | null,
+  ) {
+    if (!raceColumns) return true
+    if (!includeRaces) return true
+
+    // Force add slug and positionNames so we can dedupe by slug
+    const cols = Array.from(
+      new Set([
+        ...raceColumns.split(','),
+        SLUG_COLUMN_NAME,
+        POSITION_NAMES_COLUMN_NAME,
+      ]),
+    ).join(',')
+
+    return {
+      select: buildColumnSelect(cols) as Prisma.RaceSelect,
+    }
+  }
+
+  private makePlaceSelection(
+    withRaces: boolean,
+    placeSelectBase: Prisma.PlaceSelect | undefined,
+    raceInclude:
+      | true
+      | {
+          select: Prisma.RaceSelect
+        },
+  ) {
+    if (!placeSelectBase) {
+      if (!withRaces) return true
+
+      return {
+        include: {
+          Races: raceInclude,
+        },
+      }
+    }
+    const sel: Prisma.PlaceSelect = { ...placeSelectBase }
+    if (withRaces) sel.Races = raceInclude
+    return { select: sel }
   }
 }
