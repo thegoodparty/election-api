@@ -1,5 +1,8 @@
 import { Prisma } from '@prisma/client'
 
+export const SLUG_COLUMN_NAME = 'slug'
+export const POSITION_NAMES_COLUMN_NAME = 'positionNames'
+
 type PlaceWithRaces = Prisma.PlaceGetPayload<{ include: { Races: true } }>
 export function hasRaces(p: unknown): p is PlaceWithRaces {
   return (

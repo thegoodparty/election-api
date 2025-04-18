@@ -6,7 +6,13 @@ import {
 } from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
-import { hasChildren, hasParent, hasRaces } from './place.types'
+import {
+  hasChildren,
+  hasParent,
+  hasRaces,
+  POSITION_NAMES_COLUMN_NAME,
+  SLUG_COLUMN_NAME,
+} from './place.types'
 import { getDedupedRacesBySlug } from 'src/races/races.util'
 
 @Injectable()
@@ -48,7 +54,11 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
 
       // Force add slug and positionNames so we can dedupe by slug
       const cols = Array.from(
-        new Set([...raceColumns.split(','), 'slug', 'positionNames']),
+        new Set([
+          ...raceColumns.split(','),
+          SLUG_COLUMN_NAME,
+          POSITION_NAMES_COLUMN_NAME,
+        ]),
       ).join(',')
 
       return {
