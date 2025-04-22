@@ -70,15 +70,17 @@ export default $config({
 
     // Fetch the JSON secret using Pulumi's AWS SDK
     let secretArn: string | undefined
+
+    // QA and Dev share the same one, as they connect to the same database
     if ($app.stage === 'master') {
       secretArn =
-        'arn:aws:secretsmanager:us-west-2:333022194791:secret:ELECTION_API_PROD-PY8oWW'
+        'arn:aws:secretsmanager:us-west-2:333022194791:secret:ELECTION_API_PROD-FXrZUZ'
     } else if ($app.stage === 'develop') {
       secretArn =
         'arn:aws:secretsmanager:us-west-2:333022194791:secret:ELECTION_API_DEV-PY8oWW'
     } else if ($app.stage === 'qa') {
       secretArn =
-        'arn:aws:secretsmanager:us-west-2:333022194791:secret:ELECTION_API_QA-w290tg'
+        'arn:aws:secretsmanager:us-west-2:333022194791:secret:ELECTION_API_DEV-PY8oWW'
     }
 
     if (!secretArn) {
@@ -225,48 +227,44 @@ export default $config({
     // Changing it will cause Pulumi/SST to try to create a new RDS cluster and delete the old one
     // which would result in data loss. This is because the clusterIdentifier is part of the cluster's
     // identity and cannot be modified in place.
-    let rdsCluster: aws.rds.Cluster
-    if (
-      $app.stage === 'master' ||
-      $app.stage === 'qa' ||
-      $app.stage === 'develop'
-    ) {
-      // Create a new cluster for each stage
-      const clusterIdentifier =
-        $app.stage === 'master'
-          ? 'election-api-db-prod'
-          : $app.stage === 'qa'
-            ? 'election-api-db-qa'
-            : 'election-api-db-develop'
+    const clusterIdentifier =
+      $app.stage === 'master'
+        ? 'election-api-db-prod'
+        : 'election-api-db-develop'
 
-      rdsCluster = new aws.rds.Cluster('rdsCluster', {
-        clusterIdentifier,
-        engine: aws.rds.EngineType.AuroraPostgresql,
-        engineMode: aws.rds.EngineMode.Provisioned,
-        engineVersion: '16.2',
-        databaseName: dbName,
-        masterUsername: dbUser,
-        masterPassword: dbPassword,
-        dbSubnetGroupName: subnetGroup.name,
-        vpcSecurityGroupIds: [rdsSecurityGroup.id],
-        storageEncrypted: true,
-        deletionProtection: true,
-        finalSnapshotIdentifier: `election-api-db-${$app.stage}-final-snapshot`,
-        serverlessv2ScalingConfiguration: {
-          maxCapacity: 64,
-          minCapacity: $app.stage === 'master' ? 1.0 : 0.5,
-        },
-      })
-    } else {
-      throw new Error('Unsupported stage')
+    const createCluster = $app.stage === 'master' || $app.stage === 'develop'
+
+    const clusterArgs: aws.rds.ClusterArgs = {
+      clusterIdentifier,
+      engine: aws.rds.EngineType.AuroraPostgresql,
+      engineMode: aws.rds.EngineMode.Provisioned,
+      engineVersion: '16.2',
+      databaseName: dbName,
+      masterUsername: dbUser,
+      masterPassword: dbPassword,
+      dbSubnetGroupName: subnetGroup.name,
+      vpcSecurityGroupIds: [rdsSecurityGroup.id],
+      storageEncrypted: true,
+      deletionProtection: true,
+      finalSnapshotIdentifier: `election-api-db-${$app.stage}-final-snapshot`,
+      serverlessv2ScalingConfiguration: {
+        maxCapacity: 64,
+        minCapacity: $app.stage === 'master' ? 1.0 : 0.5,
+      },
     }
 
-    new aws.rds.ClusterInstance('rdsInstance', {
-      clusterIdentifier: rdsCluster.id,
-      instanceClass: 'db.serverless',
-      engine: aws.rds.EngineType.AuroraPostgresql,
-      engineVersion: rdsCluster.engineVersion,
-    })
+    const rdsCluster = createCluster
+      ? new aws.rds.Cluster('rdsCluster', clusterArgs) // Prod & dev
+      : aws.rds.Cluster.get('rdsCluster', clusterIdentifier) // qa
+
+    if (createCluster) {
+      new aws.rds.ClusterInstance('rdsInstance', {
+        clusterIdentifier: rdsCluster.id,
+        instanceClass: 'db.serverless',
+        engine: aws.rds.EngineType.AuroraPostgresql,
+        engineVersion: rdsCluster.engineVersion,
+      })
+    }
 
     const codeBuildRole = new aws.iam.Role('codebuild-service-role', {
       assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
