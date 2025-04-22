@@ -1,12 +1,3 @@
-import { Prisma } from '@prisma/client'
-
-export type RaceWithSlugAndNames = Prisma.RaceGetPayload<{
-  select: {
-    slug: true
-    positionNames: true
-  }
-}>
-
 export function getDedupedRacesBySlug<
   T extends { slug: string; positionNames: string[] },
 >(races: T[]): T[] {
@@ -14,9 +5,15 @@ export function getDedupedRacesBySlug<
   for (const race of races) {
     const existing = uniqueRaces.get(race.slug)
     if (existing) {
-      existing.positionNames.push(...race.positionNames)
+      // Use a set to avoid duplicates
+      existing.positionNames = [
+        ...new Set([...existing.positionNames, ...race.positionNames]),
+      ]
     } else {
-      uniqueRaces.set(race.slug, race)
+      uniqueRaces.set(race.slug, {
+        ...race,
+        positionNames: [...race.positionNames],
+      })
     }
   }
   return [...uniqueRaces.values()]

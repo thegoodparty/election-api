@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import {
   buildColumnSelect,
   createPrismaBase,
@@ -62,8 +62,13 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         select,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
+      if (!races || races.length === 0) {
+        throw new NotFoundException(
+          `No races found for query: ${JSON.stringify(where)}`,
+        )
+      }
     } else {
       const include: Prisma.RaceInclude = {}
 
@@ -73,8 +78,13 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         include,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
+      if (!races || races.length === 0) {
+        throw new NotFoundException(
+          `No races found for query: ${JSON.stringify(where)}`,
+        )
+      }
     }
     if (!races[0]?.positionNames || !races[0]?.slug) {
       return races

@@ -74,4 +74,14 @@ const placeFilterSchema = z
   })
   .strict()
 
+const mostElectionsSchema = z.object({
+  count: z
+    .string()
+    .transform(Number)
+    .refine((n) => Number.isInteger(n) && n > 0, {
+      message: 'count must be a positive integer',
+    }),
+})
+
 export class PlaceFilterDto extends createZodDto(placeFilterSchema) {}
+export class MostElectionsDto extends createZodDto(mostElectionsSchema) {}
