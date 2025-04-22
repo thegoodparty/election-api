@@ -7,32 +7,47 @@ enum ElectionResult {
 }
 
 model Candidacy {
-  id           String   @id @db.Uuid
-  brHashId     String?  @map("br_hash_id")
-  brDatabaseId Int?     @map("br_database_id")
-  createdAt    DateTime @map("created_at")
-  updatedAt    DateTime @map("updated_at")
-  slug         String   @unique @map("slug") // This is candidateName-office - but what is 'office' ?
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  middleName   String?  @map("middle_name")
-  // isCertified  Boolean         @map("is_certified")
-  // isHidden     Boolean         @map("is_hidden")
-  // withdrawn    Boolean
-  parties      String[] @map("parties") // Need to determine if this is name or shortname, and if this can be one string part(ies)?
-  // Unknown
-  isRemoved    Boolean  @default(false)
-  claimed      Boolean  @default(false)
-  email        String?
+  id   String @id @default(cuid())
+  slug String @unique
 
-  // Formerly presentation data
-  raceSlug String @map("race_slug")
-  office   String @map("office") // This is normalizedPositionName
+  // Candidacy
+  firstName String
+  lastName  String
+  party     String // Use index 0 of parties array
 
-  // Election result is an enum; can be null if no result yet
-  result ElectionResult?
-  Race   Race?           @relation(fields: [raceId], references: [id])
-  raceId String?         @unique @db.Uuid
+  // Race for state, and potentially longest geoid Place on Race?
+  city  String?
+  state String?
 
-  @@map("candidacy")
+  // Person
+  image String? // Use index 0 of images array
+  about String? // From bioText on Person
+  urls  String[] // Assume this is an array of strings
+
+  // GP-API (P2V)
+  p2vData               Json? // Store full object as JSON
+  projectedTurnout      Int?
+  republicans           Int?
+  democrats             Int?
+  independents          Int?
+  totalRegisteredVoters Int?
+
+  // GP-API (top issues and campaignPosition if a user, if not present, then use stances.issue and stances.statement from BR)
+  topIssues Json? // Array of objects with { issue, statement }
+
+  // GP-API Campaign
+  email              String?
+  pastExperience     String? // Formerly jobHistory
+  previouslyInOffice Boolean?
+  priorRoles         String? // Can be comma-separated string if array
+
+  // Position (from Candidacy -> Position)
+  electionFrequency      String? // Formerly called term
+  salary                 Int?
+  normalizedPositionName String?
+  positionDescription    String?
+
+  // Unknown source
+  education       String?
+  militaryService String?
 }
