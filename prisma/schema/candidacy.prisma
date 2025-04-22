@@ -25,7 +25,6 @@ model Candidacy {
   urls  String[] // Assume this is an array of strings
 
   // GP-API (P2V)
-  p2vData               Json? // Store full object as JSON
   projectedTurnout      Int?
   republicans           Int?
   democrats             Int?
