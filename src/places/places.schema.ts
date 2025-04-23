@@ -10,14 +10,17 @@ const raceColumns = Object.values(
   Prisma.RaceScalarFieldEnum,
 ) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 
+const toUpper = (val: unknown) =>
+  typeof val === 'string' ? val.toUpperCase() : val
+
 const placeFilterSchema = z
   .object({
     state: z
-      .string()
+      .preprocess(toUpper, z.string())
       .optional()
       .refine((val) => {
         if (!val) return true
-        return STATE_CODES.includes(val.toUpperCase())
+        return STATE_CODES.includes(val)
       }, 'Invalid state code'),
     name: z.string().optional(),
     slug: z.string().optional(),
@@ -71,4 +74,14 @@ const placeFilterSchema = z
   })
   .strict()
 
+const mostElectionsSchema = z.object({
+  count: z
+    .string()
+    .transform(Number)
+    .refine((n) => Number.isInteger(n) && n > 0, {
+      message: 'count must be a positive integer',
+    }),
+})
+
 export class PlaceFilterDto extends createZodDto(placeFilterSchema) {}
+export class MostElectionsDto extends createZodDto(mostElectionsSchema) {}

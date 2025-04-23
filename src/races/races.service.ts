@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common'
-import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  buildColumnSelect,
+  createPrismaBase,
+  MODELS,
+} from 'src/prisma/util/prisma.util'
 import { RaceFilterDto } from './races.schema'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { Prisma } from '@prisma/client'
+import { getDedupedRacesBySlug } from './races.util'
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
@@ -48,13 +53,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       | Prisma.RaceGetPayload<{ include: Prisma.RaceInclude }>[] = []
 
     if (raceColumns) {
-      const select: Prisma.RaceSelect = {}
-      raceColumns
-        .split(',')
-        .map((col) => col.trim())
-        .forEach((col) => {
-          select[col] = true
-        })
+      const select: Prisma.RaceSelect = buildColumnSelect(raceColumns)
 
       if (includePlace) {
         select.Place = true
@@ -63,8 +62,13 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         select,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
+      if (!races || races.length === 0) {
+        throw new NotFoundException(
+          `No races found for query: ${JSON.stringify(where)}`,
+        )
+      }
     } else {
       const include: Prisma.RaceInclude = {}
 
@@ -74,22 +78,17 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       races = await this.model.findMany({
         where,
         include,
-        orderBy: { electionDate: 'asc' },
+        orderBy: { electionDate: Prisma.SortOrder.asc },
       })
-    }
-    if (!races[0].positionNames || !races[0].slug) {
-      return races
-    }
-    const uniqueRaces = new Map()
-    for (const race of races) {
-      if (!uniqueRaces.has(race.slug)) {
-        uniqueRaces.set(race.slug, race)
-      } else {
-        // We add the positionName to the unique race according to its slug
-        const existingRace = uniqueRaces.get(race.slug)
-        existingRace.positionNames.push(race.positionNames[0])
+      if (!races || races.length === 0) {
+        throw new NotFoundException(
+          `No races found for query: ${JSON.stringify(where)}`,
+        )
       }
     }
-    return Array.from(uniqueRaces.values())
+    if (!races[0]?.positionNames || !races[0]?.slug) {
+      return races
+    }
+    return getDedupedRacesBySlug(races)
   }
 }
