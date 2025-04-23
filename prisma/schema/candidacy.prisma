@@ -24,7 +24,7 @@ model Candidacy {
 
   // Person
   image String? // Use index 0 of images array
-  about String? // From bioText on Person - or maybe generated differently depending on Jack
+  about String? // From bioText on Person - if not available, generateAbout()
   urls  String[]
 
   // GP-API (P2V)
