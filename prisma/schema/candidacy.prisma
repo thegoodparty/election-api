@@ -48,8 +48,4 @@ model Candidacy {
   salary                 Int?
   normalizedPositionName String?
   positionDescription    String?
-
-  // Unknown source
-  education       String?
-  militaryService String?
 }
