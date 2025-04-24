@@ -1,14 +1,12 @@
 import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
+import { raceColumns } from 'src/races/races.schema'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { z } from 'zod'
 
-const placeColumns = Object.values(
+export const placeColumns = Object.values(
   Prisma.PlaceScalarFieldEnum,
 ) as (keyof typeof Prisma.PlaceScalarFieldEnum)[]
-const raceColumns = Object.values(
-  Prisma.RaceScalarFieldEnum,
-) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 
 const toUpper = (val: unknown) =>
   typeof val === 'string' ? val.toUpperCase() : val

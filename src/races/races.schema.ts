@@ -1,10 +1,11 @@
 import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
+import { placeColumns } from 'src/places/places.schema'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
 
-const raceColumns = Object.values(
+export const raceColumns = Object.values(
   Prisma.RaceScalarFieldEnum,
 ) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 
@@ -36,6 +37,10 @@ const raceFilterSchema = z
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),
+    includeCandidacies: z.preprocess(
+      (val) => val === 'true' || val === '1' || val === true,
+      z.boolean().optional().default(false),
+    ),
     isPrimary: z.preprocess(
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional(),
@@ -59,6 +64,23 @@ const raceFilterSchema = z
         },
         {
           message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`,
+        },
+      ),
+    placeColumns: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true
+          const columns = val.split(',').map((col) => col.trim())
+          return columns.every((col) =>
+            placeColumns.includes(
+              col as keyof typeof Prisma.PlaceScalarFieldEnum,
+            ),
+          )
+        },
+        {
+          message: `Invalid place column provided. Allowed columns are: ${placeColumns.join(', ')}`,
         },
       ),
   })
