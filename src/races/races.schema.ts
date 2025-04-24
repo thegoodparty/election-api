@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
+import { candidacyColumns } from 'src/candidacies/candidacies.schema'
 import { placeColumns } from 'src/places/places.schema'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { toUpper } from 'src/shared/util/strings.util'
@@ -81,6 +82,23 @@ const raceFilterSchema = z
         },
         {
           message: `Invalid place column provided. Allowed columns are: ${placeColumns.join(', ')}`,
+        },
+      ),
+    candidacyColumns: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true
+          const columns = val.split(',').map((col) => col.trim())
+          return columns.every((col) =>
+            placeColumns.includes(
+              col as keyof typeof Prisma.PlaceScalarFieldEnum,
+            ),
+          )
+        },
+        {
+          message: `Invalid place column provided. Allowed columns are: ${candidacyColumns.join(', ')}`,
         },
       ),
   })

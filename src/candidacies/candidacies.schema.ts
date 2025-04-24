@@ -4,7 +4,7 @@ import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 
-const candidacyColumns = Object.values(
+export const candidacyColumns = Object.values(
   Prisma.RaceScalarFieldEnum,
 ) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 

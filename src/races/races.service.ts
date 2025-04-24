@@ -29,6 +29,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       isRunoff,
       raceColumns,
       placeColumns,
+      candidacyColumns,
     } = filterDto
 
     const where: Prisma.RaceWhereInput = {
@@ -55,15 +56,15 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       : undefined
 
     const placeInclude = this.buildPlaceInclude(placeColumns, includePlace)
-    const raceSelection = this.makeRaceSelection(
-      includePlace,
-      raceSelectBase,
-      placeInclude,
+    const candidacyInclude = this.buildCandidacyInclude(
+      candidacyColumns,
+      includeCandidacies,
     )
 
     const raceQueryObj = {
       ...(raceSelectBase ?? {}),
       ...(includePlace && { Place: placeInclude }),
+      // ...(includeCandidacies && { Candidacies: candidacyInclude }),
     }
 
     const races = raceSelectBase
@@ -82,50 +83,6 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       )
     }
 
-    // let races:
-    //   | Prisma.RaceGetPayload<{ select: Prisma.RaceSelect }>[]
-    //   | Prisma.RaceGetPayload<{ include: Prisma.RaceInclude }>[] = []
-
-    // if (raceColumns) {
-    //   const select: Prisma.RaceSelect = buildColumnSelect(raceColumns)
-
-    //   if (includePlace) {
-    //     select.Place = true
-    //   }
-    //   if (includeCandidacies) {
-    //     select.Candidacies = true
-    //   }
-
-    //   races = await this.model.findMany({
-    //     where,
-    //     select,
-    //     orderBy: { electionDate: Prisma.SortOrder.asc },
-    //   })
-    //   if (!races || races.length === 0) {
-    //     throw new NotFoundException(
-    //       `No races found for query: ${JSON.stringify(where)}`,
-    //     )
-    //   }
-    // } else {
-    //   const include: Prisma.RaceInclude = {}
-
-    //   if (includePlace) {
-    //     include.Place = true
-    //   }
-    //   if (includeCandidacies) {
-    //     include.Candidacies = true
-    //   }
-    //   races = await this.model.findMany({
-    //     where,
-    //     include,
-    //     orderBy: { electionDate: Prisma.SortOrder.asc },
-    //   })
-    //   if (!races || races.length === 0) {
-    //     throw new NotFoundException(
-    //       `No races found for query: ${JSON.stringify(where)}`,
-    //     )
-    //   }
-    // }
     if (!races[0]?.positionNames || !races[0]?.slug) {
       return races
     }
@@ -144,26 +101,38 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
     }
   }
 
-  private makeRaceSelection(
-    withPlace: boolean,
-    raceSelectBase: Prisma.RaceSelect | undefined,
-    placeInclude:
-      | true
-      | {
-          select: Prisma.PlaceSelect
-        },
+  private buildCandidacyInclude(
+    candidacyColumns: string | undefined | null,
+    includeCandidacies: boolean | undefined | null,
   ) {
-    if (!raceSelectBase) {
-      if (!withPlace) return true
+    if (!candidacyColumns) return true
+    if (!includeCandidacies) return true
 
-      return {
-        include: {
-          Place: placeInclude,
-        },
-      }
+    return {
+      select: buildColumnSelect(candidacyColumns) as Prisma.CandidacySelect,
     }
-    const sel: Prisma.RaceSelect = { ...raceSelectBase }
-    if (withPlace) sel.Place = placeInclude
-    return { select: sel }
   }
+
+  // private makeRaceSelection(
+  //   withPlace: boolean,
+  //   raceSelectBase: Prisma.RaceSelect | undefined,
+  //   placeInclude:
+  //     | true
+  //     | {
+  //         select: Prisma.PlaceSelect
+  //       },
+  // ) {
+  //   if (!raceSelectBase) {
+  //     if (!withPlace) return true
+
+  //     return {
+  //       include: {
+  //         Place: placeInclude,
+  //       },
+  //     }
+  //   }
+  //   const sel: Prisma.RaceSelect = { ...raceSelectBase }
+  //   if (withPlace) sel.Place = placeInclude
+  //   return { select: sel }
+  // }
 }
