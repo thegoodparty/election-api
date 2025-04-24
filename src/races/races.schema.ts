@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
+import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
 
 const raceColumns = Object.values(
@@ -16,9 +17,6 @@ const positionLevelEnum = z.enum([
   'STATE',
   'TOWNSHIP',
 ])
-
-const toUpper = (val: unknown) =>
-  typeof val === 'string' ? val.toUpperCase() : val
 
 const raceFilterSchema = z
   .object({
