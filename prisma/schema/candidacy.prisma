@@ -27,28 +27,14 @@ model Candidacy {
   about String? // From bioText on Person - if not available, generateAbout()
   urls  String[]
 
-  // GP-API (P2V)
-  projectedTurnout      Int?
-  republicans           Int?
-  democrats             Int?
-  independents          Int?
-  totalRegisteredVoters Int?
-
-  // GP-API (top issues and campaignPosition if a user, if not present, then use stances.issue and stances.statement from BR)
-  topIssues Json? // Array of objects with { issue, statement }
-
-  // GP-API Campaign
-  email              String?
-  pastExperience     String? // Formerly jobHistory
-  previouslyInOffice Boolean?
-  priorRoles         String? // Can be comma-separated string if array
-
   // Position (from Candidacy -> Position)
   electionFrequency      String? // Formerly called term
   salary                 Int?
   normalizedPositionName String?
   positionDescription    String?
 
-  Race   Race?   @relation(fields: [raceId], references: [id])
-  raceId String? @map("race_id") @db.Uuid
+  // Relations
+  Stances Stance[]
+  Race    Race?    @relation(fields: [raceId], references: [id])
+  raceId  String?  @map("race_id") @db.Uuid
 }
