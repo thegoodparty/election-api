@@ -10,6 +10,7 @@ import {
   hasChildren,
   hasParent,
   hasRaces,
+  PlaceCore,
   POSITION_NAMES_COLUMN_NAME,
   SLUG_COLUMN_NAME,
 } from './place.types'
@@ -18,6 +19,8 @@ import { getDedupedRacesBySlug } from 'src/races/races.util'
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
   constructor() {
+    const COUNTY_MTFCC = ['G4020']
+    const DISTRICT_MTFCC = ['G5420', 'G5410', 'G5400']
     super()
   }
 
@@ -163,5 +166,35 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     const sel: Prisma.PlaceSelect = { ...placeSelectBase }
     if (withRaces) sel.Races = raceInclude
     return { select: sel }
+  }
+
+  // We modify the passed in array for performance
+  private dedupeRacesInTree(obj: {
+    places: PlaceCore[]
+    includeRaces: boolean
+    includeChildren: boolean
+    includeParent: boolean
+  }) {
+    const { places, includeChildren, includeParent, includeRaces } = obj
+    if (!includeRaces) return
+    for (const place of places) {
+      if (includeRaces && hasRaces(place)) {
+        place.Races = getDedupedRacesBySlug(place.Races)
+      }
+
+      if (includeChildren && hasChildren(place)) {
+        for (const child of place.children ?? []) {
+          if (hasRaces(child)) {
+            child.Races = getDedupedRacesBySlug(child.Races)
+          }
+        }
+      }
+
+      if (includeParent && hasParent(place) && hasRaces(place.parent)) {
+        if (hasRaces(place.parent)) {
+          place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+        }
+      }
+    }
   }
 }
