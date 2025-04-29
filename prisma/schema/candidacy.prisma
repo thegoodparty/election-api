@@ -6,23 +6,35 @@ enum ElectionResult {
   @@map("election_result")
 }
 
-/**
- * CANDIDACY
- * (Implements DatabaseIdentifiable, Node, Timestamps)
- * belongs to person (candidate), election, race, position
- * many-to-many with party, has many stances
- */
 model Candidacy {
-  id           String          @id @db.Uuid
-  brHashId     String?         @map("br_hash_id")
-  brDatabaseId Int?            @map("br_database_id")
-  createdAt    DateTime        @map("created_at")
-  updatedAt    DateTime        @map("updated_at")
-  isCertified  Boolean         @map("is_certified")
-  isHidden     Boolean         @map("is_hidden")
-  withdrawn    Boolean
-  // Election result is an enum; can be null if no result yet
-  result       ElectionResult?
+  id           String   @id @map("id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  brDatabaseId Int      @map("br_database_id")
+  slug         String   @unique // slugify firstName-lastName-normalizedPositionName
 
-  @@map("candidacy")
+  // Candidacy
+  firstName String
+  lastName  String
+  party     String // Use index 0 of parties array
+
+  // Race for state, and potentially longest geoid Place on Race?
+  city  String?
+  state String?
+
+  // Person
+  image String? // Use index 0 of images array
+  about String? // From bioText on Person - if not available, generateAbout()
+  urls  String[]
+
+  // Position (from Candidacy -> Position)
+  electionFrequency      String? // Formerly called term
+  salary                 Int?
+  normalizedPositionName String?
+  positionDescription    String?
+
+  // Relations
+  Stances Stance[]
+  Race    Race?    @relation(fields: [raceId], references: [id])
+  raceId  String?  @map("race_id") @db.Uuid
 }
