@@ -1,0 +1,13 @@
+model Issue {
+    id           String   @id @map("id") @db.Uuid
+    createdAt    DateTime @default(now()) @map("created_at")
+    updatedAt    DateTime @updatedAt @map("updated_at")
+    brDatabaseId Int      @map("br_database_id")
+    expandedText String   @map("expanded_text")
+    key          String?
+    name         String
+    parent       Issue?   @relation("IssueHierarchy", fields: [parentId], references: [id])
+    parentId     String?  @map("parent_id") @db.Uuid
+    children     Issue[]  @relation("IssueHierarchy")
+    Stance       Stance[]
+}
