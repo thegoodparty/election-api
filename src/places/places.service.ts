@@ -16,11 +16,12 @@ import {
 } from './place.types'
 import { getDedupedRacesBySlug } from 'src/races/races.util'
 
+const COUNTY_MTFCC = ['G4020']
+const DISTRICT_MTFCC = ['G5420', 'G5410', 'G5400']
+
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
   constructor() {
-    const COUNTY_MTFCC = ['G4020']
-    const DISTRICT_MTFCC = ['G5420', 'G5410', 'G5400']
     super()
   }
 
@@ -29,6 +30,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       includeChildren,
       includeParent,
       includeRaces,
+      categorizePlaces,
       state,
       name,
       slug,
@@ -40,7 +42,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     this.logger.debug(`includeChildren: ${includeChildren}`)
     this.logger.debug(`includeParent: ${includeParent}`)
 
-    const where: Prisma.PlaceWhereInput = {
+    const baseWhere: Prisma.PlaceWhereInput = {
       ...(state ? { state } : {}),
       ...(name ? { name } : {}),
       ...(mtfcc ? { mtfcc } : {}),
@@ -66,44 +68,60 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     }
 
     this.logger.debug(placeQueryObj)
-    const places = placeSelectBase
-      ? await this.model.findMany({
-          where,
-          select: placeQueryObj,
-        })
-      : await this.model.findMany({
-          where,
-          include: placeQueryObj,
-        })
+    let counties: PlaceCore[] = []
+    let districts: PlaceCore[] = []
+    let others: PlaceCore[] = []
 
-    if (!places || places.length === 0) {
-      throw new NotFoundException(
-        `No places found for query: ${JSON.stringify(where)}`,
+    if (mtfcc || !categorizePlaces) {
+      // Reuse already instantiated array
+      others = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
+    } else {
+      const places = await this.runQuery(
+        baseWhere,
+        placeSelectBase,
+        placeQueryObj,
+      )
+
+      counties = places.filter((p) => COUNTY_MTFCC.includes(p.mtfcc!))
+      districts = places.filter((p) => DISTRICT_MTFCC.includes(p.mtfcc!))
+      others = places.filter(
+        (p) => ![...COUNTY_MTFCC, ...DISTRICT_MTFCC].includes(p.mtfcc!),
       )
     }
 
-    if (includeRaces) {
-      for (const place of places) {
-        if (includeRaces && hasRaces(place)) {
-          place.Races = getDedupedRacesBySlug(place.Races)
-        }
-
-        if (includeChildren && hasChildren(place)) {
-          for (const child of place.children ?? []) {
-            if (hasRaces(child)) {
-              child.Races = getDedupedRacesBySlug(child.Races)
-            }
-          }
-        }
-
-        if (includeParent && hasParent(place) && hasRaces(place.parent)) {
-          if (hasRaces(place.parent)) {
-            place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
-          }
-        }
-      }
+    if (
+      (!counties || counties.length === 0) &&
+      (!districts || districts.length === 0) &&
+      (!others || others.length === 0)
+    ) {
+      throw new NotFoundException(
+        `No places found for query: ${JSON.stringify(baseWhere)}`,
+      )
     }
-    return places
+    this.dedupeRacesInTree({
+      places: counties,
+      includeRaces,
+      includeChildren,
+      includeParent,
+    })
+    this.dedupeRacesInTree({
+      places: districts,
+      includeRaces,
+      includeChildren,
+      includeParent,
+    })
+    this.dedupeRacesInTree({
+      places: others,
+      includeRaces,
+      includeChildren,
+      includeParent,
+    })
+
+    // When caller wants races separated, we return one array
+    if (!categorizePlaces) return others
+
+    // Otherwise return all the arrays in an object
+    return { counties, districts, others }
   }
 
   async getPlacesWithMostElections(minRaces: number, count: number) {
@@ -196,5 +214,23 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
         }
       }
     }
+  }
+
+  private async runQuery<
+    T extends Prisma.PlaceSelect | Prisma.PlaceInclude | undefined,
+  >(
+    where: Prisma.PlaceWhereInput | object,
+    placeSelectBase: Prisma.PlaceSelect | undefined,
+    placeQueryObj: T,
+  ) {
+    return placeSelectBase
+      ? this.model.findMany({
+          where,
+          select: placeQueryObj,
+        })
+      : this.model.findMany({
+          where,
+          include: placeQueryObj,
+        })
   }
 }

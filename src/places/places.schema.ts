@@ -37,6 +37,10 @@ const placeFilterSchema = z
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),
+    categorizeRaces: z.preprocess(
+      (val) => val === 'true' || val === '1' || val === true,
+      z.boolean().optional().default(false),
+    ),
     placeColumns: z
       .string()
       .optional()
