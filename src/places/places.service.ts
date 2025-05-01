@@ -7,12 +7,12 @@ import {
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
 import {
-  hasBuckets,
   hasChildren,
   hasParent,
+  hasPlaceCategories,
   hasRaces,
   PlaceCore,
-  PlaceWithBuckets,
+  PlaceWithCategories,
   POSITION_NAMES_COLUMN_NAME,
   SLUG_COLUMN_NAME,
 } from './place.types'
@@ -81,7 +81,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     }
 
     this.logger.debug(placeQueryObj)
-    let places: PlaceWithBuckets[] = []
+    let places: PlaceWithCategories[] = []
 
     if (!categorizeChildren) {
       places = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
@@ -203,7 +203,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
             child.Races = getDedupedRacesBySlug(child.Races)
           }
         }
-      } else if (includeChildren && hasBuckets(place)) {
+      } else if (includeChildren && hasPlaceCategories(place)) {
         for (const district of place.districts ?? []) {
           if (hasRaces(district)) {
             district.Races = getDedupedRacesBySlug(district.Races)

@@ -24,7 +24,7 @@ export type PlaceWithParent = Prisma.PlaceGetPayload<{
   include: { parent: true }
 }>
 
-export type PlaceWithBuckets = PlaceCore & {
+export type PlaceWithCategories = PlaceCore & {
   children?: PlaceCore[]
   counties?: PlaceCore[]
   districts?: PlaceCore[]
@@ -41,7 +41,7 @@ export function hasParent(p: PlaceCore): p is PlaceWithParent {
   return 'parent' in p && (p as { parent?: unknown }).parent !== undefined
 }
 
-export function hasBuckets(p: PlaceCore): p is PlaceWithBuckets {
+export function hasPlaceCategories(p: PlaceCore): p is PlaceWithCategories {
   return (
     Array.isArray((p as { counties?: unknown }).counties) ||
     Array.isArray((p as { districts?: unknown }).districts) ||
