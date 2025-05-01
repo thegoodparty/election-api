@@ -16,7 +16,7 @@ model Candidacy {
   // Candidacy
   firstName String @map("first_name")
   lastName  String @map("last_name")
-  party     String // Use index 0 of parties array
+  party     String? // Use index 0 of parties array
 
   // Race for state, and potentially longest geoid Place on Race?
   placeName String? @map("place_name")
