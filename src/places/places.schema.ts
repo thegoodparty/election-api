@@ -29,6 +29,10 @@ const placeFilterSchema = z
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),
+    includeChildRaces: z.preprocess(
+      (val) => val === 'true' || val === '1' || val === true,
+      z.boolean().optional().default(false),
+    ),
     includeParent: z.preprocess(
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
@@ -37,7 +41,7 @@ const placeFilterSchema = z
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),
-    categorizePlaces: z.preprocess(
+    categorizeChildren: z.preprocess(
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),

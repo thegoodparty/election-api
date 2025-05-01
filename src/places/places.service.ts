@@ -7,10 +7,12 @@ import {
 import { PlaceFilterDto } from './places.schema'
 import { Prisma } from '@prisma/client'
 import {
+  hasBuckets,
   hasChildren,
   hasParent,
   hasRaces,
   PlaceCore,
+  PlaceWithBuckets,
   POSITION_NAMES_COLUMN_NAME,
   SLUG_COLUMN_NAME,
 } from './place.types'
@@ -28,9 +30,10 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
   async getPlaces(filterDto: PlaceFilterDto) {
     const {
       includeChildren,
+      includeChildRaces,
       includeParent,
       includeRaces,
-      categorizePlaces,
+      categorizeChildren,
       state,
       name,
       slug,
@@ -54,74 +57,68 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       : undefined
 
     const raceInclude = this.buildRaceInclude(raceColumns, includeRaces)
+    const childRaceInclude = this.buildRaceInclude(
+      raceColumns,
+      includeChildRaces,
+    )
     const placeSelection = this.makePlaceSelection(
       includeRaces,
       placeSelectBase,
       raceInclude,
     )
 
+    const childrenPlaceSelection = this.makePlaceSelection(
+      includeChildRaces,
+      placeSelectBase,
+      childRaceInclude,
+    )
+
     const placeQueryObj = {
       ...(placeSelectBase ?? {}),
       ...(includeRaces && { Races: raceInclude }),
-      ...(includeChildren && { children: placeSelection }),
+      ...(includeChildren && { children: childrenPlaceSelection }),
       ...(includeParent && { parent: placeSelection }),
     }
 
     this.logger.debug(placeQueryObj)
-    let counties: PlaceCore[] = []
-    let districts: PlaceCore[] = []
-    let others: PlaceCore[] = []
+    let places: PlaceWithBuckets[] = []
 
-    if (mtfcc || !categorizePlaces) {
-      // Reuse already instantiated array
-      others = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
+    if (!categorizeChildren) {
+      places = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
     } else {
-      const places = await this.runQuery(
-        baseWhere,
-        placeSelectBase,
-        placeQueryObj,
-      )
+      places = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
 
-      counties = places.filter((p) => COUNTY_MTFCC.includes(p.mtfcc!))
-      districts = places.filter((p) => DISTRICT_MTFCC.includes(p.mtfcc!))
-      others = places.filter(
-        (p) => ![...COUNTY_MTFCC, ...DISTRICT_MTFCC].includes(p.mtfcc!),
-      )
+      for (const place of places) {
+        place.counties = []
+        place.districts = []
+        place.others = []
+        if (!place.children) continue
+        for (const child of place.children) {
+          if (COUNTY_MTFCC.includes(child.mtfcc!)) {
+            place.counties.push(child)
+          } else if (DISTRICT_MTFCC.includes(child.mtfcc!)) {
+            place.districts.push(child)
+          } else {
+            place.others.push(child)
+          }
+        }
+        delete place.children
+      }
     }
 
-    if (
-      (!counties || counties.length === 0) &&
-      (!districts || districts.length === 0) &&
-      (!others || others.length === 0)
-    ) {
+    if (!places || places.length === 0) {
       throw new NotFoundException(
         `No places found for query: ${JSON.stringify(baseWhere)}`,
       )
     }
     this.dedupeRacesInTree({
-      places: counties,
-      includeRaces,
-      includeChildren,
-      includeParent,
-    })
-    this.dedupeRacesInTree({
-      places: districts,
-      includeRaces,
-      includeChildren,
-      includeParent,
-    })
-    this.dedupeRacesInTree({
-      places: others,
+      places,
       includeRaces,
       includeChildren,
       includeParent,
     })
 
-    // When caller wants races separated, we return one array
-    if (!categorizePlaces) return others
-
-    // Otherwise return all the arrays in an object
-    return { counties, districts, others }
+    return places
   }
 
   async getPlacesWithMostElections(minRaces: number, count: number) {
@@ -204,6 +201,22 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
         for (const child of place.children ?? []) {
           if (hasRaces(child)) {
             child.Races = getDedupedRacesBySlug(child.Races)
+          }
+        }
+      } else if (includeChildren && hasBuckets(place)) {
+        for (const district of place.districts ?? []) {
+          if (hasRaces(district)) {
+            district.Races = getDedupedRacesBySlug(district.Races)
+          }
+        }
+        for (const county of place.counties ?? []) {
+          if (hasRaces(county)) {
+            county.Races = getDedupedRacesBySlug(county.Races)
+          }
+        }
+        for (const other of place.counties ?? []) {
+          if (hasRaces(other)) {
+            other.Races = getDedupedRacesBySlug(other.Races)
           }
         }
       }
