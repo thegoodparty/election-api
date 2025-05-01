@@ -28,11 +28,19 @@ const placeFilterSchema = z.object({
     (val) => val === 'true' || val === '1' || val === true,
     z.boolean().optional().default(false),
   ),
+  includeChildRaces: z.preprocess(
+    (val) => val === 'true' || val === '1' || val === true,
+    z.boolean().optional().default(false),
+  ),
   includeParent: z.preprocess(
     (val) => val === 'true' || val === '1' || val === true,
     z.boolean().optional().default(false),
   ),
   includeRaces: z.preprocess(
+    (val) => val === 'true' || val === '1' || val === true,
+    z.boolean().optional().default(false),
+  ),
+  categorizeChildren: z.preprocess(
     (val) => val === 'true' || val === '1' || val === true,
     z.boolean().optional().default(false),
   ),

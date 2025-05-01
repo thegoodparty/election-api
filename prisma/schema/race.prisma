@@ -38,9 +38,11 @@ model Race {
   subAreaValue            String?       @map("sub_area_value")
   // PositionElection
   frequency               Int[]         @map("frequency")
-  Place                   Place?        @relation(fields: [placeId], references: [id])
-  placeId                 String?       @map("place_id") @db.Uuid
-  Candidacies             Candidacy[]
+
+  // Relations
+  Place       Place?      @relation(fields: [placeId], references: [id])
+  placeId     String?     @map("place_id") @db.Uuid
+  Candidacies Candidacy[]
 
   @@index([slug])
 }
