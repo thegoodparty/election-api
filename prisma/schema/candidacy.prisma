@@ -26,6 +26,7 @@ model Candidacy {
   image String? // Use index 0 of images array
   about String? // From bioText on Person - if not available, generateAbout()
   urls  String[]
+
   // Position (from Candidacy -> Position)
   electionFrequency      Int[] @map("election_frequency") // Formerly called term
   salary                 String?
