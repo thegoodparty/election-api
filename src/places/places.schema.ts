@@ -13,66 +13,63 @@ const raceColumns = Object.values(
 const toUpper = (val: unknown) =>
   typeof val === 'string' ? val.toUpperCase() : val
 
-const placeFilterSchema = z
-  .object({
-    state: z
-      .preprocess(toUpper, z.string())
-      .optional()
-      .refine((val) => {
+const placeFilterSchema = z.object({
+  state: z
+    .preprocess(toUpper, z.string())
+    .optional()
+    .refine((val) => {
+      if (!val) return true
+      return STATE_CODES.includes(val)
+    }, 'Invalid state code'),
+  name: z.string().optional(),
+  slug: z.string().optional(),
+  mtfcc: z.string().optional(),
+  includeChildren: z.preprocess(
+    (val) => val === 'true' || val === '1' || val === true,
+    z.boolean().optional().default(false),
+  ),
+  includeParent: z.preprocess(
+    (val) => val === 'true' || val === '1' || val === true,
+    z.boolean().optional().default(false),
+  ),
+  includeRaces: z.preprocess(
+    (val) => val === 'true' || val === '1' || val === true,
+    z.boolean().optional().default(false),
+  ),
+  placeColumns: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
         if (!val) return true
-        return STATE_CODES.includes(val)
-      }, 'Invalid state code'),
-    name: z.string().optional(),
-    slug: z.string().optional(),
-    mtfcc: z.string().optional(),
-    includeChildren: z.preprocess(
-      (val) => val === 'true' || val === '1' || val === true,
-      z.boolean().optional().default(false),
+        const columns = val.split(',').map((col) => col.trim())
+        return columns.every((col) =>
+          placeColumns.includes(
+            col as keyof typeof Prisma.PlaceScalarFieldEnum,
+          ),
+        )
+      },
+      {
+        message: `Invalid place column provided. Allowed columns are: ${placeColumns.join(', ')}`,
+      },
     ),
-    includeParent: z.preprocess(
-      (val) => val === 'true' || val === '1' || val === true,
-      z.boolean().optional().default(false),
+  raceColumns: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true
+        const columns = val.split(',').map((col) => col.trim())
+        return columns.every((col) =>
+          raceColumns.includes(col as keyof typeof Prisma.RaceScalarFieldEnum),
+        )
+      },
+      {
+        message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`,
+      },
     ),
-    includeRaces: z.preprocess(
-      (val) => val === 'true' || val === '1' || val === true,
-      z.boolean().optional().default(false),
-    ),
-    placeColumns: z
-      .string()
-      .optional()
-      .refine(
-        (val) => {
-          if (!val) return true
-          const columns = val.split(',').map((col) => col.trim())
-          return columns.every((col) =>
-            placeColumns.includes(
-              col as keyof typeof Prisma.PlaceScalarFieldEnum,
-            ),
-          )
-        },
-        {
-          message: `Invalid place column provided. Allowed columns are: ${placeColumns.join(', ')}`,
-        },
-      ),
-    raceColumns: z
-      .string()
-      .optional()
-      .refine(
-        (val) => {
-          if (!val) return true
-          const columns = val.split(',').map((col) => col.trim())
-          return columns.every((col) =>
-            raceColumns.includes(
-              col as keyof typeof Prisma.RaceScalarFieldEnum,
-            ),
-          )
-        },
-        {
-          message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`,
-        },
-      ),
-  })
-  .strict()
+})
+///  .strict()
 
 const mostElectionsSchema = z.object({
   count: z
