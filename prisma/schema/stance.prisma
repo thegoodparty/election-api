@@ -3,13 +3,13 @@ model Stance {
     createdAt          DateTime @default(now()) @map("created_at")
     updatedAt          DateTime @updatedAt @map("updated_at")
     brDatabaseId       Int      @map("br_database_id")
-    stanceLocale       String
-    stanceReferenceUrl String
-    stanceStatement    String
+    stanceLocale       String   @map("stance_locale")
+    stanceReferenceUrl String   @map("stance_reference_url")
+    stanceStatement    String   @map("stance_statement")
 
     // Relations
     Issue       Issue      @relation(fields: [issueId], references: [id])
-    issueId     String     @db.Uuid
+    issueId     String     @map("issue_id") @db.Uuid
     Candidacy   Candidacy? @relation(fields: [candidacyId], references: [id])
-    candidacyId String?    @db.Uuid
+    candidacyId String?    @map("candidacy_id") @db.Uuid
 }
