@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "Candidacy" ALTER COLUMN "position_name" SET NOT NULL;
+-- ALTER TABLE "Candidacy" ALTER COLUMN "position_name" SET NOT NULL;
