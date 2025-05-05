@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 
 export const candidacyColumns = Object.values(
-  Prisma.RaceScalarFieldEnum,
-) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
+  Prisma.CandidacyScalarFieldEnum,
+) as (keyof typeof Prisma.CandidacyScalarFieldEnum)[]
 
 const candidacyFilterSchema = z
   .object({
@@ -18,6 +18,11 @@ const candidacyFilterSchema = z
         return STATE_CODES.includes(val)
       }, 'Invalid state code'),
     slug: z.string().optional(),
+    raceSlug: z.string().optional(),
+    includeStances: z.preprocess(
+      (val) => val === 'true' || val === '1' || val === true,
+      z.boolean().optional().default(false),
+    ),
     columns: z
       .string()
       .optional()
@@ -26,13 +31,13 @@ const candidacyFilterSchema = z
           if (!val) return true
           const columns = val.split(',').map((col) => col.trim())
           return columns.every((col) =>
-            columns.includes(
+            candidacyColumns.includes(
               col as keyof typeof Prisma.CandidacyScalarFieldEnum,
             ),
           )
         },
         {
-          message: `Invalid candidacy column provided. Allowed columns are: ${candidacyColumns.join(', ')}`,
+          message: `Invalid race column provided. Allowed columns are: ${candidacyColumns.join(', ')}`,
         },
       ),
   })

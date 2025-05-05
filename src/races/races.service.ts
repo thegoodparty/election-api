@@ -64,7 +64,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
     const raceQueryObj = {
       ...(raceSelectBase ?? {}),
       ...(includePlace && { Place: placeInclude }),
-      // ...(includeCandidacies && { Candidacies: candidacyInclude }),
+      ...(includeCandidacies && { Candidacies: candidacyInclude }),
     }
 
     const races = raceSelectBase
