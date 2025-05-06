@@ -18,25 +18,34 @@ export class CandidaciesService extends createPrismaBase(MODELS.Candidacy) {
       ...(raceSlug && { Race: { slug: raceSlug } }),
     }
 
-    const selectBase = columns
+    const candidacySelectBase = columns
       ? (buildColumnSelect(columns) as Prisma.CandidacySelect)
       : undefined
 
-    const select: Prisma.CandidacySelect = {
-      ...selectBase,
-      ...(includeStances && {
-        Stances: {
-          include: {
-            Issue: true,
-          },
-        },
-      }),
+    const stanceInclude = { include: { Issue: true } } as const
+
+    const candidacySelection = this.makeCandidacySelection(
+      includeStances ?? false,
+      candidacySelectBase,
+      stanceInclude,
+    )
+
+    return candidacySelectBase
+      ? this.model.findMany({ where, select: candidacySelection })
+      : this.model.findMany({ where, include: candidacySelection })
+  }
+
+  private makeCandidacySelection(
+    withStances: boolean,
+    candidacySelectBase: Prisma.CandidacySelect | undefined,
+    stanceInclude: { include: { Issue: true } },
+  ): Prisma.CandidacySelect | Prisma.CandidacyInclude | undefined {
+    if (!candidacySelectBase) {
+      return withStances ? { Stances: stanceInclude } : undefined
     }
 
-    const candidacies = Object.keys(select).length
-      ? this.model.findMany({ where, select })
-      : this.model.findMany({ where })
-
-    return candidacies
+    const sel: Prisma.CandidacySelect = { ...candidacySelectBase }
+    if (withStances) sel.Stances = stanceInclude
+    return sel
   }
 }
