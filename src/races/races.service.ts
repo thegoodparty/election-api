@@ -112,27 +112,4 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       select: buildColumnSelect(candidacyColumns) as Prisma.CandidacySelect,
     }
   }
-
-  // private makeRaceSelection(
-  //   withPlace: boolean,
-  //   raceSelectBase: Prisma.RaceSelect | undefined,
-  //   placeInclude:
-  //     | true
-  //     | {
-  //         select: Prisma.PlaceSelect
-  //       },
-  // ) {
-  //   if (!raceSelectBase) {
-  //     if (!withPlace) return true
-
-  //     return {
-  //       include: {
-  //         Place: placeInclude,
-  //       },
-  //     }
-  //   }
-  //   const sel: Prisma.RaceSelect = { ...raceSelectBase }
-  //   if (withPlace) sel.Place = placeInclude
-  //   return { select: sel }
-  // }
 }
