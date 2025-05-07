@@ -1,9 +1,12 @@
 import { Prisma } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
+import { candidacyColumns } from 'src/candidacies/candidacies.schema'
+import { placeColumns } from 'src/places/places.schema'
 import { STATE_CODES } from 'src/shared/constants/states'
+import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
 
-const raceColumns = Object.values(
+export const raceColumns = Object.values(
   Prisma.RaceScalarFieldEnum,
 ) as (keyof typeof Prisma.RaceScalarFieldEnum)[]
 
@@ -16,9 +19,6 @@ const positionLevelEnum = z.enum([
   'STATE',
   'TOWNSHIP',
 ])
-
-const toUpper = (val: unknown) =>
-  typeof val === 'string' ? val.toUpperCase() : val
 
 const raceFilterSchema = z
   .object({
@@ -35,6 +35,10 @@ const raceFilterSchema = z
     electionDateStart: z.string().optional(),
     electionDateEnd: z.string().optional(),
     includePlace: z.preprocess(
+      (val) => val === 'true' || val === '1' || val === true,
+      z.boolean().optional().default(false),
+    ),
+    includeCandidacies: z.preprocess(
       (val) => val === 'true' || val === '1' || val === true,
       z.boolean().optional().default(false),
     ),
@@ -61,6 +65,40 @@ const raceFilterSchema = z
         },
         {
           message: `Invalid race column provided. Allowed columns are: ${raceColumns.join(', ')}`,
+        },
+      ),
+    placeColumns: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true
+          const columns = val.split(',').map((col) => col.trim())
+          return columns.every((col) =>
+            placeColumns.includes(
+              col as keyof typeof Prisma.PlaceScalarFieldEnum,
+            ),
+          )
+        },
+        {
+          message: `Invalid place column provided. Allowed columns are: ${placeColumns.join(', ')}`,
+        },
+      ),
+    candidacyColumns: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true
+          const columns = val.split(',').map((col) => col.trim())
+          return columns.every((col) =>
+            placeColumns.includes(
+              col as keyof typeof Prisma.PlaceScalarFieldEnum,
+            ),
+          )
+        },
+        {
+          message: `Invalid place column provided. Allowed columns are: ${candidacyColumns.join(', ')}`,
         },
       ),
   })
