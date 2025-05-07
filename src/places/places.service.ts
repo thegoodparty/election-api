@@ -9,11 +9,17 @@ import { Prisma } from '@prisma/client'
 import {
   hasChildren,
   hasParent,
+  hasPlaceCategories,
   hasRaces,
+  PlaceCore,
+  PlaceWithCategories,
   POSITION_NAMES_COLUMN_NAME,
   SLUG_COLUMN_NAME,
 } from './place.types'
 import { getDedupedRacesBySlug } from 'src/races/races.util'
+
+const COUNTY_MTFCC = { G4020: true }
+const DISTRICT_MTFCC = { G5420: true, G5410: true, G5400: true }
 
 @Injectable()
 export class PlacesService extends createPrismaBase(MODELS.Place) {
@@ -24,8 +30,10 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
   async getPlaces(filterDto: PlaceFilterDto) {
     const {
       includeChildren,
+      includeChildRaces,
       includeParent,
       includeRaces,
+      categorizeChildren,
       state,
       name,
       slug,
@@ -37,7 +45,7 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     this.logger.debug(`includeChildren: ${includeChildren}`)
     this.logger.debug(`includeParent: ${includeParent}`)
 
-    const where: Prisma.PlaceWhereInput = {
+    const baseWhere: Prisma.PlaceWhereInput = {
       ...(state ? { state } : {}),
       ...(name ? { name } : {}),
       ...(mtfcc ? { mtfcc } : {}),
@@ -49,57 +57,67 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
       : undefined
 
     const raceInclude = this.buildRaceInclude(raceColumns, includeRaces)
+    const childRaceInclude = this.buildRaceInclude(
+      raceColumns,
+      includeChildRaces,
+    )
     const placeSelection = this.makePlaceSelection(
       includeRaces,
       placeSelectBase,
       raceInclude,
     )
 
+    const childrenPlaceSelection = this.makePlaceSelection(
+      includeChildRaces,
+      placeSelectBase,
+      childRaceInclude,
+    )
+
     const placeQueryObj = {
       ...(placeSelectBase ?? {}),
       ...(includeRaces && { Races: raceInclude }),
-      ...(includeChildren && { children: placeSelection }),
+      ...(includeChildren && { children: childrenPlaceSelection }),
       ...(includeParent && { parent: placeSelection }),
     }
 
     this.logger.debug(placeQueryObj)
-    const places = placeSelectBase
-      ? await this.model.findMany({
-          where,
-          select: placeQueryObj,
-        })
-      : await this.model.findMany({
-          where,
-          include: placeQueryObj,
-        })
+    let places: PlaceWithCategories[] = []
+
+    if (!categorizeChildren) {
+      places = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
+    } else {
+      places = await this.runQuery(baseWhere, placeSelectBase, placeQueryObj)
+
+      for (const place of places) {
+        place.counties = []
+        place.districts = []
+        place.others = []
+        if (!place.children) continue
+        for (const child of place.children) {
+          if (COUNTY_MTFCC[child.mtfcc!]) {
+            place.counties.push(child)
+          } else if (DISTRICT_MTFCC[child.mtfcc!]) {
+            place.districts.push(child)
+          } else {
+            place.others.push(child)
+          }
+        }
+        delete place.children
+      }
+    }
 
     if (!places || places.length === 0) {
       throw new NotFoundException(
-        `No places found for query: ${JSON.stringify(where)}`,
+        `No places found for query: ${JSON.stringify(baseWhere)}`,
       )
     }
+    this.dedupeRacesInTree({
+      places,
+      includeRaces,
+      includeChildren,
+      includeParent,
+    })
 
-    if (includeRaces) {
-      for (const place of places) {
-        if (includeRaces && hasRaces(place)) {
-          place.Races = getDedupedRacesBySlug(place.Races)
-        }
-
-        if (includeChildren && hasChildren(place)) {
-          for (const child of place.children ?? []) {
-            if (hasRaces(child)) {
-              child.Races = getDedupedRacesBySlug(child.Races)
-            }
-          }
-        }
-
-        if (includeParent && hasParent(place) && hasRaces(place.parent)) {
-          if (hasRaces(place.parent)) {
-            place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
-          }
-        }
-      }
-    }
     return places
   }
 
@@ -163,5 +181,69 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     const sel: Prisma.PlaceSelect = { ...placeSelectBase }
     if (withRaces) sel.Races = raceInclude
     return { select: sel }
+  }
+
+  // We modify the passed in array for performance
+  private dedupeRacesInTree(obj: {
+    places: PlaceCore[]
+    includeRaces: boolean
+    includeChildren: boolean
+    includeParent: boolean
+  }) {
+    const { places, includeChildren, includeParent, includeRaces } = obj
+    if (!includeRaces) return
+    for (const place of places) {
+      if (includeRaces && hasRaces(place)) {
+        place.Races = getDedupedRacesBySlug(place.Races)
+      }
+
+      if (includeChildren && hasChildren(place)) {
+        for (const child of place.children ?? []) {
+          if (hasRaces(child)) {
+            child.Races = getDedupedRacesBySlug(child.Races)
+          }
+        }
+      } else if (includeChildren && hasPlaceCategories(place)) {
+        for (const district of place.districts ?? []) {
+          if (hasRaces(district)) {
+            district.Races = getDedupedRacesBySlug(district.Races)
+          }
+        }
+        for (const county of place.counties ?? []) {
+          if (hasRaces(county)) {
+            county.Races = getDedupedRacesBySlug(county.Races)
+          }
+        }
+        for (const other of place.counties ?? []) {
+          if (hasRaces(other)) {
+            other.Races = getDedupedRacesBySlug(other.Races)
+          }
+        }
+      }
+
+      if (includeParent && hasParent(place) && hasRaces(place.parent)) {
+        if (hasRaces(place.parent)) {
+          place.parent.Races = getDedupedRacesBySlug(place.parent.Races)
+        }
+      }
+    }
+  }
+
+  private async runQuery<
+    T extends Prisma.PlaceSelect | Prisma.PlaceInclude | undefined,
+  >(
+    where: Prisma.PlaceWhereInput | object,
+    placeSelectBase: Prisma.PlaceSelect | undefined,
+    placeQueryObj: T,
+  ) {
+    return placeSelectBase
+      ? this.model.findMany({
+          where,
+          select: placeQueryObj,
+        })
+      : this.model.findMany({
+          where,
+          include: placeQueryObj,
+        })
   }
 }
