@@ -18,6 +18,7 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
   async findRaces(filterDto: RaceFilterDto) {
     const {
       includePlace,
+      includeCandidacies,
       state,
       placeSlug,
       positionLevel,
@@ -27,6 +28,8 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       isPrimary,
       isRunoff,
       raceColumns,
+      placeColumns,
+      candidacyColumns,
     } = filterDto
 
     const where: Prisma.RaceWhereInput = {
@@ -48,47 +51,65 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         : {}),
     }
 
-    let races:
-      | Prisma.RaceGetPayload<{ select: Prisma.RaceSelect }>[]
-      | Prisma.RaceGetPayload<{ include: Prisma.RaceInclude }>[] = []
+    const raceSelectBase: Prisma.RaceSelect | undefined = raceColumns
+      ? (buildColumnSelect(raceColumns) as Prisma.RaceSelect)
+      : undefined
 
-    if (raceColumns) {
-      const select: Prisma.RaceSelect = buildColumnSelect(raceColumns)
+    const placeInclude = this.buildPlaceInclude(placeColumns, includePlace)
+    const candidacyInclude = this.buildCandidacyInclude(
+      candidacyColumns,
+      includeCandidacies,
+    )
 
-      if (includePlace) {
-        select.Place = true
-      }
-
-      races = await this.model.findMany({
-        where,
-        select,
-        orderBy: { electionDate: Prisma.SortOrder.asc },
-      })
-      if (!races || races.length === 0) {
-        throw new NotFoundException(
-          `No races found for query: ${JSON.stringify(where)}`,
-        )
-      }
-    } else {
-      const include: Prisma.RaceInclude = {}
-
-      if (includePlace) {
-        include.Place = true
-      }
-      races = await this.model.findMany({
-        where,
-        include,
-        orderBy: { electionDate: Prisma.SortOrder.asc },
-      })
-      if (!races || races.length === 0) {
-        throw new NotFoundException(
-          `No races found for query: ${JSON.stringify(where)}`,
-        )
-      }
+    const raceQueryObj = {
+      ...(raceSelectBase ?? {}),
+      ...(includePlace && { Place: placeInclude }),
+      ...(includeCandidacies && { Candidacies: candidacyInclude }),
     }
+
+    const races = raceSelectBase
+      ? await this.model.findMany({
+          where,
+          select: raceQueryObj,
+        })
+      : await this.model.findMany({
+          where,
+          include: raceQueryObj,
+        })
+
+    if (!races || races.length === 0) {
+      throw new NotFoundException(
+        `No races found for query: ${JSON.stringify(where)}`,
+      )
+    }
+
     if (!races[0]?.positionNames || !races[0]?.slug) {
       return races
     }
     return getDedupedRacesBySlug(races)
+  }
+
+  private buildPlaceInclude(
+    placeColumns: string | undefined | null,
+    includePlace: boolean | undefined | null,
+  ) {
+    if (!placeColumns) return true
+    if (!includePlace) return true
+
+    return {
+      select: buildColumnSelect(placeColumns) as Prisma.PlaceSelect,
+    }
+  }
+
+  private buildCandidacyInclude(
+    candidacyColumns: string | undefined | null,
+    includeCandidacies: boolean | undefined | null,
+  ) {
+    if (!candidacyColumns) return true
+    if (!includeCandidacies) return true
+
+    return {
+      select: buildColumnSelect(candidacyColumns) as Prisma.CandidacySelect,
+    }
   }
 }
