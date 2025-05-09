@@ -3,7 +3,7 @@ import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { z } from 'zod'
 
-const placeColumns = Object.values(
+export const placeColumns = Object.values(
   Prisma.PlaceScalarFieldEnum,
 ) as (keyof typeof Prisma.PlaceScalarFieldEnum)[]
 const raceColumns = Object.values(
