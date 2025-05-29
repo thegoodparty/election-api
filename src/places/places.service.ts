@@ -125,16 +125,16 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     const places = await this.client.$queryRaw<
       { slug: string; name: string; race_count: number }[]
     >`
-    SELECT   p.slug,
-             p.name,
-             COUNT(r.id)::int AS race_count
-    FROM     "Place" p
-    LEFT JOIN "Race" r ON r."place_id" = p.id
-    WHERE    p."mtfcc" <> 'G4000'
-    GROUP BY p.id
-    HAVING   COUNT(r.id) > ${minRaces}
-    ORDER BY race_count DESC;
-  `
+      SELECT   p.slug,
+               p.name,
+               COUNT(r.id)::int AS race_count
+      FROM     "Place" p
+      LEFT JOIN "Race" r ON r."place_id" = p.id
+      WHERE    p."mtfcc" <> 'G4000'
+      GROUP BY p.id
+      HAVING   COUNT(r.id) > ${minRaces}
+      ORDER BY race_count DESC;
+    `
     const topPlaces = places.slice(0, count)
     return topPlaces
   }
