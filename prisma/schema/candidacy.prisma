@@ -31,7 +31,7 @@ model Candidacy {
   electionFrequency      Int[]   @map("election_frequency") // Formerly called term
   salary                 String?
   normalizedPositionName String? @map("normalized_position_name")
-  positionName           String  @map("position_name")
+  positionName           String? @map("position_name")
   positionDescription    String? @map("position_description")
 
   // Relations
