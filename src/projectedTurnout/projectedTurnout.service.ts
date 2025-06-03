@@ -9,5 +9,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
     super()
   }
 
-  async getProjectedTurnout() {}
+  async getProjectedTurnout(id: string) {
+    return this.model.findFirst({ where: { id } })
+  }
 }
