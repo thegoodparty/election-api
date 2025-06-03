@@ -16,8 +16,8 @@ model ProjectedTurnout {
   updatedAt        DateTime     @updatedAt @map("updated_at")
   geoid            String       @unique
   state            String
-  L2DistrictType   String       @map("L2_office_type") // Do we want these two from L2 for debugging / investigations?
-  L2DistrictName   String       @map("L2_office_name")
+  L2DistrictType   String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
+  L2DistrictName   String       @map("l2_office_name")
   year             Int
   electionCode     ElectionCode
   projectedTurnout Int          @map("projected_turnout")
