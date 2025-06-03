@@ -11,18 +11,20 @@ enum ElectionCode {
 }
 
 model ProjectedTurnout {
-  id              String       @id @db.Uuid
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  state           String
-  officeType      String       @map("office_type")
-  officeName      String       @map("office_name")
-  year            Int
-  electionCode    ElectionCode
-  turnoutEstimate Int?         @map("turnout_estimate")
-  inferenceDate   DateTime     @map("inference_date")
-  modelVersion    String?      @map("model_version")
+  id               String       @id @map("id") @db.Uuid
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  geoid            String       @unique
+  state            String
+  L2DistrictType   String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
+  L2DistrictName   String       @map("l2_office_name")
+  year             Int
+  electionCode     ElectionCode
+  projectedTurnout Int          @map("projected_turnout")
+  inferenceDate    DateTime     @map("inference_date")
+  modelVersion     String       @map("model_version")
 
-  @@unique([state, officeType, officeName, year, electionCode])
-  @@map("projected_turnout")
+  Races Race[]
+
+  @@map("Projected_Turnout")
 }
