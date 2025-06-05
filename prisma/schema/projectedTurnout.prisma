@@ -12,9 +12,10 @@ enum ElectionCode {
 
 model ProjectedTurnout {
   id               String       @id @map("id") @db.Uuid
+  brPositionId     String       @unique()
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
-  geoid            String       @unique
+  geoid            String
   state            String
   L2DistrictType   String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
   L2DistrictName   String       @map("l2_office_name")

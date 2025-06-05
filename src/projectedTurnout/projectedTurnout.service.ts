@@ -9,7 +9,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
     super()
   }
 
-  async getProjectedTurnout(id: string) {
-    return this.model.findFirst({ where: { id } })
+  async getProjectedTurnout(brPositionId: string) {
+    return this.model.findUnique({ where: { brPositionId } })
   }
 }
