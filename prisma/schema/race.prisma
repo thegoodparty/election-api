@@ -41,9 +41,11 @@ model Race {
   frequency               Int[]         @map("frequency")
 
   // Relations
-  Place       Place?      @relation(fields: [placeId], references: [id])
-  placeId     String?     @map("place_id") @db.Uuid
-  Candidacies Candidacy[]
+  Place              Place?            @relation(fields: [placeId], references: [id])
+  placeId            String?           @map("place_id") @db.Uuid
+  Candidacies        Candidacy[]
+  projectedTurnoutId String?           @map("projected_turnout_id") @db.Uuid
+  ProjectedTurnout   ProjectedTurnout? @relation(fields: [projectedTurnoutId], references: [id])
 
   @@index([slug])
 }
