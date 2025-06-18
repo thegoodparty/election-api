@@ -7,7 +7,7 @@ import { createZodDto } from 'nestjs-zod'
 const ElectionEnum = z.nativeEnum(ElectionCode)
 
 const projectedTurnoutPostSchema = z.object({
-  brPositionId: z.string(),
+  brPositionDatabaseId: z.string(),
   geoid: z.string(),
   state: z.preprocess(toUpper, z.string()).refine((val) => {
     if (!val) return true
@@ -17,10 +17,10 @@ const projectedTurnoutPostSchema = z.object({
   L2DistrictName: z.string(),
 
   // Numbers
-  year: z.preprocess((val) => Number(val), z.number()),
+  electionYear: z.preprocess((val) => Number(val), z.number()),
   projectedTurnout: z.preprocess((val) => Number(val), z.number()),
 
-  inferenceDate: z.preprocess((val) => {
+  inferenceAt: z.preprocess((val) => {
     const date = new Date(val as string)
     return isNaN(date.getTime()) ? undefined : date
   }, z.date()),

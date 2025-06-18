@@ -1,29 +1,23 @@
 enum ElectionCode {
-  EP // Primary Election
-  EG // General Election
-  EPP // Presidential Preference Primary
-  ECP // Consolidated Primary Election
-  ECG // Consolidated General Election
-  EL // Local Election
-  ES // Special Election    
-  ER // Runoff Election
-  EPD // Democratic Election Primary
+  General
+  LocalOrMunicipal
+  ConsolidatedGeneral
 }
 
 model ProjectedTurnout {
-  id               String       @id @map("id") @db.Uuid
-  brPositionId     String       @unique()
-  createdAt        DateTime     @default(now()) @map("created_at")
-  updatedAt        DateTime     @updatedAt @map("updated_at")
-  geoid            String
-  state            String
-  L2DistrictType   String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
-  L2DistrictName   String       @map("l2_office_name")
-  electionYear     Int          @map("election_year")
-  electionCode     ElectionCode @map("election_code")
-  projectedTurnout Int          @map("projected_turnout")
-  inferenceDate    DateTime     @map("inference_date")
-  modelVersion     String       @map("model_version")
+  id                   String       @id @map("id") @db.Uuid
+  brPositionDatabaseId String       @unique() @map("br_position_database_id")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  geoid                String
+  state                String
+  L2DistrictType       String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
+  L2DistrictName       String       @map("l2_office_name")
+  electionYear         Int          @map("election_year")
+  electionCode         ElectionCode @map("election_code")
+  projectedTurnout     Int          @map("projected_turnout")
+  inferenceAt          DateTime     @map("inference_at")
+  modelVersion         String       @map("model_version")
 
   Races Race[]
 

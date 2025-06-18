@@ -11,11 +11,13 @@ export class ProjectedTurnoutService extends createPrismaBase(
     super()
   }
 
-  async getProjectedTurnout(brPositionId: string) {
-    const record = this.model.findUnique({ where: { brPositionId } })
+  async getProjectedTurnout(brPositionDatabaseId: string) {
+    const record = this.model.findUnique({
+      where: { brPositionDatabaseId },
+    })
     if (!record) {
       throw new NotFoundException(
-        `Projected turnout not found for brPositionId ${brPositionId}`,
+        `Projected turnout not found for brPositionId ${brPositionDatabaseId}`,
       )
     }
     return record

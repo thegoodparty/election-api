@@ -9,13 +9,17 @@ export class ProjectedTurnoutController {
   ) {}
 
   @Get()
-  async getProjectedTurnout(@Query('brPositionId') brPositionId: string) {
-    console.log('Received request for: ', brPositionId)
+  async getProjectedTurnout(
+    @Query('brPositionId') brPositionDatabaseId: string,
+  ) {
+    console.log('Received request for: ', brPositionDatabaseId)
     const record =
-      await this.projectedTurnoutService.getProjectedTurnout(brPositionId)
+      await this.projectedTurnoutService.getProjectedTurnout(
+        brPositionDatabaseId,
+      )
     if (!record) {
       throw new NotFoundException(
-        `Projected turnout not found for brPositionId ${brPositionId}`,
+        `Projected turnout not found for brPositionId ${brPositionDatabaseId}`,
       )
     }
     return record
