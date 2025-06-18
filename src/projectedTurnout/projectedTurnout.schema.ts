@@ -7,7 +7,7 @@ import { createZodDto } from 'nestjs-zod'
 const ElectionEnum = z.nativeEnum(ElectionCode)
 
 const projectedTurnoutPostSchema = z.object({
-  brPositionDatabaseId: z.string(),
+  brPositionId: z.string(),
   geoid: z.string(),
   state: z.preprocess(toUpper, z.string()).refine((val) => {
     if (!val) return true
