@@ -19,7 +19,7 @@ model ProjectedTurnout {
   state            String
   L2DistrictType   String       @map("l2_office_type") // Do we want these two from L2 for debugging / investigations?
   L2DistrictName   String       @map("l2_office_name")
-  year             Int
+  electionYear     Int          @map("election_year")
   electionCode     ElectionCode @map("election_code")
   projectedTurnout Int          @map("projected_turnout")
   inferenceDate    DateTime     @map("inference_date")
