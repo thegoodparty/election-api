@@ -1,12 +1,5 @@
-import {
-  Controller,
-  Get,
-  NotImplementedException,
-  Post,
-  Query,
-} from '@nestjs/common'
+import { Controller, Get, NotImplementedException } from '@nestjs/common'
 import { ProjectedTurnoutService } from './projectedTurnout.service'
-import { ProjectedTurnoutPostDTO } from './projectedTurnout.schema'
 
 @Controller('projectedTurnout')
 export class ProjectedTurnoutController {
@@ -17,10 +10,5 @@ export class ProjectedTurnoutController {
   @Get()
   async getProjectedTurnout() {
     throw new NotImplementedException('This endpoint is not supported')
-  }
-
-  @Post()
-  alterProjectedTurnout(@Query() dto: ProjectedTurnoutPostDTO) {
-    return this.projectedTurnoutService.alterProjectedTurnout(dto)
   }
 }
