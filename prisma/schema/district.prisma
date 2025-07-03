@@ -10,4 +10,5 @@ model District {
     ProjectedTurnouts ProjectedTurnout[]
 
     @@unique([state, L2DistrictType, L2DistrictName])
+    @@map("District")
 }
