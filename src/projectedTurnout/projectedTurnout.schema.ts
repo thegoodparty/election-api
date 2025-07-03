@@ -6,28 +6,17 @@ import { createZodDto } from 'nestjs-zod'
 
 const ElectionEnum = z.nativeEnum(ElectionCode)
 
-const projectedTurnoutPostSchema = z.object({
-  brPositionId: z.string(),
-  geoid: z.string(),
+const projectedTurnoutQuerySchema = z.object({
   state: z.preprocess(toUpper, z.string()).refine((val) => {
     if (!val) return true
     return STATE_CODES.includes(val)
   }, 'Invalid state code'),
   L2DistrictType: z.string(),
   L2DistrictName: z.string(),
-
-  // Numbers
-  electionYear: z.preprocess((val) => Number(val), z.number()),
-  projectedTurnout: z.preprocess((val) => Number(val), z.number()),
-
-  inferenceAt: z.preprocess((val) => {
-    const date = new Date(val as string)
-    return isNaN(date.getTime()) ? undefined : date
-  }, z.date()),
-  electionCode: ElectionEnum,
-  modelVersion: z.string(),
+  electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
+  electionCode: ElectionEnum.optional(),
 })
 
-export class ProjectedTurnoutPostDTO extends createZodDto(
-  projectedTurnoutPostSchema,
+export class ProjectedTurnoutQueryDTO extends createZodDto(
+  projectedTurnoutQuerySchema,
 ) {}

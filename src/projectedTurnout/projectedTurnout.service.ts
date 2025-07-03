@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
-import { ProjectedTurnoutPostDTO } from './projectedTurnout.schema'
-import { v4 as uuidv4 } from 'uuid'
+import { ProjectedTurnoutQueryDTO } from './projectedTurnout.schema'
 
 @Injectable()
 export class ProjectedTurnoutService extends createPrismaBase(
@@ -11,7 +10,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
     super()
   }
 
-  async getProjectedTurnout(brPositionId: string) {
+  async getProjectedTurnout(dto: ProjectedTurnoutQueryDTO) {
     const record = this.model.findUnique({
       where: { brPositionId },
     })
@@ -21,11 +20,5 @@ export class ProjectedTurnoutService extends createPrismaBase(
       )
     }
     return record
-  }
-
-  async alterProjectedTurnout(dto: ProjectedTurnoutPostDTO) {
-    await this.model.create({
-      data: { id: uuidv4(), ...dto },
-    })
   }
 }
