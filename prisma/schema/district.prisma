@@ -1,0 +1,14 @@
+model District {
+    id             String   @id @map("id") @db.Uuid
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+    state          String
+    L2DistrictType String   @map("l2_district_type")
+    L2DistrictName String   @map("l2_district_name")
+
+    // Relations
+    ProjectedTurnouts ProjectedTurnout[]
+
+    @@unique([state, L2DistrictType, L2DistrictName])
+    @@map("District")
+}

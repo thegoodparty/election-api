@@ -8,15 +8,16 @@ model ProjectedTurnout {
   id               String       @id @map("id") @db.Uuid
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
-  state            String
-  L2DistrictType   String       @map("l2_district_type")
-  L2DistrictName   String       @map("l2_district_name")
   electionYear     Int          @map("election_year")
   electionCode     ElectionCode @map("election_code")
   projectedTurnout Int          @map("projected_turnout")
   inferenceAt      DateTime     @map("inference_at")
   modelVersion     String       @map("model_version")
 
-  @@index([state, L2DistrictType, L2DistrictName, electionYear])
+  // Relations
+  district   District @relation(fields: [districtId], references: [id])
+  districtId String   @map("district_id") @db.Uuid
+
+  @@index([districtId, electionYear])
   @@map("Projected_Turnout")
 }
