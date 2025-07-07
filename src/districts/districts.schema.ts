@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma, ElectionCode as EC } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { toUpper } from 'src/shared/util/strings.util'
@@ -12,11 +12,13 @@ export const projectedTurnoutColumns = Object.values(
   Prisma.ProjectedTurnoutScalarFieldEnum,
 ) as (keyof typeof Prisma.ProjectedTurnoutScalarFieldEnum)[]
 
-const ElectionCode = z.enum([
-  'General',
-  'LocalOrMunicipal',
-  'ConsolidatedGeneral',
-])
+// const ElectionCode = z.enum([
+//   'General',
+//   'LocalOrMunicipal',
+//   'ConsolidatedGeneral',
+// ])
+
+const ElectionCode = z.nativeEnum(EC)
 
 const getDistrictTypesSchema = z.object({
   state: z
