@@ -3,7 +3,11 @@ import {
   createPrismaBase,
   MODELS,
 } from 'src/prisma/util/prisma.util'
-import { GetDistrictsDTO, GetDistrictTypesDTO } from './districts.schema'
+import {
+  GetDistrictNamesDto,
+  GetDistrictsDTO,
+  GetDistrictTypesDTO,
+} from './districts.schema'
 import { Prisma, ElectionCode as EC } from '@prisma/client'
 import { NotFoundException } from '@nestjs/common'
 
@@ -16,7 +20,7 @@ export class DistrictsService extends createPrismaBase(MODELS.District) {
     return this.listDistinct(dto, Prisma.DistrictScalarFieldEnum.L2DistrictType)
   }
 
-  async getDistrictNames(dto: GetDistrictsDTO) {
+  async getDistrictNames(dto: GetDistrictNamesDto) {
     // TODO: make specific DTO
     return this.listDistinct(dto, Prisma.DistrictScalarFieldEnum.L2DistrictName)
   }

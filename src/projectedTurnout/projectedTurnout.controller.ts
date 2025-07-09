@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Query } from '@nestjs/common'
+import { Controller, Query, Get, NotFoundException } from '@nestjs/common'
 import { ProjectedTurnoutService } from './projectedTurnout.service'
 import { ProjectedTurnoutUniqueDTO } from './projectedTurnout.schema'
 

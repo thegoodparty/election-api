@@ -76,5 +76,15 @@ const getDistrictsSchema = z.object({
     ),
 })
 
+const getDistrictNamesSchema = z.object({
+  state: z
+    .preprocess(toUpper, z.string())
+    .refine((v) => STATE_CODES.includes(v), 'Invalid state code'),
+  L2DistrictType: z.string(),
+  electionYear: z.coerce.number().int().optional(),
+  excludeInvalid: z.coerce.boolean().optional(),
+})
+
+export class GetDistrictNamesDto extends createZodDto(getDistrictNamesSchema) {}
 export class GetDistrictTypesDTO extends createZodDto(getDistrictTypesSchema) {}
 export class GetDistrictsDTO extends createZodDto(getDistrictsSchema) {}

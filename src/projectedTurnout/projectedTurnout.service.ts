@@ -46,8 +46,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
     } = dto
     const electionCode =
       dto.electionCode ?? this.determineElectionCode(electionDate, state)
-    const record = this.model.findUnique({
-      // TODO: change to find Unique
+    return this.model.findFirst({
       where: {
         electionCode,
         electionYear,
@@ -57,8 +56,6 @@ export class ProjectedTurnoutService extends createPrismaBase(
         },
       },
     })
-
-    return record
   }
   async getManyProjectedTurnouts(dto: ProjectedTurnoutManyQueryDTO) {
     const {
