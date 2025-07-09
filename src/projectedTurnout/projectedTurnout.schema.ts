@@ -6,16 +6,24 @@ import { createZodDto } from 'nestjs-zod'
 
 const ElectionEnum = z.nativeEnum(ElectionCode)
 
-const projectedTurnoutQuerySchema = z.object({
-  state: z.preprocess(toUpper, z.string()).refine((val) => {
-    if (!val) return true
-    return STATE_CODES.includes(val)
-  }, 'Invalid state code'),
-  L2DistrictType: z.string(),
-  L2DistrictName: z.string(),
-  electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
-  electionCode: ElectionEnum.optional(),
-})
+const projectedTurnoutUniqueSchema = z
+  .object({
+    state: z.preprocess(toUpper, z.string()).refine((val) => {
+      if (!val) return true
+      return STATE_CODES.includes(val)
+    }, 'Invalid state code'),
+    L2DistrictType: z.string(),
+    L2DistrictName: z.string(),
+    electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
+    electionDate: z.string().refine((val) => !isNaN(new Date(val).getTime()), {
+      message: 'Invalid date string',
+    }),
+    electionCode: ElectionEnum.optional(),
+  })
+  .refine((data) => data.electionCode || data.electionDate, {
+    message: 'Either electionCode or electionDate is required',
+    path: ['electionCode'],
+  })
 
 const projectedTurnoutManyQuerySchema = z
   .object({
@@ -45,8 +53,8 @@ const projectedTurnoutManyQuerySchema = z
     },
   )
 
-export class ProjectedTurnoutQueryDTO extends createZodDto(
-  projectedTurnoutQuerySchema,
+export class ProjectedTurnoutUniqueDTO extends createZodDto(
+  projectedTurnoutUniqueSchema,
 ) {}
 
 export class ProjectedTurnoutManyQueryDTO extends createZodDto(

@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Query } from '@nestjs/common'
 import { ProjectedTurnoutService } from './projectedTurnout.service'
-import { ProjectedTurnoutQueryDTO } from './projectedTurnout.schema'
+import { ProjectedTurnoutUniqueDTO } from './projectedTurnout.schema'
 
 @Controller('projectedTurnout')
 export class ProjectedTurnoutController {
@@ -9,7 +9,7 @@ export class ProjectedTurnoutController {
   ) {}
 
   @Get()
-  async getProjectedTurnout(@Query() dto: ProjectedTurnoutQueryDTO) {
+  async getProjectedTurnout(@Query() dto: ProjectedTurnoutUniqueDTO) {
     const record = await this.projectedTurnoutService.getProjectedTurnout(dto)
     if (!record) {
       throw new NotFoundException(`Projected turnout not found for ${dto}`)
