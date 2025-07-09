@@ -21,76 +21,11 @@ export class DistrictsService extends createPrismaBase(MODELS.District) {
     return this.listDistinct(dto, Prisma.DistrictScalarFieldEnum.L2DistrictName)
   }
 
-  // async getDistrictTypes(dto: GetDistrictTypesDTO) {
-  //   const { state, electionYear, excludeInvalid } = dto
-
-  //   return (
-  //     await this.model.findMany({
-  //       where: {
-  //         state,
-  //         ...((electionYear || excludeInvalid) && {
-  //           ProjectedTurnouts: {
-  //             some: {
-  //               ...(electionYear && { electionYear }),
-  //               ...(excludeInvalid && { projectedTurnout: { gt: 0 } }),
-  //             },
-  //           },
-  //         }),
-  //       },
-  //       select: { L2DistrictType: true },
-  //       distinct: ['L2DistrictType'],
-  //     })
-  //   ).map((r) => r.L2DistrictType)
-  // }
-
-  // async getDistrictNames(dto: GetDistrictsDTO) {
-  //   const { state, L2DistrictType, electionYear, excludeInvalid } = dto
-
-  //   return (
-  //     await this.model.findMany({
-  //       where: {
-  //         state,
-  //         L2DistrictType,
-  //         ...((electionYear || excludeInvalid) && {
-  //           ProjectedTurnouts: {
-  //             some: {
-  //               ...(electionYear && { electionYear }),
-  //               ...(excludeInvalid && { projectedTurnout: { gt: 0 } }),
-  //             },
-  //           },
-  //         }),
-  //       },
-  //       select: { L2DistrictName: true },
-  //     })
-  //   ).map((r) => r.L2DistrictName)
-  // }
-
   async getDistricts(dto: GetDistrictsDTO) {
-    const {
-      state,
-      L2DistrictName,
-      L2DistrictType,
-      electionYear,
-      electionCode,
-      excludeInvalid,
-      districtColumns,
-      projectedTurnoutColumns,
-    } = dto
-    // const turnoutWhere: Prisma.ProjectedTurnoutWhereInput = {
-    //   ...(electionYear && { electionYear }),
-    //   ...(electionCode && { electionCode }),
-    //   ...(excludeInvalid && { projectedTurnout: { gt: 0 } }),
-    // }
+    const { districtColumns, projectedTurnoutColumns } = dto
+
     const turnoutWhere = this.buildTurnoutWhere(dto)
     const where = this.buildDistrictWhere(dto, turnoutWhere)
-    //const hasTurnoutFilters = Object.keys(turnoutWhere).length > 0
-
-    // const where: Prisma.DistrictWhereInput = {
-    //   ...(state && { state }),
-    //   ...(L2DistrictType && { L2DistrictType }),
-    //   ...(L2DistrictName && { L2DistrictName }),
-    //   ...(hasTurnoutFilters && { ProjectedTurnouts: { some: turnoutWhere } }),
-    // }
 
     const districtSelectBase: Prisma.DistrictSelect | undefined =
       districtColumns
@@ -160,16 +95,16 @@ export class DistrictsService extends createPrismaBase(MODELS.District) {
   private async listDistinct<K extends 'L2DistrictType' | 'L2DistrictName'>(
     dto: GetDistrictTypesDTO | GetDistrictsDTO,
     field: K,
-  ): Promise<string[]> {
+  ) {
     const turnoutWhere = this.buildTurnoutWhere(dto)
     const where = this.buildDistrictWhere(dto, turnoutWhere)
 
-    const rows = await this.model.findMany({
+    return await this.model.findMany({
       where,
-      select: { [field]: true } as Prisma.DistrictSelect,
+      select: { id: true, [field]: true } as Prisma.DistrictSelect,
       distinct: [field],
+      orderBy: { [field]: Prisma.SortOrder.asc },
     })
-    return rows.map((r) => r[field] as string)
   }
 
   private buildProjectedTurnoutInclude(

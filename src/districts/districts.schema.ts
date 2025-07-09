@@ -12,12 +12,6 @@ export const projectedTurnoutColumns = Object.values(
   Prisma.ProjectedTurnoutScalarFieldEnum,
 ) as (keyof typeof Prisma.ProjectedTurnoutScalarFieldEnum)[]
 
-// const ElectionCode = z.enum([
-//   'General',
-//   'LocalOrMunicipal',
-//   'ConsolidatedGeneral',
-// ])
-
 const ElectionCode = z.nativeEnum(EC)
 
 const getDistrictTypesSchema = z.object({
@@ -29,6 +23,7 @@ const getDistrictTypesSchema = z.object({
     }, 'Invalid state code')
     .optional(),
   electionYear: z.coerce.number().int().optional(),
+  electionCode: ElectionCode.optional(),
   excludeInvalid: z.coerce.boolean().optional(),
 })
 
