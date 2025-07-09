@@ -21,7 +21,6 @@ export class DistrictsService extends createPrismaBase(MODELS.District) {
   }
 
   async getDistrictNames(dto: GetDistrictNamesDto) {
-    // TODO: make specific DTO
     return this.listDistinct(dto, Prisma.DistrictScalarFieldEnum.L2DistrictName)
   }
 
