@@ -8,10 +8,10 @@ const ElectionEnum = z.nativeEnum(ElectionCode)
 
 const projectedTurnoutUniqueSchema = z
   .object({
-    state: z.preprocess(toUpper, z.string()).refine((val) => {
-      if (!val) return true
-      return STATE_CODES.includes(val)
-    }, 'Invalid state code'),
+    state: z
+      .string()
+      .transform(v => v.toUpperCase())
+      .refine(v => STATE_CODES.includes(v), 'Invalid state code'),
     L2DistrictType: z.string(),
     L2DistrictName: z.string(),
     electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
@@ -27,10 +27,10 @@ const projectedTurnoutUniqueSchema = z
 
 const projectedTurnoutManyQuerySchema = z
   .object({
-    state: z.preprocess(toUpper, z.string()).refine((val) => {
-      if (!val) return true
-      return STATE_CODES.includes(val)
-    }, 'Invalid state code'),
+    state: z
+      .string()
+      .transform(v => v.toUpperCase())
+      .refine(v => STATE_CODES.includes(v), 'Invalid state code'),
     L2DistrictType: z.string().optional(),
     L2DistrictName: z.string().optional(),
     electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
@@ -55,8 +55,8 @@ const projectedTurnoutManyQuerySchema = z
 
 export class ProjectedTurnoutUniqueDTO extends createZodDto(
   projectedTurnoutUniqueSchema,
-) {}
+) { }
 
 export class ProjectedTurnoutManyQueryDTO extends createZodDto(
   projectedTurnoutManyQuerySchema,
-) {}
+) { }

@@ -10,13 +10,13 @@ import { ElectionCode } from '@prisma/client'
 export class ProjectedTurnoutService extends createPrismaBase(
   MODELS.ProjectedTurnout,
 ) {
-  static readonly CONSOLIDATED_2YR_STATES = new Set([
+  private static readonly CONSOLIDATED_2YR_STATES = new Set([
     'LA',
     'MS',
     'NJ',
     'VA',
   ] as const)
-  static readonly CONSOLIDATED_4YR_STATES = new Set(['KS'] as const)
+  private static readonly CONSOLIDATED_4YR_STATES = new Set(['KS'] as const)
 
   private static makeStateGuard<Code extends string>(set: ReadonlySet<Code>) {
     return (s: string): s is Code => set.has(s as Code)
@@ -67,28 +67,27 @@ export class ProjectedTurnoutService extends createPrismaBase(
       includeDistrict,
     } = dto
 
-    let districtinclude = includeDistrict
-    if (state || L2DistrictType || L2DistrictName) districtinclude = true
+    const districtInclude = (state || L2DistrictType || L2DistrictName) ? true : includeDistrict
 
-    return districtinclude
+    return districtInclude
       ? this.model.findMany({
-          where: {
-            district: {
-              state,
-              L2DistrictType,
-              L2DistrictName,
-            },
-            electionYear,
-            electionCode,
+        where: {
+          district: {
+            state,
+            L2DistrictType,
+            L2DistrictName,
           },
-          include: { district: districtinclude },
-        })
+          electionYear,
+          electionCode,
+        },
+        include: { district: districtInclude },
+      })
       : this.model.findMany({
-          where: {
-            electionYear,
-            electionCode,
-          },
-        })
+        where: {
+          electionYear,
+          electionCode,
+        },
+      })
   }
 
   private isTuesdayAfterFirstMondayInNov(date: Date): boolean {
