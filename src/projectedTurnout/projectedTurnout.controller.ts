@@ -1,5 +1,6 @@
-import { Controller, Get, NotImplementedException } from '@nestjs/common'
+import { Controller, Query, Get, NotFoundException } from '@nestjs/common'
 import { ProjectedTurnoutService } from './projectedTurnout.service'
+import { ProjectedTurnoutUniqueDTO } from './projectedTurnout.schema'
 
 @Controller('projectedTurnout')
 export class ProjectedTurnoutController {
@@ -8,7 +9,11 @@ export class ProjectedTurnoutController {
   ) {}
 
   @Get()
-  async getProjectedTurnout() {
-    throw new NotImplementedException('This endpoint is not supported')
+  async getProjectedTurnout(@Query() dto: ProjectedTurnoutUniqueDTO) {
+    const record = await this.projectedTurnoutService.getProjectedTurnout(dto)
+    if (!record) {
+      throw new NotFoundException(`Projected turnout not found for ${dto}`)
+    }
+    return record
   }
 }
