@@ -16,4 +16,4 @@ import { DistrictsModule } from './districts/districts.module'
     DistrictsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
