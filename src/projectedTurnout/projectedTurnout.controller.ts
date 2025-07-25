@@ -6,7 +6,7 @@ import { ProjectedTurnoutUniqueDTO } from './projectedTurnout.schema'
 export class ProjectedTurnoutController {
   constructor(
     private readonly projectedTurnoutService: ProjectedTurnoutService,
-  ) {}
+  ) { }
 
   @Get()
   async getProjectedTurnout(@Query() dto: ProjectedTurnoutUniqueDTO) {
