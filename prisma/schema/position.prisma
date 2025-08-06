@@ -6,5 +6,5 @@ model Position {
 
     // Relations
     district   District @relation(fields: [districtId], references: [id])
-    districtId String   @unique @map("district_id") @db.Uuid()
+    districtId String   @map("district_id") @db.Uuid()
 }
