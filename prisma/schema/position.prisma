@@ -1,7 +1,7 @@
 model Position {
     id           String @id @map("id") @db.Uuid
     brDatabaseId String @map("br_database_id")
-    brPositionId String @map("br_position_id") // Must be the source Ballotready position ID
+    brPositionId String @unique @map("br_position_id") // Must be the source Ballotready position ID
     state        String
 
     // Relations

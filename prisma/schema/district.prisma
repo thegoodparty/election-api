@@ -8,7 +8,7 @@ model District {
 
     // Relations
     ProjectedTurnouts ProjectedTurnout[]
-    Positions         Position[]
+    position          Position?
 
     @@unique([state, L2DistrictType, L2DistrictName])
     @@map("District")
