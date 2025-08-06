@@ -8,9 +8,18 @@ export const getPositionByBrIdParamsSchema = z.object({
 export const getPositionByBrIdQuerySchema = z
   .object({
     includeDistrict: z.coerce.boolean().optional(),
-    electionDate: z.string().refine((val) => !isNaN(new Date(val).getTime()), {
-      message: 'Invalid date string',
-    }),
+    electionDate: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (val === undefined) return true
+          return !isNaN(new Date(val).getTime())
+        },
+        {
+          message: 'Invalid date string',
+        },
+      ),
   })
   .refine(
     (data) => {

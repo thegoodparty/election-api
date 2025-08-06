@@ -5,6 +5,7 @@ import { HealthModule } from './health/health.module'
 import { CandidaciesModule } from './candidacies/candidacies.module'
 import { ProjectedTurnoutModule } from './projectedTurnout/projectedTurnout.module'
 import { DistrictsModule } from './districts/districts.module'
+import { PositionsModule } from './positions/positions.module'
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DistrictsModule } from './districts/districts.module'
     CandidaciesModule,
     ProjectedTurnoutModule,
     DistrictsModule,
+    PositionsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

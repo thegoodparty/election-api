@@ -9,7 +9,7 @@ import {
 export class PositionsController {
   constructor(private readonly positions: PositionsService) {}
 
-  @Get('by-ballotready-id:brPositionId')
+  @Get('by-ballotready-id/:brPositionId')
   async getPositionByBallotReadyId(
     @Param() params: GetPositionByBrIdParamsDTO,
     @Query() query: GetPositionByBrIdQueryDTO,
