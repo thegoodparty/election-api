@@ -29,7 +29,9 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     if (!includeDistrict) {
       const position = await this.model.findUnique({ where: { brPositionId } })
       if (!position) {
-        throw new NotFoundException('No position with that brPositionId was found')
+        throw new NotFoundException(
+          'No position with that brPositionId was found',
+        )
       }
       return position
     }
@@ -45,7 +47,9 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       },
     })
     if (!positionWithDistrict) {
-      throw new NotFoundException('No position with that brPositionId was found')
+      throw new NotFoundException(
+        'No position with that brPositionId was found',
+      )
     }
     if (!positionWithDistrict?.district?.ProjectedTurnouts) {
       throw new InternalServerErrorException(
