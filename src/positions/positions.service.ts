@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
@@ -70,7 +71,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       )
     }
     if (filteredTurnout.length === 0) {
-      throw new InternalServerErrorException(
+      throw new NotFoundException(
         'Error: No projected turnouts matched the electionDate input',
       )
     }
