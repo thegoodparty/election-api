@@ -16,7 +16,7 @@ export class PositionsController {
   ) {
     return this.positions.getPositionByBallotReadyId({
       brPositionId: params.brPositionId,
-      includeDistrict: query.includeDistrict,
+      includeDistrict: query?.includeDistrict,
       electionDate: query?.electionDate,
     })
   }

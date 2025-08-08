@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
@@ -23,20 +22,17 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     const { brPositionId, includeDistrict, electionDate } = params
     if (includeDistrict && !electionDate) {
       throw new BadRequestException(
-        'If includeDistrict is true, you must pass an electionCode or an electionDate',
+        'If includeDistrict is true, you must pass an electionDate',
       )
     }
     if (!includeDistrict) {
-      const position = await this.model.findUnique({ where: { brPositionId } })
-      if (!position) {
-        throw new NotFoundException(
-          'No position with that brPositionId was found',
-        )
-      }
+      const position = await this.model.findUniqueOrThrow({
+        where: { brPositionId },
+      })
       return position
     }
 
-    const positionWithDistrict = await this.model.findUnique({
+    const positionWithDistrict = await this.model.findUniqueOrThrow({
       where: { brPositionId },
       include: {
         district: {
@@ -46,11 +42,6 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         },
       },
     })
-    if (!positionWithDistrict) {
-      throw new NotFoundException(
-        'No position with that brPositionId was found',
-      )
-    }
     if (!positionWithDistrict?.district?.ProjectedTurnouts) {
       throw new InternalServerErrorException(
         'Failed to fetch projected turnouts',
