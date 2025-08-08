@@ -67,27 +67,28 @@ export class ProjectedTurnoutService extends createPrismaBase(
       includeDistrict,
     } = dto
 
-    const districtInclude = (state || L2DistrictType || L2DistrictName) ? true : includeDistrict
+    const districtInclude =
+      state || L2DistrictType || L2DistrictName ? true : includeDistrict
 
     return districtInclude
       ? this.model.findMany({
-        where: {
-          district: {
-            state,
-            L2DistrictType,
-            L2DistrictName,
+          where: {
+            district: {
+              state,
+              L2DistrictType,
+              L2DistrictName,
+            },
+            electionYear,
+            electionCode,
           },
-          electionYear,
-          electionCode,
-        },
-        include: { district: districtInclude },
-      })
+          include: { district: districtInclude },
+        })
       : this.model.findMany({
-        where: {
-          electionYear,
-          electionCode,
-        },
-      })
+          where: {
+            electionYear,
+            electionCode,
+          },
+        })
   }
 
   private isTuesdayAfterFirstMondayInNov(date: Date): boolean {
@@ -95,10 +96,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
     return date.getMonth() === 10 && date.getDay() === 2 && day > 1 && day <= 8
   }
 
-  private determineElectionCode(
-    electionDate: string,
-    state: string,
-  ): ElectionCode {
+  determineElectionCode(electionDate: string, state: string): ElectionCode {
     // Converted from Nigel's Python, you probably shouldn't touch this
     const date = new Date(`${electionDate}T00:00:00`)
     const year = date.getFullYear()

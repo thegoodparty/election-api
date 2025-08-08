@@ -1,5 +1,4 @@
 import { STATE_CODES } from 'src/shared/constants/states'
-import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
 import { ElectionCode } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
@@ -10,8 +9,8 @@ const projectedTurnoutUniqueSchema = z
   .object({
     state: z
       .string()
-      .transform(v => v.toUpperCase())
-      .refine(v => STATE_CODES.includes(v), 'Invalid state code'),
+      .transform((v) => v.toUpperCase())
+      .refine((v) => STATE_CODES.includes(v), 'Invalid state code'),
     L2DistrictType: z.string(),
     L2DistrictName: z.string(),
     electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
@@ -29,8 +28,8 @@ const projectedTurnoutManyQuerySchema = z
   .object({
     state: z
       .string()
-      .transform(v => v.toUpperCase())
-      .refine(v => STATE_CODES.includes(v), 'Invalid state code'),
+      .transform((v) => v.toUpperCase())
+      .refine((v) => STATE_CODES.includes(v), 'Invalid state code'),
     L2DistrictType: z.string().optional(),
     L2DistrictName: z.string().optional(),
     electionYear: z.preprocess((val) => Number(val), z.number()).optional(),
@@ -55,8 +54,8 @@ const projectedTurnoutManyQuerySchema = z
 
 export class ProjectedTurnoutUniqueDTO extends createZodDto(
   projectedTurnoutUniqueSchema,
-) { }
+) {}
 
 export class ProjectedTurnoutManyQueryDTO extends createZodDto(
   projectedTurnoutManyQuerySchema,
-) { }
+) {}
