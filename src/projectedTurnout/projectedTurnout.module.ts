@@ -5,5 +5,6 @@ import { ProjectedTurnoutService } from './projectedTurnout.service'
 @Module({
   controllers: [ProjectedTurnoutController],
   providers: [ProjectedTurnoutService],
+  exports: [ProjectedTurnoutService],
 })
 export class ProjectedTurnoutModule {}
