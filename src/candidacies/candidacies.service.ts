@@ -10,7 +10,15 @@ import { Prisma } from '@prisma/client'
 @Injectable()
 export class CandidaciesService extends createPrismaBase(MODELS.Candidacy) {
   async getCandidacies(filterDto: CandidacyFilterDto) {
-    const { slug, raceSlug, state, columns, includeStances } = filterDto
+    const {
+      slug,
+      raceSlug,
+      state,
+      columns,
+      includeStances,
+      includeRace,
+      raceColumns,
+    } = filterDto
 
     const where: Prisma.CandidacyWhereInput = {
       ...(slug && { slug }),
@@ -23,11 +31,14 @@ export class CandidaciesService extends createPrismaBase(MODELS.Candidacy) {
       : undefined
 
     const stanceInclude = { include: { Issue: true } } as const
+    const raceInclude = this.buildRaceInclude(raceColumns, includeRace)
 
     const candidacySelection = this.makeCandidacySelection(
       includeStances ?? false,
+      includeRace ?? false,
       candidacySelectBase,
       stanceInclude,
+      raceInclude,
     )
 
     return candidacySelectBase
@@ -37,15 +48,39 @@ export class CandidaciesService extends createPrismaBase(MODELS.Candidacy) {
 
   private makeCandidacySelection(
     withStances: boolean,
+    withRace: boolean,
     candidacySelectBase: Prisma.CandidacySelect | undefined,
     stanceInclude: { include: { Issue: true } },
+    raceInclude:
+      | true
+      | {
+          select: Prisma.RaceSelect
+        },
   ): Prisma.CandidacySelect | Prisma.CandidacyInclude | undefined {
     if (!candidacySelectBase) {
-      return withStances ? { Stances: stanceInclude } : undefined
+      if (!withStances && !withRace) return undefined
+
+      return {
+        ...(withStances ? { Stances: stanceInclude } : {}),
+        ...(withRace ? { Race: raceInclude } : {}),
+      }
     }
 
     const sel: Prisma.CandidacySelect = { ...candidacySelectBase }
     if (withStances) sel.Stances = stanceInclude
+    if (withRace) sel.Race = raceInclude
     return sel
+  }
+
+  private buildRaceInclude(
+    raceColumns: string | undefined | null,
+    includeRace: boolean | undefined | null,
+  ) {
+    if (!raceColumns) return true
+    if (!includeRace) return true
+
+    return {
+      select: buildColumnSelect(raceColumns) as Prisma.RaceSelect,
+    }
   }
 }
