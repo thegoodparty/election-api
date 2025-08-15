@@ -21,6 +21,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     electionDate?: string
   }) {
     const { brPositionId, includeDistrict, electionDate } = params
+    console.dir(params, { depth: 6 })
     if (includeDistrict && !electionDate) {
       throw new BadRequestException(
         'If includeDistrict is true, you must pass an electionDate',
@@ -43,6 +44,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         },
       },
     })
+    console.dir(positionWithDistrict)
     if (!positionWithDistrict?.district?.ProjectedTurnouts) {
       throw new InternalServerErrorException(
         'Failed to fetch projected turnouts',
@@ -57,6 +59,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       electionDate,
       positionWithDistrict.state,
     )
+    console.log(electionCode)
     const electionYear = new Date(electionDate).getFullYear()
     const filteredTurnout =
       positionWithDistrict.district.ProjectedTurnouts.filter(
