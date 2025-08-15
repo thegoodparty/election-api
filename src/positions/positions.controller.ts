@@ -14,7 +14,6 @@ export class PositionsController {
     @Param() params: GetPositionByBrIdParamsDTO,
     @Query() query: GetPositionByBrIdQueryDTO,
   ) {
-    console.log('positions controller')
     return this.positions.getPositionByBallotReadyId({
       brPositionId: params.brPositionId,
       includeDistrict: query?.includeDistrict,
