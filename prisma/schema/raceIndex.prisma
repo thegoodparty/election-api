@@ -1,0 +1,69 @@
+model RaceIndex {
+    id        String   @id @map("id") @db.Uuid
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Identification (BallotReady / CivicEngine references)
+    brHashId     String? @map("br_hash_id")
+    brDatabaseId Int?    @map("br_database_id")
+    brPositionId String? @map("br_position_id")
+    brElectionId String? @map("br_election_id")
+
+    // Slug and geography
+    slug          String  @map("slug")
+    state         String  @db.Char(2)
+    placeGeoid    String? @map("place_geoid")
+    placeSlug     String? @map("place_slug")
+    positionGeoid String? @map("position_geoid")
+
+    // Election
+    electionName            String?   @map("election_name")
+    electionDate            DateTime  @map("election_date")
+    electionYear            Int       @map("election_year")
+    electionType            String?   @map("election_type")
+    isRunoff                Boolean?  @map("is_runoff")
+    isPrimary               Boolean?  @map("is_primary")
+    partisanType            String?   @map("partisan_type")
+    registrationDeadline    DateTime? @map("registration_deadline")
+    absenteeRequestDeadline DateTime? @map("absentee_request_deadline")
+    absenteeReturnDeadline  DateTime? @map("absentee_return_deadline")
+
+    // Position (office)
+    positionLevel           PositionLevel @map("position_level")
+    normalizedPositionName  String?       @map("normalized_position_name")
+    positionNames           String[]      @map("position_names")
+    positionDescription     String?       @map("position_description")
+    filingOfficeAddress     String?       @map("filing_office_address")
+    filingPhoneNumber       String?       @map("filing_phone_number")
+    paperworkInstructions   String?       @map("paperwork_instructions")
+    filingRequirements      String?       @map("filing_requirements")
+    filingDateStart         DateTime?     @map("filing_date_start")
+    filingDateEnd           DateTime?     @map("filing_date_end")
+    employmentType          String?       @map("employment_type")
+    eligibilityRequirements String?       @map("eligibility_requirements")
+    salary                  String?       @map("salary")
+    subAreaName             String?       @map("sub_area_name")
+    subAreaValue            String?       @map("sub_area_value")
+    seats                   Int?          @map("seats")
+    termLengthMonths        Int?          @map("term_length_months")
+    frequency               Int[]         @map("frequency")
+
+    // District attributes (for cross-filtering)
+    districtType String? @map("district_type")
+    districtName String? @map("district_name")
+
+    // ZIP crosswalk for quick filtering. Store 5-char strings (keep leading zeros).
+    zipCodes String[] @db.Text
+
+    // Indexes
+    @@index([zipCodes], type: Gin)
+    @@index([slug])
+    @@index([state, electionDate])
+    @@index([electionYear, electionDate])
+    @@index([positionLevel, electionDate])
+    @@index([placeGeoid])
+    @@index([positionGeoid])
+    @@index([brPositionId])
+    @@index([brDatabaseId])
+    @@index([brElectionId])
+}
