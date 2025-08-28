@@ -1,59 +1,57 @@
 model RaceIndex {
-    id        String   @id @map("id") @db.Uuid
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+    id        String   @id @map("id") @db.Uuid // internal
+    createdAt DateTime @default(now()) @map("created_at") // internal
+    updatedAt DateTime @updatedAt @map("updated_at") // internal
 
     // Identification (BallotReady / CivicEngine references)
-    brHashId     String? @map("br_hash_id")
-    brDatabaseId Int?    @map("br_database_id")
-    brPositionId String? @map("br_position_id")
-    brElectionId String? @map("br_election_id")
+    brDatabaseId Int?    @map("br_database_id") // source: race.databaseId
+    brPositionId String? @map("br_position_id") // source: race->position.id
+    brRaceId     String? @map("br_race_id") // source: race.id
+    brElectionId String? @map("br_election_id") // source: race->election.id
 
     // Slug and geography
-    slug          String  @map("slug")
-    state         String  @db.Char(2)
-    placeGeoid    String? @map("place_geoid")
-    placeSlug     String? @map("place_slug")
-    positionGeoid String? @map("position_geoid")
+    slug          String  @map("slug") // derived: internal slug for race+position
+    state         String  @db.Char(2) // source: race.state
+    positionGeoid String? @map("position_geoid") // source: race->position.geoid
 
     // Election
-    electionName            String?   @map("election_name")
-    electionDate            DateTime  @map("election_date")
-    electionYear            Int       @map("election_year")
-    electionType            String?   @map("election_type")
-    isRunoff                Boolean?  @map("is_runoff")
-    isPrimary               Boolean?  @map("is_primary")
-    partisanType            String?   @map("partisan_type")
-    registrationDeadline    DateTime? @map("registration_deadline")
-    absenteeRequestDeadline DateTime? @map("absentee_request_deadline")
-    absenteeReturnDeadline  DateTime? @map("absentee_return_deadline")
+    electionName            String?   @map("election_name") // source: race->election.name
+    electionDate            DateTime  @map("election_date") // source: race->election.electionDay
+    electionYear            Int       @map("election_year") // derived: year(race->election.electionDay)
+    isRunoff                Boolean?  @map("is_runoff") // source: race.isRunoff
+    isPrimary               Boolean?  @map("is_primary") // source: race.isPrimary
+    partisanType            String?   @map("partisan_type") // source: race.partisanType
+    registrationDeadline    DateTime? @map("registration_deadline") // source: race->election.registrationDeadline
+    absenteeRequestDeadline DateTime? @map("absentee_request_deadline") // source: race->election.absenteeApplicationDeadline
+    absenteeReturnDeadline  DateTime? @map("absentee_return_deadline") // source: race->election.absenteeBallotReturnDeadline
 
     // Position (office)
-    positionLevel           PositionLevel @map("position_level")
-    normalizedPositionName  String?       @map("normalized_position_name")
-    positionNames           String[]      @map("position_names")
-    positionDescription     String?       @map("position_description")
-    filingOfficeAddress     String?       @map("filing_office_address")
-    filingPhoneNumber       String?       @map("filing_phone_number")
-    paperworkInstructions   String?       @map("paperwork_instructions")
-    filingRequirements      String?       @map("filing_requirements")
-    filingDateStart         DateTime?     @map("filing_date_start")
-    filingDateEnd           DateTime?     @map("filing_date_end")
-    employmentType          String?       @map("employment_type")
-    eligibilityRequirements String?       @map("eligibility_requirements")
-    salary                  String?       @map("salary")
-    subAreaName             String?       @map("sub_area_name")
-    subAreaValue            String?       @map("sub_area_value")
-    seats                   Int?          @map("seats")
-    termLengthMonths        Int?          @map("term_length_months")
-    frequency               Int[]         @map("frequency")
+    positionLevel           PositionLevel @map("position_level") // source: race->position.level
+    normalizedPositionName  String?       @map("normalized_position_name") // source: race->position.normalizedName
+    positionNames           String[]      @map("position_names") // source: race->position.names
+    positionDescription     String?       @map("position_description") // source: race->position.description
+    filingOfficeAddress     String?       @map("filing_office_address") // source: race->filingPeriods[].officeAddress
+    filingPhoneNumber       String?       @map("filing_phone_number") // source: race->filingPeriods[].phone
+    paperworkInstructions   String?       @map("paperwork_instructions") // source: race->filingPeriods[].paperworkInstructions
+    filingRequirements      String?       @map("filing_requirements") // source: race->filingPeriods[].requirements
+    filingDateStart         DateTime?     @map("filing_date_start") // source: race->filingPeriods[].startDate
+    filingDateEnd           DateTime?     @map("filing_date_end") // source: race->filingPeriods[].endDate
+    employmentType          String?       @map("employment_type") // source: race->position.employmentType
+    eligibilityRequirements String?       @map("eligibility_requirements") // source: race->position.eligibilityRequirements
+    salary                  String?       @map("salary") // source: race->position.salary
+    subAreaName             String?       @map("sub_area_name") // source: race.subArea.name
+    subAreaValue            String?       @map("sub_area_value") // source: race.subArea.value
+    seats                   Int?          @map("seats") // source: race->position.seats
+    termLengthMonths        Int?          @map("term_length_months") // source: race->position.termLengthMonths
+    frequency               Int[]         @map("frequency") // source: race->positionElection.frequency
 
     // District attributes (for cross-filtering)
-    districtType String? @map("district_type")
-    districtName String? @map("district_name")
+    // Avoiding joins to keep the read-path cheap
+    districtType String? @map("district_type") // source: race->position->district.type
+    districtName String? @map("district_name") // source: race->position->district.name
 
     // ZIP crosswalk for quick filtering. Store 5-char strings (keep leading zeros).
-    zipCodes String[] @db.Text
+    zipCodes String[] @db.Text // internal crosswalk (not from BallotReady)
 
     // Indexes
     @@index([zipCodes], type: Gin)
@@ -61,7 +59,6 @@ model RaceIndex {
     @@index([state, electionDate])
     @@index([electionYear, electionDate])
     @@index([positionLevel, electionDate])
-    @@index([placeGeoid])
     @@index([positionGeoid])
     @@index([brPositionId])
     @@index([brDatabaseId])
