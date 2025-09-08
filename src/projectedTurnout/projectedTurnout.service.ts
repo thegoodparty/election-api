@@ -53,6 +53,7 @@ export class ProjectedTurnoutService extends createPrismaBase(
         district: {
           L2DistrictType,
           L2DistrictName,
+          state,
         },
       },
     })
