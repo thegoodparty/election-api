@@ -83,15 +83,23 @@ export class DistrictsService extends createPrismaBase(MODELS.District) {
       state?: string | null
       L2DistrictType?: string | null
       L2DistrictName?: string | null
+      excludeInvalid?: boolean | null
     },
     turnoutWhere: Prisma.ProjectedTurnoutWhereInput,
   ) {
-    const hasTurnout = Object.keys(turnoutWhere).length > 0
+    const hasTurnoutFilters = Object.keys(turnoutWhere).length > 0
+    const shouldRequireMatchingTurnout =
+      dto?.excludeInvalid === true && hasTurnoutFilters
     return {
       ...(dto.state && { state: dto.state }),
       ...(dto.L2DistrictType && { L2DistrictType: dto.L2DistrictType }),
       ...(dto.L2DistrictName && { L2DistrictName: dto.L2DistrictName }),
-      ...(hasTurnout && { ProjectedTurnouts: { some: turnoutWhere } }),
+      // Only constrain districts by existence of matching ProjectedTurnouts
+      // when excludeInvalid is true. Otherwise, allow districts to return
+      // even if there is no associated ProjectedTurnout (e.g., past years).
+      ...(shouldRequireMatchingTurnout && {
+        ProjectedTurnouts: { some: turnoutWhere },
+      }),
     }
   }
 

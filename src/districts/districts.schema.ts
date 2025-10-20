@@ -21,7 +21,15 @@ const getDistrictTypesSchema = z.object({
     .optional(),
   electionYear: z.coerce.number().int().optional(),
   electionCode: ElectionCode.optional(),
-  excludeInvalid: z.coerce.boolean().optional(),
+  excludeInvalid: z.preprocess(
+    (val) =>
+      val === 'true' || val === '1' || val === true
+        ? true
+        : val === 'false' || val === '0' || val === false
+          ? false
+          : undefined,
+    z.boolean().optional().default(false),
+  ),
 })
 
 const getDistrictsSchema = z.object({
@@ -33,7 +41,15 @@ const getDistrictsSchema = z.object({
   L2DistrictType: z.string().optional(),
   L2DistrictName: z.string().optional(),
   electionYear: z.coerce.number().int().optional(),
-  excludeInvalid: z.coerce.boolean().optional(),
+  excludeInvalid: z.preprocess(
+    (val) =>
+      val === 'true' || val === '1' || val === true
+        ? true
+        : val === 'false' || val === '0' || val === false
+          ? false
+          : undefined,
+    z.boolean().optional().default(false),
+  ),
   electionCode: ElectionCode.optional(),
   districtColumns: z
     .string()
@@ -78,7 +94,15 @@ const getDistrictNamesSchema = z.object({
     .refine((v) => STATE_CODES.includes(v), 'Invalid state code'),
   L2DistrictType: z.string(),
   electionYear: z.coerce.number().int().optional(),
-  excludeInvalid: z.coerce.boolean().optional(),
+  excludeInvalid: z.preprocess(
+    (val) =>
+      val === 'true' || val === '1' || val === true
+        ? true
+        : val === 'false' || val === '0' || val === false
+          ? false
+          : undefined,
+    z.boolean().optional().default(false),
+  ),
 })
 
 export class GetDistrictNamesDto extends createZodDto(getDistrictNamesSchema) {}
