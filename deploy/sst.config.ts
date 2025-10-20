@@ -141,15 +141,7 @@ export default $config({
           },
         },
       },
-      capacity:
-        $app.stage === 'master'
-          ? {
-              fargate: { weight: 1, base: 1 },
-              spot: { weight: 1 },
-            }
-          : {
-              spot: { weight: 1, base: 1 },
-            },
+      capacity: { fargate: { weight: 1 } },
       memory: $app.stage === 'master' ? '4 GB' : '2 GB',
       cpu: $app.stage === 'master' ? '1 vCPU' : '0.5 vCPU',
       scaling: {
