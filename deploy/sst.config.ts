@@ -19,7 +19,7 @@ export default $config({
           version: '6.67.0',
           defaultTags: {
             // @ts-expect-error input stage is not typed
-            Environment: environment[$app.stage],
+            Environment: environment[input.stage],
             Project: 'election-api'
           }
         },
