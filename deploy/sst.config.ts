@@ -249,7 +249,7 @@ export default $config({
       clusterIdentifier,
       engine: aws.rds.EngineType.AuroraPostgresql,
       engineMode: aws.rds.EngineMode.Provisioned,
-      engineVersion: '16.2',
+      engineVersion: '16.8',
       databaseName: dbName,
       masterUsername: dbUser,
       masterPassword: dbPassword,
