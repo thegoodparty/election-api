@@ -1,5 +1,12 @@
 ///  <reference types="./.sst/platform/config.d.ts" />
 
+
+const environment = {
+  develop: 'dev',
+  qa: 'qa',
+  master: 'prod',
+}
+
 export default $config({
   app(input) {
     return {
@@ -10,6 +17,13 @@ export default $config({
         aws: {
           region: 'us-west-2',
           version: '6.67.0',
+          defaultTags: {
+            tags: {
+              // @ts-expect-error input stage is not typed
+              Environment: environment[input.stage],
+              Project: 'election-api'
+            }
+          }
         },
       },
     }
@@ -237,7 +251,7 @@ export default $config({
       clusterIdentifier,
       engine: aws.rds.EngineType.AuroraPostgresql,
       engineMode: aws.rds.EngineMode.Provisioned,
-      engineVersion: '16.2',
+      engineVersion: '16.8',
       databaseName: dbName,
       masterUsername: dbUser,
       masterPassword: dbPassword,
