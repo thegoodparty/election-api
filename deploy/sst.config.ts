@@ -18,9 +18,11 @@ export default $config({
           region: 'us-west-2',
           version: '6.67.0',
           defaultTags: {
-            // @ts-expect-error input stage is not typed
-            Environment: environment[input.stage],
-            Project: 'election-api'
+            tags: {
+              // @ts-expect-error input stage is not typed
+              Environment: environment[input.stage],
+              Project: 'election-api'
+            }
           }
         },
       },
