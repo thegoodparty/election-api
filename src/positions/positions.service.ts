@@ -18,12 +18,19 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
   async getPositionByBallotReadyId(params: {
     brPositionId: string
     includeDistrict?: boolean
+    includeTurnout?: boolean
     electionDate?: string
   }) {
-    const { brPositionId, includeDistrict, electionDate } = params
-    if (includeDistrict && !electionDate) {
+    const { brPositionId, includeDistrict, electionDate, includeTurnout } =
+      params
+    if (includeTurnout && !electionDate) {
       throw new BadRequestException(
-        'If includeDistrict is true, you must pass an electionDate',
+        'If includeTurnout is true, you must pass an electionDate',
+      )
+    }
+    if (includeTurnout && !includeDistrict) {
+      throw new BadRequestException(
+        'A district must be included in the response to return a turnout',
       )
     }
     if (!includeDistrict) {
@@ -31,6 +38,14 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         where: { brPositionId },
       })
       return position
+    }
+    console.log('includeTurnout: ', includeTurnout)
+    if (!includeTurnout) {
+      // If the caller doesn't want projectedTurnout, no further processing is needed
+      return await this.model.findUniqueOrThrow({
+        where: { brPositionId },
+        include: { district: true },
+      })
     }
 
     const positionWithDistrict = await this.model.findUniqueOrThrow({
