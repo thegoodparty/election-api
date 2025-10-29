@@ -39,7 +39,6 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       })
       return position
     }
-    console.log('includeTurnout: ', includeTurnout)
     if (!includeTurnout) {
       // If the caller doesn't want projectedTurnout, no further processing is needed
       return await this.model.findUniqueOrThrow({
