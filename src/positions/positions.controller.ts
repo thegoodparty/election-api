@@ -18,6 +18,7 @@ export class PositionsController {
       brPositionId: params.brPositionId,
       includeDistrict: query?.includeDistrict,
       electionDate: query?.electionDate,
+      includeTurnout: query?.includeTurnout,
     })
   }
 }
