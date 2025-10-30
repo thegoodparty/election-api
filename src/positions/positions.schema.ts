@@ -7,6 +7,15 @@ export const getPositionByBrIdParamsSchema = z.object({
 
 export const getPositionByBrIdQuerySchema = z
   .object({
+    includeTurnout: z.preprocess(
+      (val) =>
+        val === 'true' || val === '1' || val === true
+          ? true
+          : val === 'false' || val === '0' || val === false
+            ? false
+            : undefined,
+      z.boolean().optional().default(true),
+    ),
     includeDistrict: z.coerce.boolean().optional(),
     electionDate: z
       .string()
@@ -23,16 +32,22 @@ export const getPositionByBrIdQuerySchema = z
   })
   .refine(
     (data) => {
-      if (data.includeDistrict === true) {
+      if (data.includeTurnout) {
         return data.electionDate !== undefined
       }
       return true
     },
     {
-      message: 'When includeDistrict is true, electionDate has to be provided',
+      message: 'When includeTurnout is true, electionDate has to be provided',
       path: ['electionDate'],
     },
   )
+// // TODO: Remove this after gp-api is updated, this is just to prevent a circular merge dependency
+// .refine((data) => {
+//   if (data.includeDistrict) {
+//     data.includeTurnout = true
+//   }
+// })
 
 export const getPositionByBrIdRequestSchema = z.object({
   params: getPositionByBrIdParamsSchema,
