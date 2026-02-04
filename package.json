@@ -29,6 +29,7 @@
     "@nestjs/platform-fastify": "^11.0.11",
     "@nestjs/swagger": "^11.0.6",
     "@prisma/client": "^6.5.0",
+    "@pulumi/aws": "^7.17.0",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",

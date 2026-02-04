@@ -7,12 +7,8 @@ node_modules
 nestjs/node_modules
 sst/node_modules
 
-# SST specific
-.sst
-sst-env.d.ts
-deploy/sst-env.d.ts
-deploy/.sst
-.build
+# Pulumi
+deploy/Pulumi.*.yaml
 
 # Logs
 logs
