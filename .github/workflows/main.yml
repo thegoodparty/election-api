@@ -2,27 +2,57 @@ name: Deploy
 
 on:
   push:
-    branches: ['develop', 'qa', 'master']
+    branches: ["develop", "qa", "master"]
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+env:
+  AWS_REGION: us-west-2
+  IMAGE_URI: 333022194791.dkr.ecr.us-west-2.amazonaws.com/election-api:${{ github.sha }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::333022194791:role/github-actions-pulumi-deploy
           aws-region: us-west-2
 
-      # Each branch has a different codebuild project.
-      - name: Run CodeBuild
-        uses: aws-actions/aws-codebuild-run-build@v1
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Install Pulumi
+        uses: pulumi/actions@v6
         with:
-          project-name: election-api-deploy-build-${{ github.ref_name }}
+          pulumi-version: "^3"
+
+      - run: npm ci
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t "${IMAGE_URI}" -f deploy/Dockerfile .
+          docker push "${IMAGE_URI}"
+
+      - name: Determine deployment context
+        id: context
+        run: |
+          case "${{ github.ref_name }}" in
+            develop) echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
+            qa) echo "environment=qa" >> "$GITHUB_OUTPUT" ;;
+            master) echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Deploy
+        working-directory: deploy
+        run: ./deploy.sh ${{ steps.context.outputs.environment }}
 
       - name: Notify Slack on Success
         if: success()
