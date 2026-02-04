@@ -150,17 +150,6 @@ export = async () => {
       }),
       AWS_REGION: 'us-west-2',
     },
-    permissions: [
-      {
-        Effect: 'Allow',
-        Action: [
-          'ssm:GetParameters',
-          'ssm:GetParameterHistory',
-          'ssm:GetParameter',
-          'secretsmanager:GetSecretValue',
-        ],
-        Resource: ['*'],
-      },
-    ],
+    permissions: [],
   })
 }
