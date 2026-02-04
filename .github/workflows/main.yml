@@ -4,6 +4,11 @@ on:
   push:
     branches: ["develop", "qa", "master"]
 
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
 env:
   AWS_REGION: us-west-2
   IMAGE_URI: 333022194791.dkr.ecr.us-west-2.amazonaws.com/election-api:${{ github.sha }}
@@ -23,6 +28,11 @@ jobs:
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Install Pulumi
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: "^3"
 
       - run: npm ci
 

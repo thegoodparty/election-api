@@ -34,7 +34,7 @@ pulumi config set imageUri "$IMAGE_URI"
 pulumi config set --path aws:defaultTags.tags.Environment "$env"
 pulumi config set --path aws:defaultTags.tags.Project election-api
 
-if [ "$CI" = "1" ]; then
+if [ "$CI" = "true" ]; then
   pulumi up --diff --yes
 else
   pulumi preview --diff

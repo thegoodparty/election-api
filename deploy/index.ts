@@ -115,7 +115,7 @@ export = async () => {
     )
   }
 
-  const service = createService({
+  createService({
     environment,
     stage,
     imageUri,
