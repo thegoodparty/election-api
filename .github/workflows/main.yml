@@ -44,15 +44,11 @@ jobs:
       - name: Determine deployment context
         id: context
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "environment=preview" >> "$GITHUB_OUTPUT"
-          else
-            case "${{ github.ref_name }}" in
-              develop) echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
-              qa) echo "environment=qa" >> "$GITHUB_OUTPUT" ;;
-              master) echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
-            esac
-          fi
+          case "${{ github.ref_name }}" in
+            develop) echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
+            qa) echo "environment=qa" >> "$GITHUB_OUTPUT" ;;
+            master) echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       - name: Deploy
         working-directory: deploy
