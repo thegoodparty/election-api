@@ -150,6 +150,17 @@ export = async () => {
       }),
       AWS_REGION: 'us-west-2',
     },
-    permissions: [],
+    permissions: [
+      {
+        Effect: 'Allow',
+        Action: [
+          'ssmmessages:OpenDataChannel',
+          'ssmmessages:OpenControlChannel',
+          'ssmmessages:CreateDataChannel',
+          'ssmmessages:CreateControlChannel',
+        ],
+        Resource: ['*'],
+      },
+    ],
   })
 }
