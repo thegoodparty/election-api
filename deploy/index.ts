@@ -1,6 +1,7 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as aws from '@pulumi/aws'
 import { createService } from './components/service'
+import { createNewRelicLogForwarder } from './components/newrelic-log-forwarder'
 
 const extractDbCredentials = (dbUrl: string) => {
   const url = new URL(dbUrl)
@@ -95,7 +96,7 @@ export = async () => {
     })
   }
 
-  createService({
+  const service = createService({
     environment,
     stage,
     imageUri,
@@ -142,5 +143,14 @@ export = async () => {
         Resource: ['*'],
       },
     ],
+  })
+
+  createNewRelicLogForwarder({
+    environment,
+    secretArn: secretVersion.arn,
+    secretKey: 'NEW_RELIC_LICENSE_KEY',
+    logGroupName: service.logGroupName,
+    logGroupArn: service.logGroupArn,
+    serviceName: `election_api_${environment}`.toUpperCase(),
   })
 }
