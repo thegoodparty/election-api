@@ -47,72 +47,52 @@ export = async () => {
     const { username, password, database } = extractDbCredentials(
       secret.DATABASE_URL,
     )
-    const rdsCluster = new aws.rds.Cluster(
-      'rdsCluster',
-      {
-        clusterIdentifier: select({
-          dev: 'election-api-db-develop',
-          qa: 'NOT_APPLICABLE',
-          prod: 'election-api-db-prod',
+    const rdsCluster = new aws.rds.Cluster('rdsCluster', {
+      clusterIdentifier: select({
+        dev: 'election-api-db-develop',
+        qa: 'NOT_APPLICABLE',
+        prod: 'election-api-db-prod',
+      }),
+      engine: aws.rds.EngineType.AuroraPostgresql,
+      engineMode: aws.rds.EngineMode.Provisioned,
+      engineVersion: '16.8',
+      databaseName: database,
+      masterUsername: username,
+      masterPassword: pulumi.secret(password),
+      dbSubnetGroupName: select({
+        dev: 'api-rds-subnet-group',
+        qa: 'api-qa-rds-subnet-group',
+        prod: 'api-master-rds-subnet-group',
+      }),
+      vpcSecurityGroupIds: [
+        select({
+          dev: 'sg-0b834a3f7b64950d0',
+          qa: 'sg-0b0a0d163267de5d5',
+          prod: 'sg-03783e4adbbee87dc',
         }),
-        engine: aws.rds.EngineType.AuroraPostgresql,
-        engineMode: aws.rds.EngineMode.Provisioned,
-        engineVersion: '16.8',
-        databaseName: database,
-        masterUsername: username,
-        masterPassword: pulumi.secret(password),
-        dbSubnetGroupName: select({
-          dev: 'api-rds-subnet-group',
-          qa: 'api-qa-rds-subnet-group',
-          prod: 'api-master-rds-subnet-group',
-        }),
-        vpcSecurityGroupIds: [
-          select({
-            dev: 'sg-0b834a3f7b64950d0',
-            qa: 'sg-0b0a0d163267de5d5',
-            prod: 'sg-03783e4adbbee87dc',
-          }),
-        ],
-        storageEncrypted: true,
-        serverlessv2ScalingConfiguration: {
-          minCapacity: environment === 'prod' ? 1 : 0.5,
-          maxCapacity: 64,
-        },
-        backupRetentionPeriod: select({ dev: 7, qa: 7, prod: 14 }),
-        deletionProtection: true,
-        skipFinalSnapshot: false,
-        finalSnapshotIdentifier: `election-api-db-${stage}-final-snapshot`,
+      ],
+      storageEncrypted: true,
+      serverlessv2ScalingConfiguration: {
+        minCapacity: environment === 'prod' ? 1 : 0.5,
+        maxCapacity: 64,
       },
-      {
-        import: select({
-          dev: 'election-api-db-develop',
-          qa: 'NOT_APPLICABLE',
-          prod: 'election-api-db-prod',
-        }),
-      },
-    )
+      backupRetentionPeriod: select({ dev: 7, qa: 7, prod: 14 }),
+      deletionProtection: true,
+      skipFinalSnapshot: false,
+      finalSnapshotIdentifier: `election-api-db-${stage}-final-snapshot`,
+    })
 
-    new aws.rds.ClusterInstance(
-      'rdsInstance',
-      {
-        identifier: select({
-          dev: 'tf-20250328152646832200000003',
-          qa: 'NOT_APPLICABLE',
-          prod: 'tf-20250422023552728500000001',
-        }),
-        clusterIdentifier: rdsCluster.id,
-        instanceClass: 'db.serverless',
-        engine: aws.rds.EngineType.AuroraPostgresql,
-        engineVersion: rdsCluster.engineVersion,
-      },
-      {
-        import: select({
-          dev: 'tf-20250328152646832200000003',
-          qa: 'NOT_APPLICABLE',
-          prod: 'tf-20250422023552728500000001',
-        }),
-      },
-    )
+    new aws.rds.ClusterInstance('rdsInstance', {
+      identifier: select({
+        dev: 'tf-20250328152646832200000003',
+        qa: 'NOT_APPLICABLE',
+        prod: 'tf-20250422023552728500000001',
+      }),
+      clusterIdentifier: rdsCluster.id,
+      instanceClass: 'db.serverless',
+      engine: aws.rds.EngineType.AuroraPostgresql,
+      engineVersion: rdsCluster.engineVersion,
+    })
   }
 
   createService({
