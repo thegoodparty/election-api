@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
@@ -33,20 +34,31 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       )
     }
     if (!includeDistrict) {
-      const position = await this.model.findUniqueOrThrow({
+      const position = await this.model.findUnique({
         where: { brPositionId },
       })
+      if (!position) {
+        throw new NotFoundException(
+          `Position not found for brPositionId=${brPositionId}`,
+        )
+      }
       return position
     }
     if (!includeTurnout) {
       // If the caller doesn't want projectedTurnout, no further processing is needed
-      return await this.model.findUniqueOrThrow({
+      const position = await this.model.findUnique({
         where: { brPositionId },
         include: { district: true },
       })
+      if (!position) {
+        throw new NotFoundException(
+          `Position not found for brPositionId=${brPositionId}`,
+        )
+      }
+      return position
     }
 
-    const positionWithDistrict = await this.model.findUniqueOrThrow({
+    const positionWithDistrict = await this.model.findUnique({
       where: { brPositionId },
       include: {
         district: {
@@ -56,6 +68,11 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         },
       },
     })
+    if (!positionWithDistrict) {
+      throw new NotFoundException(
+        `Position not found for brPositionId=${brPositionId}`,
+      )
+    }
     if (!positionWithDistrict?.district?.ProjectedTurnouts) {
       throw new InternalServerErrorException(
         'Failed to fetch projected turnouts',

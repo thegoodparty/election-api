@@ -9,7 +9,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import { AppModule } from './app.module'
-import { Logger } from '@nestjs/common'
+import { HttpAdapterHost, Logger } from '@nestjs/common'
+import { AllExceptionsFilter } from './shared/filters/allExceptions.filter'
 import fastifyStatic from '@fastify/static'
 import { join } from 'path'
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -35,6 +36,9 @@ const bootstrap = async () => {
   )
   app.setGlobalPrefix('v1')
   app.useGlobalPipes(new ZodValidationPipe())
+
+  const httpAdapterHost = app.get(HttpAdapterHost)
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost.httpAdapter))
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Documentation')
