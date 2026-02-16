@@ -1,6 +1,6 @@
 import '../../module-alias'
 import './configrc'
-import { NestFactory } from '@nestjs/core'
+import { HttpAdapterHost, NestFactory } from '@nestjs/core'
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -9,7 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import { AppModule } from './app.module'
-import { HttpAdapterHost, Logger } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { AllExceptionsFilter } from './shared/filters/allExceptions.filter'
 import fastifyStatic from '@fastify/static'
 import { join } from 'path'

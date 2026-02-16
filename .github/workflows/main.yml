@@ -20,6 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
