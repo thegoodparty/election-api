@@ -58,7 +58,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       return position
     }
 
-    const positionWithDistrict = await this.model.findUnique({
+    const position = await this.model.findUnique({
       where: { brPositionId },
       include: {
         district: {
@@ -68,14 +68,9 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         },
       },
     })
-    if (!positionWithDistrict) {
+    if (!position) {
       throw new NotFoundException(
         `Position not found for brPositionId=${brPositionId}`,
-      )
-    }
-    if (!positionWithDistrict?.district?.ProjectedTurnouts) {
-      throw new InternalServerErrorException(
-        'Failed to fetch projected turnouts',
       )
     }
     if (!electionDate) {
@@ -83,40 +78,28 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         'It should be impossible to get to this line without electionDate defined',
       )
     }
+    // If district wasn't found (no precomputed match), just return the position
+    if (!position?.district) return position
+
+    const { id, brDatabaseId, district, districtId, state } = position
+    const { L2DistrictName, L2DistrictType } = district
     const electionCode = this.projectedTurnoutService.determineElectionCode(
       electionDate,
-      positionWithDistrict.state,
+      state,
     )
+
     const electionYear = new Date(electionDate).getFullYear()
-    const filteredTurnout =
-      positionWithDistrict.district.ProjectedTurnouts.filter(
-        (turnout) =>
-          turnout.electionYear === electionYear &&
-          turnout.electionCode === electionCode,
-      )
+    const filteredTurnout = position.district.ProjectedTurnouts.filter(
+      (turnout) =>
+        turnout.electionYear === electionYear &&
+        turnout.electionCode === electionCode,
+    )
 
     if (filteredTurnout.length > 1) {
       throw new InternalServerErrorException(
         'Error: Data integrity issue - duplicate turnouts found for a given electionYear and electionCode',
       )
     }
-    if (filteredTurnout.length === 0) {
-      const { id, brDatabaseId, district, districtId } = positionWithDistrict
-      const { L2DistrictName, L2DistrictType } = district
-      return {
-        positionId: id,
-        brPositionId,
-        brDatabaseId,
-        district: {
-          id: districtId,
-          L2DistrictType,
-          L2DistrictName,
-          projectedTurnout: null,
-        },
-      }
-    }
-    const { id, brDatabaseId, district, districtId } = positionWithDistrict
-    const { L2DistrictName, L2DistrictType } = district
     return {
       positionId: id,
       brPositionId,
@@ -125,7 +108,8 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         id: districtId,
         L2DistrictType,
         L2DistrictName,
-        projectedTurnout: filteredTurnout[0],
+        projectedTurnout:
+          filteredTurnout.length > 0 ? filteredTurnout[0] : null,
       },
     }
   }
