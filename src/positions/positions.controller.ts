@@ -4,6 +4,7 @@ import {
   GetPositionByBrIdParamsDTO,
   GetPositionByBrIdQueryDTO,
 } from './positions.schema'
+import { PositionWithOptionalDistrict } from './positions.types'
 
 @Controller('positions')
 export class PositionsController {
@@ -13,7 +14,7 @@ export class PositionsController {
   async getPositionByBallotReadyId(
     @Param() params: GetPositionByBrIdParamsDTO,
     @Query() query: GetPositionByBrIdQueryDTO,
-  ) {
+  ): Promise<PositionWithOptionalDistrict> {
     return this.positions.getPositionByBallotReadyId({
       brPositionId: params.brPositionId,
       includeDistrict: query?.includeDistrict,
