@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
+import { PositionWithOptionalDistrict } from './positions.types'
 
 @Injectable()
 export class PositionsService extends createPrismaBase(MODELS.Position) {
@@ -20,7 +21,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     includeDistrict?: boolean
     includeTurnout?: boolean
     electionDate?: string
-  }) {
+  }): Promise<PositionWithOptionalDistrict> {
     const { brPositionId, includeDistrict, electionDate, includeTurnout } =
       params
     if (includeTurnout && !electionDate) {
@@ -55,9 +56,15 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
           `Position not found for brPositionId=${brPositionId}`,
         )
       }
-      return position
+      const { id, brDatabaseId, state, name } = position
+      return {
+        id,
+        brPositionId: position.brPositionId,
+        brDatabaseId,
+        state,
+        name,
+      }
     }
-
     const position = await this.model.findUnique({
       where: { brPositionId },
       include: {
@@ -79,10 +86,16 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       )
     }
     // If district wasn't found (no precomputed match), just return the position
-    if (!position?.district) return position
-
-    const { id, brDatabaseId, district, districtId, state, name } = position
-    const { L2DistrictName, L2DistrictType } = district
+    const { id, brDatabaseId, state, name } = position
+    if (!position.district)
+      return {
+        id,
+        brPositionId: position.brPositionId,
+        brDatabaseId,
+        state,
+        name,
+      }
+    const { L2DistrictName, L2DistrictType } = position.district
     const electionCode = this.projectedTurnoutService.determineElectionCode(
       electionDate,
       state,
@@ -107,7 +120,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       state,
       name,
       district: {
-        id: districtId,
+        id: position.district.id,
         L2DistrictType,
         L2DistrictName,
         projectedTurnout:
