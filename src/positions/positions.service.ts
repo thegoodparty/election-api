@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
+import { PositionWithOptionalDistrict } from './positions.types'
 
 @Injectable()
 export class PositionsService extends createPrismaBase(MODELS.Position) {
@@ -20,7 +21,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     includeDistrict?: boolean
     includeTurnout?: boolean
     electionDate?: string
-  }) {
+  }): Promise<PositionWithOptionalDistrict> {
     const { brPositionId, includeDistrict, electionDate, includeTurnout } =
       params
     if (includeTurnout && !electionDate) {
@@ -55,10 +56,16 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
           `Position not found for brPositionId=${brPositionId}`,
         )
       }
-      return position
+      const { id, brDatabaseId, state, name } = position
+      return {
+        id,
+        brPositionId: position.brPositionId,
+        brDatabaseId,
+        state,
+        name,
+      }
     }
-
-    const positionWithDistrict = await this.model.findUnique({
+    const position = await this.model.findUnique({
       where: { brPositionId },
       include: {
         district: {
@@ -68,14 +75,9 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         },
       },
     })
-    if (!positionWithDistrict) {
+    if (!position) {
       throw new NotFoundException(
         `Position not found for brPositionId=${brPositionId}`,
-      )
-    }
-    if (!positionWithDistrict?.district?.ProjectedTurnouts) {
-      throw new InternalServerErrorException(
-        'Failed to fetch projected turnouts',
       )
     }
     if (!electionDate) {
@@ -83,49 +85,46 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         'It should be impossible to get to this line without electionDate defined',
       )
     }
+    // If district wasn't found (no precomputed match), just return the position
+    const { id, brDatabaseId, state, name } = position
+    if (!position.district)
+      return {
+        id,
+        brPositionId: position.brPositionId,
+        brDatabaseId,
+        state,
+        name,
+      }
+    const { L2DistrictName, L2DistrictType } = position.district
     const electionCode = this.projectedTurnoutService.determineElectionCode(
       electionDate,
-      positionWithDistrict.state,
+      state,
     )
+
     const electionYear = new Date(electionDate).getFullYear()
-    const filteredTurnout =
-      positionWithDistrict.district.ProjectedTurnouts.filter(
-        (turnout) =>
-          turnout.electionYear === electionYear &&
-          turnout.electionCode === electionCode,
-      )
+    const filteredTurnout = position.district.ProjectedTurnouts.filter(
+      (turnout) =>
+        turnout.electionYear === electionYear &&
+        turnout.electionCode === electionCode,
+    )
 
     if (filteredTurnout.length > 1) {
       throw new InternalServerErrorException(
         'Error: Data integrity issue - duplicate turnouts found for a given electionYear and electionCode',
       )
     }
-    if (filteredTurnout.length === 0) {
-      const { id, brDatabaseId, district, districtId } = positionWithDistrict
-      const { L2DistrictName, L2DistrictType } = district
-      return {
-        positionId: id,
-        brPositionId,
-        brDatabaseId,
-        district: {
-          id: districtId,
-          L2DistrictType,
-          L2DistrictName,
-          projectedTurnout: null,
-        },
-      }
-    }
-    const { id, brDatabaseId, district, districtId } = positionWithDistrict
-    const { L2DistrictName, L2DistrictType } = district
     return {
-      positionId: id,
+      id,
       brPositionId,
       brDatabaseId,
+      state,
+      name,
       district: {
-        id: districtId,
+        id: position.district.id,
         L2DistrictType,
         L2DistrictName,
-        projectedTurnout: filteredTurnout[0],
+        projectedTurnout:
+          filteredTurnout.length > 0 ? filteredTurnout[0] : null,
       },
     }
   }
