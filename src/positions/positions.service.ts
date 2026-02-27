@@ -81,7 +81,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     // If district wasn't found (no precomputed match), just return the position
     if (!position?.district) return position
 
-    const { id, brDatabaseId, district, districtId, state } = position
+    const { id, brDatabaseId, district, districtId, state, name } = position
     const { L2DistrictName, L2DistrictType } = district
     const electionCode = this.projectedTurnoutService.determineElectionCode(
       electionDate,
@@ -101,9 +101,11 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       )
     }
     return {
-      positionId: id,
+      id,
       brPositionId,
       brDatabaseId,
+      state,
+      name,
       district: {
         id: districtId,
         L2DistrictType,
