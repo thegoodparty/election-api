@@ -1,10 +1,11 @@
 model Position {
-    id           String @id @map("id") @db.Uuid
-    brDatabaseId String @map("br_database_id")
-    brPositionId String @unique @map("br_position_id") // Must be the source Ballotready position ID
+    id           String  @id @map("id") @db.Uuid
+    brDatabaseId String  @map("br_database_id")
+    brPositionId String  @unique @map("br_position_id") // Must be the source Ballotready position ID
     state        String
+    name         String?
 
     // Relations
-    district   District @relation(fields: [districtId], references: [id])
-    districtId String   @map("district_id") @db.Uuid()
+    district   District? @relation(fields: [districtId], references: [id])
+    districtId String?   @map("district_id") @db.Uuid()
 }
