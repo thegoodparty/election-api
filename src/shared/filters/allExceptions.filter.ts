@@ -37,8 +37,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     // build a response that includes the real error message.
     const message =
       exception instanceof Error ? exception.message : String(exception)
-    const stack =
-      exception instanceof Error ? exception.stack : undefined
+    const stack = exception instanceof Error ? exception.stack : undefined
 
     this.logger.error(`Unhandled exception: ${message}`, stack)
 

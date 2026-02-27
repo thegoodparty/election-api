@@ -78,8 +78,18 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         'It should be impossible to get to this line without electionDate defined',
       )
     }
-    // If district wasn't found (no precomputed match), just return the position
-    if (!position?.district) return position
+    // If district wasn't found (no precomputed match), return consistent shape with district: null
+    if (!position?.district) {
+      const { id, brDatabaseId, state, name } = position
+      return {
+        id,
+        brPositionId,
+        brDatabaseId,
+        state,
+        name,
+        district: null,
+      }
+    }
 
     const { id, brDatabaseId, district, districtId, state, name } = position
     const { L2DistrictName, L2DistrictType } = district
