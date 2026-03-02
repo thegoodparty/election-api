@@ -9,11 +9,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import { AppModule } from './app.module'
+import { Logger as PinoNestLogger, PinoLogger } from 'nestjs-pino'
 import { Logger } from '@nestjs/common'
 import { AllExceptionsFilter } from './shared/filters/allExceptions.filter'
 import fastifyStatic from '@fastify/static'
 import { join } from 'path'
 import { ZodValidationPipe } from 'nestjs-zod'
+import { randomUUID } from 'crypto'
 
 const APP_LISTEN_CONFIG = {
   port: Number(process.env.PORT) || 3000,
@@ -23,22 +25,29 @@ const APP_LISTEN_CONFIG = {
 const bootstrap = async () => {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({
-      ...(process.env.LOG_LEVEL
-        ? {
-            logger: { level: process.env.LOG_LEVEL },
-          }
-        : {}),
-    }),
+    new FastifyAdapter({ logger: false, genReqId: () => randomUUID() }),
     {
       rawBody: true,
+      bufferLogs: true,
     },
   )
+  app.useLogger(app.get(PinoNestLogger))
+
+  if (global.__fastifyOtelInstrumentation) {
+    await app
+      .getHttpAdapter()
+      .getInstance()
+      .register(global.__fastifyOtelInstrumentation.plugin())
+  }
+
   app.setGlobalPrefix('v1')
   app.useGlobalPipes(new ZodValidationPipe())
 
   const httpAdapterHost = app.get(HttpAdapterHost)
-  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost.httpAdapter))
+  const logger = await app.resolve(PinoLogger)
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapterHost.httpAdapter, logger),
+  )
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Documentation')

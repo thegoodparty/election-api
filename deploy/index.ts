@@ -123,6 +123,8 @@ export = async () => {
       PORT: '80',
       HOST: '0.0.0.0',
       LOG_LEVEL: 'debug',
+      OTEL_SERVICE_ENVIRONMENT: environment,
+      SECRET_NAMES: Object.keys(secret).join(','),
       CORS_ORIGIN: select({
         dev: 'https://dev.goodparty.org',
         qa: 'https://qa.goodparty.org',
