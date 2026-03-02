@@ -56,13 +56,21 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
           `Position not found for brPositionId=${brPositionId}`,
         )
       }
-      const { id, brDatabaseId, state, name } = position
+      const { id, brDatabaseId, state, name, district } = position
       return {
         id,
         brPositionId: position.brPositionId,
         brDatabaseId,
         state,
         name,
+        ...(district && {
+          district: {
+            id: district.id,
+            L2DistrictType: district.L2DistrictType,
+            L2DistrictName: district.L2DistrictName,
+            projectedTurnout: null,
+          },
+        }),
       }
     }
     const position = await this.model.findUnique({
