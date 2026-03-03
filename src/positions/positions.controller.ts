@@ -3,6 +3,7 @@ import { PositionsService } from './positions.service'
 import {
   GetPositionByBrIdParamsDTO,
   GetPositionByBrIdQueryDTO,
+  GetPositionByIdParamsDTO,
 } from './positions.schema'
 import { PositionWithOptionalDistrict } from './positions.types'
 
@@ -17,6 +18,19 @@ export class PositionsController {
   ): Promise<PositionWithOptionalDistrict> {
     return this.positions.getPositionByBallotReadyId({
       brPositionId: params.brPositionId,
+      includeDistrict: query?.includeDistrict,
+      electionDate: query?.electionDate,
+      includeTurnout: query?.includeTurnout,
+    })
+  }
+
+  @Get(':id')
+  async getPositionById(
+    @Param() params: GetPositionByIdParamsDTO,
+    @Query() query: GetPositionByBrIdQueryDTO,
+  ): Promise<PositionWithOptionalDistrict> {
+    return this.positions.getPositionById({
+      id: params.id,
       includeDistrict: query?.includeDistrict,
       electionDate: query?.electionDate,
       includeTurnout: query?.includeTurnout,

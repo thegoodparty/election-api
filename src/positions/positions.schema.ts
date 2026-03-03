@@ -5,6 +5,14 @@ export const getPositionByBrIdParamsSchema = z.object({
   brPositionId: z.string().min(1, 'BallotReady Position ID is required'),
 })
 
+export const getPositionByIdParamsSchema = z.object({
+  id: z.string().uuid('Position ID must be a valid UUID'),
+})
+
+export class GetPositionByIdParamsDTO extends createZodDto(
+  getPositionByIdParamsSchema,
+) {}
+
 export const getPositionByBrIdQuerySchema = z
   .object({
     includeTurnout: z.preprocess(
@@ -14,7 +22,7 @@ export const getPositionByBrIdQuerySchema = z
           : val === 'false' || val === '0' || val === false
             ? false
             : undefined,
-      z.boolean().optional().default(true),
+      z.boolean().optional().default(false),
     ),
     includeDistrict: z.coerce.boolean().optional(),
     electionDate: z
@@ -30,24 +38,22 @@ export const getPositionByBrIdQuerySchema = z
         },
       ),
   })
-  .refine(
-    (data) => {
-      if (data.includeTurnout) {
-        return data.electionDate !== undefined
-      }
-      return true
-    },
-    {
-      message: 'When includeTurnout is true, electionDate has to be provided',
-      path: ['electionDate'],
-    },
-  )
-// // TODO: Remove this after gp-api is updated, this is just to prevent a circular merge dependency
-// .refine((data) => {
-//   if (data.includeDistrict) {
-//     data.includeTurnout = true
-//   }
-// })
+  .superRefine((data, ctx) => {
+    if (data.includeTurnout && !data.electionDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'When includeTurnout is true, electionDate has to be provided',
+        path: ['electionDate'],
+      })
+    }
+    if (data.includeTurnout && !data.includeDistrict) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'When includeTurnout is true, includeDistrict must be true',
+        path: ['includeDistrict'],
+      })
+    }
+  })
 
 export const getPositionByBrIdRequestSchema = z.object({
   params: getPositionByBrIdParamsSchema,
