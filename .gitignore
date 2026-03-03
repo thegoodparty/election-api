@@ -62,3 +62,14 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Other
 devnotes.md
+
+# Tests
+/coverage
+/.nyc_output
+/test-scripts
+/postman
+/newman
+/test-results
+/e2e-tests/test-results
+/e2e-tests/playwright-report
+/e2e-tests/postman-old-tests
