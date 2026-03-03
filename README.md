@@ -27,7 +27,7 @@ $ npm run start:prod
 
 ## Unit tests
 
-Create an `.env.test` file (already committed in this repo) for test-safe defaults, then run:
+Run:
 
 ```bash
 # run once
