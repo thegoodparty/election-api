@@ -25,6 +25,18 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Unit tests
+
+Run:
+
+```bash
+# run once
+$ npm run test
+
+# watch mode
+$ npm run test:watch
+```
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:
