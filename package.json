@@ -17,7 +17,9 @@
     "migrate:dev": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
     "migrate:reset": "npx prisma migrate reset --force",
-    "generate": "npx prisma generate"
+    "generate": "npx prisma generate",
+    "test": "npx vitest run",
+    "test:watch": "npx vitest"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -71,6 +73,8 @@
     "@types/node": "^22.13.9",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -86,7 +90,10 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.27.0"
+    "typescript-eslint": "^8.27.0",
+    "unplugin-swc": "^1.5.9",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
   },
   "rootDir": "src"
 }

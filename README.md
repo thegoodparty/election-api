@@ -25,6 +25,18 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Unit tests
+
+Create an `.env.test` file (already committed in this repo) for test-safe defaults, then run:
+
+```bash
+# run once
+$ npm run test
+
+# watch mode
+$ npm run test:watch
+```
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:
