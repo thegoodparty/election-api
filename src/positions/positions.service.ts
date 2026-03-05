@@ -4,9 +4,35 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
+import { District, Position, Prisma, ProjectedTurnout } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import { PositionWithOptionalDistrict } from './positions.types'
+
+type PositionLookupOptions = {
+  includeDistrict?: boolean
+  includeTurnout?: boolean
+  electionDate?: string
+}
+
+type FindPositionWithOptionsParams = PositionLookupOptions & {
+  where: Prisma.PositionWhereUniqueInput
+  notFoundMessage: string
+}
+
+type PositionWithOptionalDistrictAndTurnouts = {
+  id: Position['id']
+  brPositionId: Position['brPositionId']
+  brDatabaseId: Position['brDatabaseId']
+  state: Position['state']
+  name: Position['name']
+  district?: {
+    id: District['id']
+    L2DistrictType: District['L2DistrictType']
+    L2DistrictName: District['L2DistrictName']
+    ProjectedTurnouts?: ProjectedTurnout[]
+  } | null
+}
 
 @Injectable()
 export class PositionsService extends createPrismaBase(MODELS.Position) {
@@ -16,14 +42,39 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     super()
   }
 
+  async getPositionById(params: {
+    id: string
+    includeDistrict?: boolean
+    includeTurnout?: boolean
+    electionDate?: string
+  }): Promise<PositionWithOptionalDistrict> {
+    const { id } = params
+    return this.findPositionWithOptions({
+      ...params,
+      where: { id },
+      notFoundMessage: `Position not found for id=${id}`,
+    })
+  }
+
   async getPositionByBallotReadyId(params: {
     brPositionId: string
     includeDistrict?: boolean
     includeTurnout?: boolean
     electionDate?: string
   }): Promise<PositionWithOptionalDistrict> {
-    const { brPositionId, includeDistrict, electionDate, includeTurnout } =
-      params
+    const { brPositionId } = params
+    return this.findPositionWithOptions({
+      ...params,
+      where: { brPositionId },
+      notFoundMessage: `Position not found for brPositionId=${brPositionId}`,
+    })
+  }
+
+  private validateOptions({
+    includeDistrict,
+    includeTurnout,
+    electionDate,
+  }: PositionLookupOptions): void {
     if (includeTurnout && !electionDate) {
       throw new BadRequestException(
         'If includeTurnout is true, you must pass an electionDate',
@@ -34,87 +85,117 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         'A district must be included in the response to return a turnout',
       )
     }
+  }
+
+  private async findPositionWithOptions(
+    params: FindPositionWithOptionsParams,
+  ): Promise<PositionWithOptionalDistrict> {
+    const {
+      where,
+      notFoundMessage,
+      includeDistrict,
+      includeTurnout,
+      electionDate,
+    } = params
+    this.validateOptions({ includeDistrict, includeTurnout, electionDate })
+
     if (!includeDistrict) {
-      const position = await this.model.findUnique({
-        where: { brPositionId },
-      })
+      const position: PositionWithOptionalDistrictAndTurnouts | null =
+        await this.model.findUnique({
+          where,
+          select: {
+            id: true,
+            brPositionId: true,
+            brDatabaseId: true,
+            state: true,
+            name: true,
+          },
+        })
       if (!position) {
-        throw new NotFoundException(
-          `Position not found for brPositionId=${brPositionId}`,
-        )
+        throw new NotFoundException(notFoundMessage)
       }
-      return position
+      return this.shapePositionResponse(position)
     }
+
     if (!includeTurnout) {
       // If the caller doesn't want projectedTurnout, no further processing is needed
-      const position = await this.model.findUnique({
-        where: { brPositionId },
-        include: { district: true },
-      })
+      const position: PositionWithOptionalDistrictAndTurnouts | null =
+        await this.model.findUnique({
+          where,
+          include: { district: true },
+        })
       if (!position) {
-        throw new NotFoundException(
-          `Position not found for brPositionId=${brPositionId}`,
-        )
+        throw new NotFoundException(notFoundMessage)
       }
-      const { id, brDatabaseId, state, name, district } = position
-      return {
-        id,
-        brPositionId: position.brPositionId,
-        brDatabaseId,
-        state,
-        name,
-        ...(district && {
-          district: {
-            id: district.id,
-            L2DistrictType: district.L2DistrictType,
-            L2DistrictName: district.L2DistrictName,
-            projectedTurnout: null,
-          },
-        }),
-      }
+      return this.shapePositionResponse(position)
     }
-    const position = await this.model.findUnique({
-      where: { brPositionId },
-      include: {
-        district: {
-          include: {
-            ProjectedTurnouts: true,
+
+    const position: PositionWithOptionalDistrictAndTurnouts | null =
+      await this.model.findUnique({
+        where,
+        include: {
+          district: {
+            include: {
+              ProjectedTurnouts: true,
+            },
           },
         },
-      },
-    })
+      })
     if (!position) {
-      throw new NotFoundException(
-        `Position not found for brPositionId=${brPositionId}`,
-      )
+      throw new NotFoundException(notFoundMessage)
     }
     if (!electionDate) {
       throw new InternalServerErrorException(
         'It should be impossible to get to this line without electionDate defined',
       )
     }
-    // If district wasn't found (no precomputed match), just return the position
-    const { id, brDatabaseId, state, name } = position
-    if (!position.district)
+    return this.shapePositionResponse(position, electionDate)
+  }
+
+  private shapePositionResponse(
+    position: PositionWithOptionalDistrictAndTurnouts,
+    electionDate?: string,
+  ): PositionWithOptionalDistrict {
+    const { id, brPositionId, brDatabaseId, state, name, district } = position
+    if (!district) {
+      return { id, brPositionId, brDatabaseId, state, name }
+    }
+
+    const {
+      id: districtId,
+      L2DistrictType,
+      L2DistrictName,
+      ProjectedTurnouts,
+    } = district
+    const districtResponse = {
+      id: districtId,
+      L2DistrictType,
+      L2DistrictName,
+      projectedTurnout: null as ProjectedTurnout | null,
+    }
+
+    if (!electionDate || !ProjectedTurnouts) {
       return {
         id,
-        brPositionId: position.brPositionId,
+        brPositionId,
         brDatabaseId,
         state,
         name,
+        district: districtResponse,
       }
-    const { L2DistrictName, L2DistrictType } = position.district
+    }
+
     const electionCode = this.projectedTurnoutService.determineElectionCode(
       electionDate,
       state,
     )
-
     const electionYear = new Date(electionDate).getFullYear()
-    const filteredTurnout = position.district.ProjectedTurnouts.filter(
+    const filteredTurnout = ProjectedTurnouts.filter(
       (turnout) =>
         turnout.electionYear === electionYear &&
         turnout.electionCode === electionCode,
     )
+    const [projectedTurnout] = filteredTurnout
 
     if (filteredTurnout.length > 1) {
       throw new InternalServerErrorException(
@@ -128,11 +209,8 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       state,
       name,
       district: {
-        id: position.district.id,
-        L2DistrictType,
-        L2DistrictName,
-        projectedTurnout:
-          filteredTurnout.length > 0 ? filteredTurnout[0] : null,
+        ...districtResponse,
+        projectedTurnout: projectedTurnout ?? null,
       },
     }
   }
