@@ -1,6 +1,13 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+} from '@nestjs/common'
 import { DistrictsService } from './districts.service'
 import {
+  GetDistrictByIdParamsDTO,
   GetDistrictNamesDto,
   GetDistrictsDTO,
   GetDistrictTypesDTO,
@@ -22,5 +29,16 @@ export class DistrictsController {
   @Get('names')
   getDistrictNames(@Query() dto: GetDistrictNamesDto) {
     return this.districts.getDistrictNames(dto)
+  }
+
+  @Get(':id')
+  async getDistrict(@Param() params: GetDistrictByIdParamsDTO) {
+    const result = await this.districts.findUnique({ where: { id: params.id } })
+
+    if (!result) {
+      throw new NotFoundException('District not found')
+    }
+
+    return result
   }
 }
