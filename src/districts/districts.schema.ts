@@ -105,6 +105,13 @@ const getDistrictNamesSchema = z.object({
   ),
 })
 
+const getDistrictByIdParamsSchema = z.object({
+  id: z.string().uuid('District ID must be a valid UUID'),
+})
+
+export class GetDistrictByIdParamsDTO extends createZodDto(
+  getDistrictByIdParamsSchema,
+) {}
 export class GetDistrictNamesDto extends createZodDto(getDistrictNamesSchema) {}
 export class GetDistrictTypesDTO extends createZodDto(getDistrictTypesSchema) {}
 export class GetDistrictsDTO extends createZodDto(getDistrictsSchema) {}
