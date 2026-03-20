@@ -3,7 +3,7 @@ model Position {
     brDatabaseId String  @map("br_database_id")
     brPositionId String  @unique @map("br_position_id") // Must be the source Ballotready position ID
     state        String
-    name         String?
+    name         String
 
     // Relations
     district   District? @relation(fields: [districtId], references: [id])
