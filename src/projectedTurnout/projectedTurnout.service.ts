@@ -37,15 +37,15 @@ export class ProjectedTurnoutService extends createPrismaBase(
   }
 
   async getProjectedTurnout(dto: ProjectedTurnoutUniqueDTO) {
-    const {
-      electionYear,
-      electionDate,
-      state,
-      L2DistrictType,
-      L2DistrictName,
-    } = dto
+    const { electionYear, electionDate, districtId } = dto
+
+    if (districtId) {
+      return this.getByDistrictId(districtId, electionDate, electionYear)
+    }
+
+    const { state, L2DistrictType, L2DistrictName } = dto
     const electionCode =
-      dto.electionCode ?? this.determineElectionCode(electionDate, state)
+      dto.electionCode ?? this.determineElectionCode(electionDate, state!)
     return this.model.findFirst({
       where: {
         electionCode,
@@ -55,6 +55,30 @@ export class ProjectedTurnoutService extends createPrismaBase(
           L2DistrictName,
           state,
         },
+      },
+    })
+  }
+
+  private async getByDistrictId(
+    districtId: string,
+    electionDate: string,
+    electionYear?: number,
+  ) {
+    const district = await this.client.district.findUnique({
+      where: { id: districtId },
+      select: { state: true },
+    })
+    if (!district) return null
+
+    const electionCode = this.determineElectionCode(
+      electionDate,
+      district.state,
+    )
+    return this.model.findFirst({
+      where: {
+        districtId,
+        electionCode,
+        electionYear,
       },
     })
   }

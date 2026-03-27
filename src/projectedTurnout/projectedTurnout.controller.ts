@@ -24,6 +24,10 @@ export class ProjectedTurnoutController {
   private formatDtoForError(dto: ProjectedTurnoutUniqueDTO): string {
     const params: string[] = []
 
+    if (dto.districtId) {
+      params.push(`District ID: ${dto.districtId}`)
+    }
+
     if (dto.state) {
       params.push(`State: ${dto.state}`)
     }
