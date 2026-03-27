@@ -22,49 +22,51 @@ export class ProjectedTurnoutController {
   }
 
   private formatDtoForError(dto: ProjectedTurnoutUniqueDTO): string {
+    const { districtId, state, electionDate, L2DistrictType, L2DistrictName } =
+      dto
     const params: string[] = []
 
-    if (dto.districtId) {
-      params.push(`District ID: ${dto.districtId}`)
+    if (districtId) {
+      params.push(`District ID: ${districtId}`)
     }
 
-    if (dto.state) {
-      params.push(`State: ${dto.state}`)
+    if (state) {
+      params.push(`State: ${state}`)
     }
 
-    if (dto.electionDate) {
-      params.push(`Election Date: ${dto.electionDate}`)
+    if (electionDate) {
+      params.push(`Election Date: ${electionDate}`)
     }
 
-    if (dto.L2DistrictType) {
+    if (L2DistrictType) {
       let districtTypeLabel = ''
-      if (typeof dto.L2DistrictType === 'string') {
+      if (typeof L2DistrictType === 'string') {
         try {
-          const parsed = JSON.parse(dto.L2DistrictType)
+          const parsed = JSON.parse(L2DistrictType)
           districtTypeLabel =
-            parsed.label || parsed.L2DistrictType || dto.L2DistrictType
+            parsed.label || parsed.L2DistrictType || L2DistrictType
         } catch {
           // If parsing fails, use the string as-is
-          districtTypeLabel = dto.L2DistrictType
+          districtTypeLabel = L2DistrictType
         }
       } else {
-        districtTypeLabel = String(dto.L2DistrictType)
+        districtTypeLabel = String(L2DistrictType)
       }
       params.push(`District Type: ${districtTypeLabel}`)
     }
 
-    if (dto.L2DistrictName) {
+    if (L2DistrictName) {
       let districtName = ''
-      if (typeof dto.L2DistrictName === 'string') {
+      if (typeof L2DistrictName === 'string') {
         try {
-          const parsed = JSON.parse(dto.L2DistrictName)
-          districtName = parsed.L2DistrictName || dto.L2DistrictName
+          const parsed = JSON.parse(L2DistrictName)
+          districtName = parsed.L2DistrictName || L2DistrictName
         } catch {
           // If parsing fails, use the string as-is
-          districtName = dto.L2DistrictName
+          districtName = L2DistrictName
         }
       } else {
-        districtName = String(dto.L2DistrictName)
+        districtName = String(L2DistrictName)
       }
       params.push(`District Name: ${districtName}`)
     }
