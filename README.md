@@ -1,16 +1,38 @@
-# election-api
+# Election API
 
 ## Description
 
-This is our API to serve the [GoodParty.org](https://goodparty.org) public election pages
+This is our NestJS API to serve the [GoodParty.org](https://goodparty.org) public election pages. It provides election data, candidate information, and related services for the public-facing election content.
 
 ## Project setup
 
 ```bash
-$ npm install
+npm install
 ```
 
 Install the [node-gyp](https://github.com/nodejs/node-gyp#on-unix) prerequisites for your operating system
+
+## Database Setup
+
+Copy the environment file and configure your database connection:
+
+```bash
+cp .env.example .env
+# Edit .env with your database URL
+```
+
+Run database migrations:
+
+```bash
+npm run migrate:dev    # For development
+npm run migrate:deploy # For production
+```
+
+Generate Prisma client:
+
+```bash
+npm run generate
+```
 
 ## Compile and run the project
 
@@ -37,18 +59,9 @@ $ npm run test
 $ npm run test:watch
 ```
 
-## Resources
+## Architecture
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Built with NestJS and Fastify for high-performance API responses. Uses Prisma ORM for database access.
 
 ### Resources
 https://github.com/kjhealy/fips-codes/tree/master
