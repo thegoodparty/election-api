@@ -6,7 +6,10 @@ model ZipToPosition {
   position   Position @relation(fields: [positionId], references: [id])
   positionId String   @map("position_id") @db.Uuid
 
-  // Denormalized from Position so callers can query without a join
+  // Denormalized from the dbt mart so callers can query without joining Position.
+  // brDatabaseId is Int to match the dbt mart (bigint) and the rest of this
+  // codebase (Place, Race, Candidacy, Issue, Stance). Position.brDatabaseId is
+  // a String outlier we deliberately don't propagate.
   name         String
   brDatabaseId Int    @map("br_database_id")
 

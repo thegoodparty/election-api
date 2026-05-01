@@ -25,7 +25,12 @@ CREATE INDEX "Zip_To_Position_zip_code_idx" ON "Zip_To_Position"("zip_code");
 CREATE INDEX "Zip_To_Position_position_id_idx" ON "Zip_To_Position"("position_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Zip_To_Position_zip_code_position_id_election_date_key" ON "Zip_To_Position"("zip_code", "position_id", "election_date");
+-- NULLS NOT DISTINCT is a manual deviation from `prisma migrate diff` output.
+-- zip_code is nullable (positions without zip coverage), and PostgreSQL's
+-- default treats NULLs as distinct in unique indexes, which would let
+-- duplicate (NULL, position_id, election_date) rows through. The dbt mart's
+-- grain treats nulls as a single value, so we mirror that here.
+CREATE UNIQUE INDEX "Zip_To_Position_zip_code_position_id_election_date_key" ON "Zip_To_Position"("zip_code", "position_id", "election_date") NULLS NOT DISTINCT;
 
 -- AddForeignKey
 ALTER TABLE "Zip_To_Position" ADD CONSTRAINT "Zip_To_Position_position_id_fkey" FOREIGN KEY ("position_id") REFERENCES "Position"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
