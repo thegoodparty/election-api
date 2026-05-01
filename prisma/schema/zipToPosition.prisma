@@ -1,0 +1,31 @@
+model ZipToPosition {
+  id        String   @id @map("id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  position   Position @relation(fields: [positionId], references: [id])
+  positionId String   @map("position_id") @db.Uuid
+
+  // Denormalized from Position so callers can query without a join
+  name         String
+  brDatabaseId Int    @map("br_database_id")
+
+  // Nullable; positions without zip coverage have null zip_code
+  zipCode String? @map("zip_code")
+
+  electionYear Int      @map("election_year")
+  electionDate DateTime @map("election_date") @db.Date
+
+  // Constrained by accepted_values in the upstream dbt model
+  // (City, County, Federal, Judicial, Local, Regional, State, Township)
+  displayOfficeLevel String @map("display_office_level")
+  officeType         String @map("office_type")
+  state              String @db.Char(2)
+  city               String
+  district           String
+
+  @@unique([zipCode, positionId, electionDate])
+  @@index([zipCode])
+  @@index([positionId])
+  @@map("Zip_To_Position")
+}
