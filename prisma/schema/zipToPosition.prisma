@@ -30,5 +30,4 @@ model ZipToPosition {
   @@unique([zipCode, positionId, electionDate])
   @@index([zipCode])
   @@index([positionId])
-  @@map("Zip_To_Position")
 }

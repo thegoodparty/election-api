@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Zip_To_Position" (
+CREATE TABLE "ZipToPosition" (
     "id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -15,14 +15,14 @@ CREATE TABLE "Zip_To_Position" (
     "city" TEXT NOT NULL,
     "district" TEXT NOT NULL,
 
-    CONSTRAINT "Zip_To_Position_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ZipToPosition_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE INDEX "Zip_To_Position_zip_code_idx" ON "Zip_To_Position"("zip_code");
+CREATE INDEX "ZipToPosition_zip_code_idx" ON "ZipToPosition"("zip_code");
 
 -- CreateIndex
-CREATE INDEX "Zip_To_Position_position_id_idx" ON "Zip_To_Position"("position_id");
+CREATE INDEX "ZipToPosition_position_id_idx" ON "ZipToPosition"("position_id");
 
 -- CreateIndex
 -- NULLS NOT DISTINCT is a manual deviation from `prisma migrate diff` output.
@@ -30,7 +30,7 @@ CREATE INDEX "Zip_To_Position_position_id_idx" ON "Zip_To_Position"("position_id
 -- default treats NULLs as distinct in unique indexes, which would let
 -- duplicate (NULL, position_id, election_date) rows through. The dbt mart's
 -- grain treats nulls as a single value, so we mirror that here.
-CREATE UNIQUE INDEX "Zip_To_Position_zip_code_position_id_election_date_key" ON "Zip_To_Position"("zip_code", "position_id", "election_date") NULLS NOT DISTINCT;
+CREATE UNIQUE INDEX "ZipToPosition_zip_code_position_id_election_date_key" ON "ZipToPosition"("zip_code", "position_id", "election_date") NULLS NOT DISTINCT;
 
 -- AddForeignKey
-ALTER TABLE "Zip_To_Position" ADD CONSTRAINT "Zip_To_Position_position_id_fkey" FOREIGN KEY ("position_id") REFERENCES "Position"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ZipToPosition" ADD CONSTRAINT "ZipToPosition_position_id_fkey" FOREIGN KEY ("position_id") REFERENCES "Position"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
