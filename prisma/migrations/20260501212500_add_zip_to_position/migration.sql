@@ -12,7 +12,6 @@ CREATE TABLE "ZipToPosition" (
     "display_office_level" TEXT NOT NULL,
     "office_type" TEXT NOT NULL,
     "state" CHAR(2) NOT NULL,
-    "city" TEXT NOT NULL,
     "district" TEXT NOT NULL,
 
     CONSTRAINT "ZipToPosition_pkey" PRIMARY KEY ("id")

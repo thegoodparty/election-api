@@ -24,7 +24,6 @@ model ZipToPosition {
   displayOfficeLevel String @map("display_office_level")
   officeType         String @map("office_type")
   state              String @db.Char(2)
-  city               String
   district           String
 
   @@unique([zipCode, positionId, electionDate])
