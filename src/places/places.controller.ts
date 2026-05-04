@@ -1,5 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common'
-import { MostElectionsDto, PlaceFilterDto } from './places.schema'
+import { Controller, Get, Param, Query } from '@nestjs/common'
+import {
+  GetPlaceByPositionIdParamsDTO,
+  MostElectionsDto,
+  PlaceFilterDto,
+} from './places.schema'
 import { PlacesService } from './places.service'
 
 const MIN_RACES = 100
@@ -11,6 +15,13 @@ export class PlaceController {
   @Get()
   async getPlaces(@Query() filterDto: PlaceFilterDto) {
     return this.placesService.getPlaces(filterDto)
+  }
+
+  @Get('by-position-id/:positionId')
+  async getPlaceByPositionId(
+    @Param() params: GetPlaceByPositionIdParamsDTO,
+  ) {
+    return this.placesService.getPlaceByPositionId(params.positionId)
   }
 
   @Get('most-elections')
