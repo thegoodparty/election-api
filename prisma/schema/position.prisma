@@ -8,4 +8,8 @@ model Position {
     // Relations
     district   District? @relation(fields: [districtId], references: [id])
     districtId String?   @map("district_id") @db.Uuid()
+    place      Place?    @relation(fields: [placeId], references: [id])
+    placeId    String?   @map("place_id") @db.Uuid()
+
+    @@index([placeId])
 }
