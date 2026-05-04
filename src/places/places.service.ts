@@ -121,6 +121,22 @@ export class PlacesService extends createPrismaBase(MODELS.Place) {
     return places
   }
 
+  async getPlaceByPositionId(positionId: string) {
+    const result = await this.client.position.findUnique({
+      where: { id: positionId },
+      select: { place: true },
+    })
+    if (!result) {
+      throw new NotFoundException(`Position not found for id=${positionId}`)
+    }
+    if (!result.place) {
+      throw new NotFoundException(
+        `No place associated with position id=${positionId}`,
+      )
+    }
+    return result.place
+  }
+
   async getPlacesWithMostElections(minRaces: number, count: number) {
     const places = await this.client.$queryRaw<
       { slug: string; name: string; race_count: number }[]
