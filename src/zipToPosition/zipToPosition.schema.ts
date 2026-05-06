@@ -1,4 +1,3 @@
-// election-api/src/zipToPosition/zipToPosition.schema.ts
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
