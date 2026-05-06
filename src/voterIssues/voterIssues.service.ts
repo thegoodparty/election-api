@@ -1,11 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { VoterIssue } from './voterIssues.schema'
-
-type ResolveDistrictParams = {
-  districtId?: string
-  ballotReadyPositionId?: string
-}
 
 @Injectable()
 export class VoterIssuesService extends createPrismaBase(
@@ -16,20 +11,11 @@ export class VoterIssuesService extends createPrismaBase(
   }
 
   async getVoterIssues(params: {
-    districtId?: string
-    ballotReadyPositionId?: string
-    state?: string
-    city?: string
+    districtId: string
     limit: number
   }): Promise<VoterIssue[]> {
-    const districtId = await this.resolveDistrictId({
-      districtId: params.districtId,
-      ballotReadyPositionId: params.ballotReadyPositionId,
-    })
-    if (!districtId) return []
-
     const rows = await this.model.findMany({
-      where: { districtId },
+      where: { districtId: params.districtId },
       orderBy: { issueRank: 'asc' },
       take: params.limit,
       select: { issueLabel: true, score: true, issueRank: true },
@@ -46,31 +32,5 @@ export class VoterIssuesService extends createPrismaBase(
     if (rank <= 3) return 'high'
     if (rank <= 6) return 'medium'
     return 'low'
-  }
-
-  private async resolveDistrictId(
-    params: ResolveDistrictParams,
-  ): Promise<string | null> {
-    if (params.districtId) return params.districtId
-
-    if (params.ballotReadyPositionId) {
-      const position = await this.client.position.findUnique({
-        where: { brPositionId: params.ballotReadyPositionId },
-        select: { districtId: true },
-      })
-      if (!position) {
-        throw new NotFoundException(
-          `Position not found for brPositionId=${params.ballotReadyPositionId}`,
-        )
-      }
-      if (!position.districtId) {
-        throw new NotFoundException(
-          `Position with brPositionId=${params.ballotReadyPositionId} has no associated district`,
-        )
-      }
-      return position.districtId
-    }
-
-    return null
   }
 }

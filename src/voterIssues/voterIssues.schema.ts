@@ -1,17 +1,10 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-const getVoterIssuesQuerySchema = z
-  .object({
-    districtId: z.string().uuid().optional(),
-    ballotReadyPositionId: z.string().min(1).optional(),
-    state: z.string().length(2).optional(),
-    city: z.string().min(1).optional(),
-    limit: z.coerce.number().int().positive().max(50).optional().default(10),
-  })
-  .refine((v) => Boolean(v.districtId || v.ballotReadyPositionId), {
-    message: 'At least one of districtId or ballotReadyPositionId is required',
-  })
+const getVoterIssuesQuerySchema = z.object({
+  districtId: z.string().uuid(),
+  limit: z.coerce.number().int().positive().max(50).optional().default(10),
+})
 
 export class GetVoterIssuesQueryDTO extends createZodDto(
   getVoterIssuesQuerySchema,

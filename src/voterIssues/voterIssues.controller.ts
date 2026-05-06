@@ -12,9 +12,6 @@ export class VoterIssuesController {
   ): Promise<VoterIssue[]> {
     return this.voterIssues.getVoterIssues({
       districtId: query.districtId,
-      ballotReadyPositionId: query.ballotReadyPositionId,
-      state: query.state,
-      city: query.city,
       limit: query.limit,
     })
   }
