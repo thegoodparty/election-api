@@ -63,6 +63,11 @@ export class VoterIssuesService extends createPrismaBase(
           `Position not found for brPositionId=${params.ballotReadyPositionId}`,
         )
       }
+      if (!position.districtId) {
+        throw new NotFoundException(
+          `Position with brPositionId=${params.ballotReadyPositionId} has no associated district`,
+        )
+      }
       return position.districtId
     }
 
