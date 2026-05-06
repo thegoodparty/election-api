@@ -1,0 +1,18 @@
+model DistrictTopIssue {
+  id        String   @id @map("id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  district   District @relation(fields: [districtId], references: [id])
+  districtId String   @map("district_id") @db.Uuid
+
+  // Haystaq issue score column name (e.g. hs_charter_schools_support)
+  issue      String
+  issueLabel String @map("issue_label")
+  // Average Haystaq score across voters in the district (0-100)
+  score      Float
+  // Rank of the issue within the district (1 = highest score)
+  issueRank  Int @map("issue_rank")
+
+  @@unique([districtId, issue])
+}
