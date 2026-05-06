@@ -3,8 +3,10 @@ import { Prisma } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { RaceListItem } from './zipToPosition.types'
 
-type FindByZipParams = {
-  zip: string
+type SearchParams = {
+  zip?: string
+  name?: string
+  officeType?: string[]
   displayOfficeLevels?: string[]
   electionDateFrom?: string
   electionDateTo?: string
@@ -18,9 +20,17 @@ export class ZipToPositionService extends createPrismaBase(
     super()
   }
 
-  async findByZip(params: FindByZipParams): Promise<RaceListItem[]> {
-    const where: Prisma.ZipToPositionWhereInput = {
-      zipCode: params.zip,
+  async search(params: SearchParams): Promise<RaceListItem[]> {
+    const where: Prisma.ZipToPositionWhereInput = {}
+    if (params.zip) where.zipCode = params.zip
+    if (params.name) {
+      where.name = { contains: params.name, mode: 'insensitive' }
+    }
+    if (params.officeType && params.officeType.length > 0) {
+      where.officeType = { in: params.officeType }
+    }
+    if (params.displayOfficeLevels && params.displayOfficeLevels.length > 0) {
+      where.displayOfficeLevel = { in: params.displayOfficeLevels }
     }
     if (params.electionDateFrom || params.electionDateTo) {
       where.electionDate = {
@@ -29,9 +39,6 @@ export class ZipToPositionService extends createPrismaBase(
         }),
         ...(params.electionDateTo && { lte: new Date(params.electionDateTo) }),
       }
-    }
-    if (params.displayOfficeLevels && params.displayOfficeLevels.length > 0) {
-      where.displayOfficeLevel = { in: params.displayOfficeLevels }
     }
 
     const rows = await this.model.findMany({

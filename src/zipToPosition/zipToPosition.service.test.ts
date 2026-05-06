@@ -32,7 +32,7 @@ describe('ZipToPositionService', () => {
   })
 
   it('queries ZipToPosition by zip and date range, joining Position and Place', async () => {
-    await service.findByZip({
+    await service.search({
       zip: '90210',
       electionDateFrom: '2026-01-01',
       electionDateTo: '2027-12-31',
@@ -52,7 +52,7 @@ describe('ZipToPositionService', () => {
   })
 
   it('filters by displayOfficeLevels when provided', async () => {
-    await service.findByZip({
+    await service.search({
       zip: '90210',
       displayOfficeLevels: ['City', 'Township'],
     })
@@ -83,7 +83,7 @@ describe('ZipToPositionService', () => {
       },
     ])
 
-    const result = await service.findByZip({ zip: '90210' })
+    const result = await service.search({ zip: '90210' })
 
     expect(result).toEqual([
       {
@@ -95,6 +95,45 @@ describe('ZipToPositionService', () => {
         district: null,
       },
     ])
+  })
+
+  it('filters by name with case-insensitive substring', async () => {
+    await service.search({ name: 'mayor' })
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          name: { contains: 'mayor', mode: 'insensitive' },
+        }),
+      }),
+    )
+  })
+
+  it('filters by officeType (exact match against array)', async () => {
+    await service.search({ officeType: ['Mayor', 'Sheriff'] })
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          officeType: { in: ['Mayor', 'Sheriff'] },
+        }),
+      }),
+    )
+  })
+
+  it('combines zip + name + officeType when all provided', async () => {
+    await service.search({
+      zip: '90210',
+      name: 'mayor',
+      officeType: ['Mayor'],
+    })
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          zipCode: '90210',
+          name: { contains: 'mayor', mode: 'insensitive' },
+          officeType: { in: ['Mayor'] },
+        }),
+      }),
+    )
   })
 })
 
@@ -212,7 +251,7 @@ describe.skipIf(process.env.CI === 'true')(
     })
 
     it('returns only the row for the requested zip, joined to its Place', async () => {
-      const result = await service.findByZip({ zip: '90210' })
+      const result = await service.search({ zip: '90210' })
 
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe(ztpBeverlyHillsId)
