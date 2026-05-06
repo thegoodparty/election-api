@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common'
-import { GetPositionsByZipQueryDTO } from './zipToPosition.schema'
+import { SearchPositionsQueryDTO } from './zipToPosition.schema'
 import { ZipToPositionService } from './zipToPosition.service'
 import { RaceListItem } from './zipToPosition.types'
 
@@ -7,12 +7,14 @@ import { RaceListItem } from './zipToPosition.types'
 export class ZipToPositionController {
   constructor(private readonly zipToPosition: ZipToPositionService) {}
 
-  @Get('by-zip')
-  async byZip(
-    @Query() query: GetPositionsByZipQueryDTO,
+  @Get('search')
+  async search(
+    @Query() query: SearchPositionsQueryDTO,
   ): Promise<RaceListItem[]> {
-    return this.zipToPosition.findByZip({
+    return this.zipToPosition.search({
       zip: query.zip,
+      name: query.name,
+      officeType: query.officeType,
       displayOfficeLevels: query.displayOfficeLevels,
       electionDateFrom: query.electionDateFrom,
       electionDateTo: query.electionDateTo,

@@ -30,12 +30,10 @@ const OFFICE_TYPES = [
 ] as const
 
 const arrayOrSingle = <T extends z.ZodTypeAny>(inner: T) =>
-  z
-    .union([inner, z.array(inner)])
-    .optional()
-    .transform((v) =>
-      v === undefined ? undefined : Array.isArray(v) ? v : [v],
-    )
+  z.preprocess(
+    (v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]),
+    z.array(inner).optional(),
+  )
 
 export const SearchPositionsQuerySchema = z
   .object({
