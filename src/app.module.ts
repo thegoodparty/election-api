@@ -6,6 +6,7 @@ import { CandidaciesModule } from './candidacies/candidacies.module'
 import { ProjectedTurnoutModule } from './projectedTurnout/projectedTurnout.module'
 import { DistrictsModule } from './districts/districts.module'
 import { PositionsModule } from './positions/positions.module'
+import { VoterIssuesModule } from './voterIssues/voterIssues.module'
 import { loggerModule } from './observability/logging/logger-module'
 
 @Module({
@@ -18,6 +19,7 @@ import { loggerModule } from './observability/logging/logger-module'
     ProjectedTurnoutModule,
     DistrictsModule,
     PositionsModule,
+    VoterIssuesModule,
   ],
 })
 export class AppModule {}
