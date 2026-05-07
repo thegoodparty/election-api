@@ -109,6 +109,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
             brDatabaseId: true,
             state: true,
             name: true,
+            level: true,
           },
         })
       if (!position) {
