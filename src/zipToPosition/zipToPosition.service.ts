@@ -3,6 +3,15 @@ import { Prisma } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { RaceListItem } from './zipToPosition.types'
 
+// DATA-1896: minimum fraction of a zip's L2 voters that must live in a
+// district for that (zip, position) overlap to surface here. Tunable via
+// env so the threshold can be moved without a deploy. Rows below the
+// threshold are kept in the table (so a future "see more" UX can read
+// them); this endpoint just hides them.
+const PCT_DISTRICTZIP_TO_ZIP_THRESHOLD = Number(
+  process.env.PCT_DISTRICTZIP_TO_ZIP_THRESHOLD ?? 0.005,
+)
+
 type SearchParams = {
   zip?: string
   name?: string
@@ -21,7 +30,17 @@ export class ZipToPositionService extends createPrismaBase(
   }
 
   async search(params: SearchParams): Promise<RaceListItem[]> {
-    const where: Prisma.ZipToPositionWhereInput = {}
+    const where: Prisma.ZipToPositionWhereInput = {
+      // Null-safe overlap-quality gate. The IS NULL branch covers the
+      // deploy window between this Prisma migration and the first
+      // sync_election_api run that populates the new columns; once
+      // the sync completes, all rows have non-null values and the
+      // null branch is defense in depth.
+      OR: [
+        { pctDistrictzipToZip: null },
+        { pctDistrictzipToZip: { gte: PCT_DISTRICTZIP_TO_ZIP_THRESHOLD } },
+      ],
+    }
     if (params.zip) where.zipCode = params.zip
     if (params.name) {
       where.name = { contains: params.name, mode: 'insensitive' }
