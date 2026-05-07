@@ -3,6 +3,9 @@ import { Prisma } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { RaceListItem } from './zipToPosition.types'
 
+const PCT_DISTRICTZIP_TO_ZIP_THRESHOLD =
+  Number(process.env.PCT_DISTRICTZIP_TO_ZIP_THRESHOLD) || 0.005
+
 type SearchParams = {
   zip?: string
   name?: string
@@ -21,7 +24,12 @@ export class ZipToPositionService extends createPrismaBase(
   }
 
   async search(params: SearchParams): Promise<RaceListItem[]> {
-    const where: Prisma.ZipToPositionWhereInput = {}
+    const where: Prisma.ZipToPositionWhereInput = {
+      OR: [
+        { pctDistrictzipToZip: null },
+        { pctDistrictzipToZip: { gte: PCT_DISTRICTZIP_TO_ZIP_THRESHOLD } },
+      ],
+    }
     if (params.zip) where.zipCode = params.zip
     if (params.name) {
       where.name = { contains: params.name, mode: 'insensitive' }

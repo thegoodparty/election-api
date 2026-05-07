@@ -40,6 +40,10 @@ describe('ZipToPositionService', () => {
 
     expect(findMany).toHaveBeenCalledWith({
       where: {
+        OR: [
+          { pctDistrictzipToZip: null },
+          { pctDistrictzipToZip: { gte: 0.005 } },
+        ],
         zipCode: '90210',
         electionDate: {
           gte: new Date('2026-01-01'),
@@ -49,6 +53,21 @@ describe('ZipToPositionService', () => {
       include: { position: { include: { place: true } } },
       orderBy: [{ electionDate: 'asc' }, { name: 'asc' }],
     })
+  })
+
+  it('always applies the null-safe pct_districtzip_to_zip threshold filter', async () => {
+    await service.search({ zip: '90210' })
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { pctDistrictzipToZip: null },
+            { pctDistrictzipToZip: { gte: 0.005 } },
+          ],
+        }),
+      }),
+    )
   })
 
   it('filters by displayOfficeLevels when provided', async () => {

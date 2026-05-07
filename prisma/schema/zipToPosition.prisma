@@ -26,7 +26,12 @@ model ZipToPosition {
   state              String @db.Char(2)
   district           String
 
+  votersInZip         BigInt? @map("voters_in_zip")
+  votersInZipDistrict BigInt? @map("voters_in_zip_district")
+  pctDistrictzipToZip Float?  @map("pct_districtzip_to_zip")
+
   @@unique([zipCode, positionId, electionDate])
   @@index([zipCode])
   @@index([positionId])
+  @@index([zipCode, pctDistrictzipToZip])
 }
