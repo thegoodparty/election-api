@@ -7,6 +7,7 @@ import { ProjectedTurnoutModule } from './projectedTurnout/projectedTurnout.modu
 import { DistrictsModule } from './districts/districts.module'
 import { PositionsModule } from './positions/positions.module'
 import { VoterIssuesModule } from './voterIssues/voterIssues.module'
+import { ZipToPositionModule } from './zipToPosition/zipToPosition.module'
 import { loggerModule } from './observability/logging/logger-module'
 
 @Module({
@@ -20,6 +21,7 @@ import { loggerModule } from './observability/logging/logger-module'
     DistrictsModule,
     PositionsModule,
     VoterIssuesModule,
+    ZipToPositionModule,
   ],
 })
 export class AppModule {}
