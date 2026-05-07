@@ -26,11 +26,6 @@ model ZipToPosition {
   state              String @db.Char(2)
   district           String
 
-  // Overlap-quality fields (DATA-1896): expose the dbt-computed voter counts
-  // and the derived percentage so this service can filter spurious ZIP↔
-  // district overlaps (e.g., a handful of West Hollywood voters scattered
-  // into 90210). Nullable for the deploy window between this Prisma migration
-  // and the first sync_election_api run that populates them.
   votersInZip         BigInt? @map("voters_in_zip")
   votersInZipDistrict BigInt? @map("voters_in_zip_district")
   pctDistrictzipToZip Float?  @map("pct_districtzip_to_zip")
