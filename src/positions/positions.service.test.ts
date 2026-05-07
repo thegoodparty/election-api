@@ -69,6 +69,7 @@ describe('PositionsService', () => {
       brDatabaseId: 'db-1',
       state: 'CA',
       name: 'Mayor',
+      level: 'Local',
     })
 
     const result = await service.getPositionById({ id: 'pos-1' })
@@ -81,6 +82,7 @@ describe('PositionsService', () => {
         brDatabaseId: true,
         state: true,
         name: true,
+        level: true,
       },
     })
     expect(result).toEqual({
@@ -89,6 +91,7 @@ describe('PositionsService', () => {
       brDatabaseId: 'db-1',
       state: 'CA',
       name: 'Mayor',
+      level: 'Local',
     })
   })
 
