@@ -26,6 +26,7 @@ type PositionWithOptionalDistrictAndTurnouts = {
   brDatabaseId: Position['brDatabaseId']
   state: Position['state']
   name: Position['name']
+  level: Position['level']
   district?: {
     id: District['id']
     L2DistrictType: District['L2DistrictType']
@@ -109,6 +110,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
             brDatabaseId: true,
             state: true,
             name: true,
+            level: true,
           },
         })
       if (!position) {
@@ -156,9 +158,10 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     position: PositionWithOptionalDistrictAndTurnouts,
     electionDate?: string,
   ): PositionWithOptionalDistrict {
-    const { id, brPositionId, brDatabaseId, state, name, district } = position
+    const { id, brPositionId, brDatabaseId, state, level, name, district } =
+      position
     if (!district) {
-      return { id, brPositionId, brDatabaseId, state, name }
+      return { id, brPositionId, brDatabaseId, state, name, level }
     }
 
     const {
@@ -182,6 +185,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         state,
         name,
         district: districtResponse,
+        level,
       }
     }
 
@@ -208,6 +212,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       brDatabaseId,
       state,
       name,
+      level,
       district: {
         ...districtResponse,
         projectedTurnout: projectedTurnout ?? null,

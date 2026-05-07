@@ -11,6 +11,8 @@ model Position {
     place      Place?    @relation(fields: [placeId], references: [id])
     placeId    String?   @map("place_id") @db.Uuid()
 
+    level  PositionLevel? @map("level")
+
     ZipToPositions ZipToPosition[]
 
     @@index([placeId])
