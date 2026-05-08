@@ -6,6 +6,7 @@
   "private": true,
   "license": "CC0-1.0",
   "scripts": {
+    "postinstall": "git submodule update --init --recursive",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
