@@ -11,6 +11,7 @@ import { PositionsService } from './positions.service'
 describe('PositionsService', () => {
   let service: PositionsService
   let findUnique: ReturnType<typeof vi.fn>
+  let raceFindMany: ReturnType<typeof vi.fn>
   let projectedTurnoutService: Pick<
     ProjectedTurnoutService,
     'determineElectionCode'
@@ -18,6 +19,7 @@ describe('PositionsService', () => {
 
   beforeEach(() => {
     findUnique = vi.fn()
+    raceFindMany = vi.fn()
     projectedTurnoutService = {
       determineElectionCode: vi.fn(),
     }
@@ -28,6 +30,9 @@ describe('PositionsService', () => {
       value: {
         position: {
           findUnique,
+        },
+        race: {
+          findMany: raceFindMany,
         },
       },
     })
@@ -83,6 +88,7 @@ describe('PositionsService', () => {
         state: true,
         name: true,
         level: true,
+        placeId: true,
       },
     })
     expect(result).toEqual({
@@ -365,5 +371,247 @@ describe('PositionsService', () => {
     ).rejects.toThrow(
       new NotFoundException('Position not found for brPositionId=missing-id'),
     )
+  })
+
+  describe('includeFilingFee', () => {
+    const positionRow = {
+      id: 'pos-1',
+      brPositionId: 'br-pos-1',
+      brDatabaseId: 'db-1',
+      state: 'CA',
+      name: 'Mayor',
+      placeId: 'place-1',
+    }
+
+    it('does not query Race when includeFilingFee is false', async () => {
+      findUnique.mockResolvedValue(positionRow)
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: false,
+      })
+
+      expect(raceFindMany).not.toHaveBeenCalled()
+      expect(result.filingFee).toBeUndefined()
+      expect(result.filingRequirementsText).toBeUndefined()
+    })
+
+    it('returns null filing fee when position has no placeId', async () => {
+      findUnique.mockResolvedValue({ ...positionRow, placeId: null })
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(raceFindMany).not.toHaveBeenCalled()
+      expect(result.filingFee).toBeNull()
+      expect(result.filingRequirementsText).toBeNull()
+      expect(result.filingFeeExtractionSource).toBeNull()
+    })
+
+    it('returns null filing fee when no Race matches placeId + name', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(raceFindMany).toHaveBeenCalledWith({
+        where: {
+          placeId: 'place-1',
+          positionNames: { has: 'Mayor' },
+        },
+        select: {
+          electionDate: true,
+          isPrimary: true,
+          isRunoff: true,
+          filingRequirements: true,
+          salary: true,
+        },
+      })
+      expect(result.filingFee).toBeNull()
+      expect(result.filingRequirementsText).toBeNull()
+      expect(result.filingFeeExtractionSource).toBeNull()
+    })
+
+    it('extracts the filing fee from the matching Race row', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2030-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: 'Filing fee is $250.',
+          salary: null,
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(result.filingFee).toBe(250)
+      expect(result.filingRequirementsText).toBe('Filing fee is $250.')
+      expect(result.filingFeeExtractionSource).toBe('direct_dollar')
+    })
+
+    it('prefers the race matching the given electionDate exactly', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2024-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: '$500 fee',
+          salary: null,
+        },
+        {
+          electionDate: new Date('2028-11-07'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: '$1,000 fee',
+          salary: null,
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+        electionDate: '2028-11-07',
+      })
+
+      expect(result.filingFee).toBe(1000)
+    })
+
+    it('nulls out fee but keeps raw text when race has multiple dollar amounts', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2030-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: '$300 for D/R candidates, $50 for independents.',
+          salary: null,
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(result.filingFee).toBeNull()
+      expect(result.filingRequirementsText).toBe(
+        '$300 for D/R candidates, $50 for independents.',
+      )
+      expect(result.filingFeeExtractionSource).toBe('multi_value')
+    })
+
+    it('computes pct_of_salary end-to-end through the service', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2030-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: 'Filing fee is 2% of annual salary.',
+          salary: '$80,000 per year',
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(result.filingFee).toBe(1600)
+      expect(result.filingFeeExtractionSource).toBe('pct_of_salary')
+    })
+
+    it('attaches filing fee fields to the includeDistrict response shape', async () => {
+      findUnique.mockResolvedValue({
+        ...positionRow,
+        district: {
+          id: 'district-1',
+          L2DistrictType: 'City',
+          L2DistrictName: 'Los Angeles',
+        },
+      })
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2030-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: 'Filing fee is $125.',
+          salary: null,
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeDistrict: true,
+        includeFilingFee: true,
+      })
+
+      expect(result.district).toEqual({
+        id: 'district-1',
+        L2DistrictType: 'City',
+        L2DistrictName: 'Los Angeles',
+        projectedTurnout: null,
+      })
+      expect(result.filingFee).toBe(125)
+      expect(result.filingRequirementsText).toBe('Filing fee is $125.')
+      expect(result.filingFeeExtractionSource).toBe('direct_dollar')
+    })
+
+    it('attaches filing fee fields to the includeTurnout response shape', async () => {
+      vi.mocked(projectedTurnoutService.determineElectionCode).mockReturnValue(
+        ElectionCode.General,
+      )
+      findUnique.mockResolvedValue({
+        ...positionRow,
+        district: {
+          id: 'district-1',
+          L2DistrictType: 'City',
+          L2DistrictName: 'Los Angeles',
+          ProjectedTurnouts: [
+            {
+              id: 'pt-1',
+              electionYear: 2030,
+              electionCode: ElectionCode.General,
+            },
+          ],
+        },
+      })
+      raceFindMany.mockResolvedValue([
+        {
+          electionDate: new Date('2030-11-05'),
+          isPrimary: false,
+          isRunoff: false,
+          filingRequirements: 'Filing fee is $75.',
+          salary: null,
+        },
+      ])
+
+      const result = await service.getPositionById({
+        id: 'pos-1',
+        includeDistrict: true,
+        includeTurnout: true,
+        includeFilingFee: true,
+        electionDate: '2030-11-05',
+      })
+
+      expect(result.district?.projectedTurnout).toMatchObject({
+        id: 'pt-1',
+        electionYear: 2030,
+        electionCode: ElectionCode.General,
+      })
+      expect(result.filingFee).toBe(75)
+      expect(result.filingFeeExtractionSource).toBe('direct_dollar')
+    })
   })
 })
