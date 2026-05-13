@@ -88,7 +88,6 @@ describe('PositionsService', () => {
         state: true,
         name: true,
         level: true,
-        placeId: true,
       },
     })
     expect(result).toEqual({
@@ -394,6 +393,35 @@ describe('PositionsService', () => {
       expect(raceFindMany).not.toHaveBeenCalled()
       expect(result.filingFee).toBeUndefined()
       expect(result.filingRequirementsText).toBeUndefined()
+    })
+
+    it('does not fetch placeId on findUnique when includeFilingFee is false', async () => {
+      findUnique.mockResolvedValue(positionRow)
+
+      await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: false,
+      })
+
+      expect(findUnique).toHaveBeenCalledWith({
+        where: { id: 'pos-1' },
+        select: expect.not.objectContaining({ placeId: true }),
+      })
+    })
+
+    it('fetches placeId on findUnique when includeFilingFee is true', async () => {
+      findUnique.mockResolvedValue(positionRow)
+      raceFindMany.mockResolvedValue([])
+
+      await service.getPositionById({
+        id: 'pos-1',
+        includeFilingFee: true,
+      })
+
+      expect(findUnique).toHaveBeenCalledWith({
+        where: { id: 'pos-1' },
+        select: expect.objectContaining({ placeId: true }),
+      })
     })
 
     it('returns null filing fee when position has no placeId', async () => {

@@ -107,15 +107,15 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     } = params
     this.validateOptions({ includeDistrict, includeTurnout, electionDate })
 
-    const baseSelect = {
+    const baseSelect: Prisma.PositionSelect = {
       id: true,
       brPositionId: true,
       brDatabaseId: true,
       state: true,
       name: true,
       level: true,
-      placeId: true,
-    } satisfies Prisma.PositionSelect
+      ...(includeFilingFee ? { placeId: true } : {}),
+    }
 
     if (!includeDistrict) {
       const position: PositionWithOptionalDistrictAndTurnouts | null =
