@@ -275,7 +275,16 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       filingRequirementsText: null,
       extractionSource: null,
     }
-    if (!position.placeId || !position.name) return empty
+    if (!position.placeId || !position.name) {
+      this.logger.debug({
+        event: 'FilingFeeLookup',
+        outcome: 'skipped',
+        reason: !position.placeId ? 'no_place_id' : 'no_name',
+        positionId: position.id,
+        positionName: position.name,
+      })
+      return empty
+    }
 
     const races = await this.client.race.findMany({
       where: {
@@ -290,11 +299,48 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         salary: true,
       },
     })
-    if (races.length === 0) return empty
+
+    if (races.length === 0) {
+      // Diagnose: peek at what positionNames exist for this place so we can
+      // see whether the join is failing because the name string differs from
+      // what's stored on Race rows.
+      const sampleNames = await this.client.race.findMany({
+        where: { placeId: position.placeId },
+        select: { positionNames: true },
+        take: 5,
+      })
+      this.logger.debug({
+        event: 'FilingFeeLookup',
+        outcome: 'no_race_match',
+        positionId: position.id,
+        positionName: position.name,
+        placeId: position.placeId,
+        sampleRacePositionNames: sampleNames.flatMap((r) => r.positionNames),
+      })
+      return empty
+    }
 
     const chosen = pickRelevantRace(races, electionDate)
     if (!chosen) return empty
 
-    return extractFilingFee(chosen.filingRequirements, chosen.salary)
+    const fee = extractFilingFee(chosen.filingRequirements, chosen.salary)
+
+    this.logger.debug({
+      event: 'FilingFeeLookup',
+      outcome: 'matched',
+      positionId: position.id,
+      positionName: position.name,
+      placeId: position.placeId,
+      racesMatched: races.length,
+      chosenElectionDate: chosen.electionDate,
+      chosenIsPrimary: chosen.isPrimary,
+      chosenIsRunoff: chosen.isRunoff,
+      hasFilingRequirements: Boolean(chosen.filingRequirements),
+      hasSalary: Boolean(chosen.salary),
+      filingFee: fee.filingFee,
+      extractionSource: fee.extractionSource,
+    })
+
+    return fee
   }
 }
