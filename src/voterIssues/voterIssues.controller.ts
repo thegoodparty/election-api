@@ -13,6 +13,7 @@ export class VoterIssuesController {
     return this.voterIssues.getVoterIssues({
       districtId: query.districtId,
       limit: query.limit,
+      ...(query.level !== undefined && { level: query.level }),
     })
   }
 }
