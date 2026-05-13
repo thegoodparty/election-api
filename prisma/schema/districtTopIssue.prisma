@@ -8,11 +8,21 @@ model DistrictTopIssue {
 
   // Haystaq issue score column name (e.g. hs_charter_schools_support)
   issue      String
-  issueLabel String @map("issue_label")
+  issueLabel String   @map("issue_label")
   // Average Haystaq score across voters in the district (0-100)
   score      Float
+  // Jurisdictional flags from gp-data-platform DATA-1903: the level(s) of
+  // government where this issue is actionable. Not mutually exclusive — an
+  // issue can be actionable at multiple levels. Nullable while the
+  // gp-data-platform phase-(c) Airflow sync work is in flight; values are
+  // populated by the next sync_election_api run after that PR lands. May
+  // tighten to non-nullable in a follow-up once data is verified.
+  isLocal    Boolean? @map("is_local")
+  isRegional Boolean? @map("is_regional")
+  isState    Boolean? @map("is_state")
+  isFederal  Boolean? @map("is_federal")
   // Rank of the issue within the district (1 = highest score)
-  issueRank  Int @map("issue_rank")
+  issueRank  Int      @map("issue_rank")
 
   @@unique([districtId, issue])
 }
