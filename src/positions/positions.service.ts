@@ -8,10 +8,13 @@ import { District, Position, Prisma, ProjectedTurnout } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import { PositionWithOptionalDistrict } from './positions.types'
+import { extractFilingFee, FilingFeeResult } from './util/filingFee.util'
+import { pickRelevantRace } from './util/pickRelevantRace.util'
 
 type PositionLookupOptions = {
   includeDistrict?: boolean
   includeTurnout?: boolean
+  includeFilingFee?: boolean
   electionDate?: string
 }
 
@@ -27,6 +30,7 @@ type PositionWithOptionalDistrictAndTurnouts = {
   state: Position['state']
   name: Position['name']
   level: Position['level']
+  placeId?: Position['placeId'] | null
   district?: {
     id: District['id']
     L2DistrictType: District['L2DistrictType']
@@ -47,6 +51,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     id: string
     includeDistrict?: boolean
     includeTurnout?: boolean
+    includeFilingFee?: boolean
     electionDate?: string
   }): Promise<PositionWithOptionalDistrict> {
     const { id } = params
@@ -61,6 +66,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
     brPositionId: string
     includeDistrict?: boolean
     includeTurnout?: boolean
+    includeFilingFee?: boolean
     electionDate?: string
   }): Promise<PositionWithOptionalDistrict> {
     const { brPositionId } = params
@@ -96,31 +102,34 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       notFoundMessage,
       includeDistrict,
       includeTurnout,
+      includeFilingFee,
       electionDate,
     } = params
     this.validateOptions({ includeDistrict, includeTurnout, electionDate })
 
+    const baseSelect: Prisma.PositionSelect = {
+      id: true,
+      brPositionId: true,
+      brDatabaseId: true,
+      state: true,
+      name: true,
+      level: true,
+      ...(includeFilingFee ? { placeId: true } : {}),
+    }
+
     if (!includeDistrict) {
       const position: PositionWithOptionalDistrictAndTurnouts | null =
-        await this.model.findUnique({
-          where,
-          select: {
-            id: true,
-            brPositionId: true,
-            brDatabaseId: true,
-            state: true,
-            name: true,
-            level: true,
-          },
-        })
+        await this.model.findUnique({ where, select: baseSelect })
       if (!position) {
         throw new NotFoundException(notFoundMessage)
       }
-      return this.shapePositionResponse(position)
+      const filingFee = includeFilingFee
+        ? await this.lookupFilingFee(position, electionDate)
+        : undefined
+      return this.shapePositionResponse(position, undefined, filingFee)
     }
 
     if (!includeTurnout) {
-      // If the caller doesn't want projectedTurnout, no further processing is needed
       const position: PositionWithOptionalDistrictAndTurnouts | null =
         await this.model.findUnique({
           where,
@@ -129,7 +138,10 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
       if (!position) {
         throw new NotFoundException(notFoundMessage)
       }
-      return this.shapePositionResponse(position)
+      const filingFee = includeFilingFee
+        ? await this.lookupFilingFee(position, electionDate)
+        : undefined
+      return this.shapePositionResponse(position, undefined, filingFee)
     }
 
     const position: PositionWithOptionalDistrictAndTurnouts | null =
@@ -151,17 +163,40 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         'It should be impossible to get to this line without electionDate defined',
       )
     }
-    return this.shapePositionResponse(position, electionDate)
+    const filingFee = includeFilingFee
+      ? await this.lookupFilingFee(position, electionDate)
+      : undefined
+    return this.shapePositionResponse(position, electionDate, filingFee)
   }
 
   private shapePositionResponse(
     position: PositionWithOptionalDistrictAndTurnouts,
     electionDate?: string,
+    filingFee?: FilingFeeResult,
   ): PositionWithOptionalDistrict {
     const { id, brPositionId, brDatabaseId, state, level, name, district } =
       position
+    const filingFeeFields: Pick<
+      PositionWithOptionalDistrict,
+      'filingFee' | 'filingRequirementsText' | 'filingFeeExtractionSource'
+    > = filingFee
+      ? {
+          filingFee: filingFee.filingFee,
+          filingRequirementsText: filingFee.filingRequirementsText,
+          filingFeeExtractionSource: filingFee.extractionSource,
+        }
+      : {}
+
     if (!district) {
-      return { id, brPositionId, brDatabaseId, state, name, level }
+      return {
+        id,
+        brPositionId,
+        brDatabaseId,
+        state,
+        name,
+        level,
+        ...filingFeeFields,
+      }
     }
 
     const {
@@ -186,6 +221,7 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         name,
         district: districtResponse,
         level,
+        ...filingFeeFields,
       }
     }
 
@@ -217,6 +253,48 @@ export class PositionsService extends createPrismaBase(MODELS.Position) {
         ...districtResponse,
         projectedTurnout: projectedTurnout ?? null,
       },
+      ...filingFeeFields,
     }
+  }
+
+  /**
+   * BallotReady stores filing fees on the Race row, not the Position. There's
+   * no FK between Position and Race — the de-facto join is shared `placeId`
+   * plus a position-name match against Race.positionNames. One Position can
+   * have many Races (different election dates, primary vs. general), so we
+   * pick the most relevant one: matching electionDate exact > nearest future
+   * general > nearest future > latest historical. Returns an empty result if
+   * no candidate race exists or its filingRequirements yields nothing.
+   */
+  private async lookupFilingFee(
+    position: PositionWithOptionalDistrictAndTurnouts,
+    electionDate?: string,
+  ): Promise<FilingFeeResult> {
+    const empty: FilingFeeResult = {
+      filingFee: null,
+      filingRequirementsText: null,
+      extractionSource: null,
+    }
+    if (!position.placeId || !position.name) return empty
+
+    const races = await this.client.race.findMany({
+      where: {
+        placeId: position.placeId,
+        positionNames: { has: position.name },
+      },
+      select: {
+        electionDate: true,
+        isPrimary: true,
+        isRunoff: true,
+        filingRequirements: true,
+        salary: true,
+      },
+    })
+    if (races.length === 0) return empty
+
+    const chosen = pickRelevantRace(races, electionDate)
+    if (!chosen) return empty
+
+    return extractFilingFee(chosen.filingRequirements, chosen.salary)
   }
 }
