@@ -30,4 +30,20 @@ describe('VoterIssuesController', () => {
     })
     expect(result).toEqual(issues)
   })
+
+  it('forwards the level filter to the service when provided', async () => {
+    getVoterIssues.mockResolvedValue([])
+
+    await controller.getVoterIssues({
+      districtId: 'd-1',
+      limit: 10,
+      level: 'local',
+    })
+
+    expect(getVoterIssues).toHaveBeenCalledWith({
+      districtId: 'd-1',
+      limit: 10,
+      level: 'local',
+    })
+  })
 })

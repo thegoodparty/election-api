@@ -1,4 +1,5 @@
 import { Position, ProjectedTurnout } from '@prisma/client'
+import type { FilingFeeExtractionSource } from './util/filingFee.util'
 
 export type PositionWithOptionalDistrict = Pick<
   Position,
@@ -12,4 +13,7 @@ export type PositionWithOptionalDistrict = Pick<
     L2DistrictName: string
     projectedTurnout: ProjectedTurnout | null
   }
+  filingFee?: number | null
+  filingRequirementsText?: string | null
+  filingFeeExtractionSource?: FilingFeeExtractionSource | null
 }
