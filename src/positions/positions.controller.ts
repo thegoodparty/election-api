@@ -16,12 +16,14 @@ export class PositionsController {
     @Param() params: GetPositionByBrIdParamsDTO,
     @Query() query: GetPositionByBrIdQueryDTO,
   ): Promise<PositionWithOptionalDistrict> {
-    const { includeDistrict, electionDate, includeTurnout } = query
+    const { includeDistrict, electionDate, includeTurnout, includeFilingFee } =
+      query
     return this.positions.getPositionByBallotReadyId({
       brPositionId: params.brPositionId,
       includeDistrict: includeDistrict,
       electionDate: electionDate,
       includeTurnout: includeTurnout,
+      includeFilingFee: includeFilingFee,
     })
   }
 
@@ -30,12 +32,14 @@ export class PositionsController {
     @Param() params: GetPositionByIdParamsDTO,
     @Query() query: GetPositionByBrIdQueryDTO,
   ): Promise<PositionWithOptionalDistrict> {
-    const { includeDistrict, electionDate, includeTurnout } = query
+    const { includeDistrict, electionDate, includeTurnout, includeFilingFee } =
+      query
     return this.positions.getPositionById({
       id: params.id,
       includeDistrict: includeDistrict,
       electionDate: electionDate,
       includeTurnout: includeTurnout,
+      includeFilingFee: includeFilingFee,
     })
   }
 }

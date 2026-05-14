@@ -25,6 +25,15 @@ export const getPositionByBrIdQuerySchema = z
       z.boolean().optional().default(false),
     ),
     includeDistrict: z.coerce.boolean().optional(),
+    includeFilingFee: z.preprocess(
+      (val) =>
+        val === 'true' || val === '1' || val === true
+          ? true
+          : val === 'false' || val === '0' || val === false
+            ? false
+            : undefined,
+      z.boolean().optional().default(false),
+    ),
     electionDate: z
       .string()
       .optional()
