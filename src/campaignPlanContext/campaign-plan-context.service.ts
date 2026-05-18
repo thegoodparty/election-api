@@ -149,6 +149,9 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     const yearStart = new Date(Date.UTC(year, 0, 1))
     const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
 
+    // orderBy keeps primaryDate / generalDate stable if a data error ever
+    // produces multiple sibling rows with the same stage flag — same
+    // defense-in-depth reasoning as the parent findFirst lookup.
     const siblings = await this.client.race.findMany({
       where: {
         positionId,
@@ -156,6 +159,7 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
         electionDate: { gte: yearStart, lt: yearEnd },
       },
       select: { electionDate: true, isPrimary: true, isRunoff: true },
+      orderBy: { electionDate: 'asc' },
     })
 
     for (const sibling of siblings) {

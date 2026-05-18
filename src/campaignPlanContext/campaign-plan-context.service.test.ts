@@ -406,6 +406,18 @@ describe('CampaignPlanContextService', () => {
     )
   })
 
+  it('passes orderBy electionDate asc through to the sibling-race findMany', async () => {
+    raceFindFirst.mockResolvedValue(baseRace())
+
+    await service.getCampaignPlanContext(baseRequest())
+
+    expect(raceFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { electionDate: 'asc' },
+      }),
+    )
+  })
+
   it('fills primary_election_date from a sibling primary race within the same calendar year', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
     raceFindMany.mockResolvedValue([
