@@ -20,8 +20,19 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   ): Promise<CampaignPlanContextResponse> {
     const { brDatabaseId, user } = dto
 
+    // brDatabaseId is unique in practice (the dbt mart's
+    // unique_int__enhanced_race_br_database_id test enforces 1:1 with BR's
+    // race.database_id), but there's no @unique constraint in the Prisma
+    // schema to enforce that here. orderBy is defense-in-depth — if a dup
+    // ever slips in, we pin a deterministic survivor.
+    //
+    // ProjectedTurnouts can have multiple rows per (electionYear,
+    // electionCode) when the model has been re-run with new versions; order
+    // by inferenceAt desc so the .find() in resolveProjectedTurnout picks
+    // the latest snapshot.
     const race = await this.model.findFirst({
       where: { brDatabaseId },
+      orderBy: { electionDate: 'asc' },
       include: {
         Candidacies: {
           select: {
@@ -34,7 +45,13 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
         },
         Position: {
           include: {
-            district: { include: { ProjectedTurnouts: true } },
+            district: {
+              include: {
+                ProjectedTurnouts: {
+                  orderBy: { inferenceAt: 'desc' },
+                },
+              },
+            },
           },
         },
       },

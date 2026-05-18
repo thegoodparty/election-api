@@ -337,6 +337,75 @@ describe('CampaignPlanContextService', () => {
     expect(result.projected_turnout).toBeNull()
   })
 
+  it('picks the first matching ProjectedTurnout row (relies on Prisma ordering by inferenceAt desc)', async () => {
+    // The service eager-loads ProjectedTurnouts with `orderBy: inferenceAt
+    // desc` so the .find() in resolveProjectedTurnout returns the most
+    // recent snapshot when multiple model_versions share the same
+    // (electionYear, electionCode). This test feeds a pre-ordered array
+    // (mimicking what Prisma returns) and asserts the first match wins.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 3000, // newer model run
+              },
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 2500, // older model run
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignPlanContext(baseRequest())
+
+    expect(result.projected_turnout).toBe(3000)
+  })
+
+  it('passes orderBy inferenceAt desc through to the Prisma include for ProjectedTurnouts', async () => {
+    raceFindFirst.mockResolvedValue(baseRace())
+
+    await service.getCampaignPlanContext(baseRequest())
+
+    expect(raceFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          Position: expect.objectContaining({
+            include: expect.objectContaining({
+              district: expect.objectContaining({
+                include: expect.objectContaining({
+                  ProjectedTurnouts: { orderBy: { inferenceAt: 'desc' } },
+                }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    )
+  })
+
+  it('pins a deterministic race via orderBy electionDate asc on the brDatabaseId lookup', async () => {
+    raceFindFirst.mockResolvedValue(baseRace())
+
+    await service.getCampaignPlanContext(baseRequest())
+
+    expect(raceFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { brDatabaseId: 1000001 },
+        orderBy: { electionDate: 'asc' },
+      }),
+    )
+  })
+
   it('fills primary_election_date from a sibling primary race within the same calendar year', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
     raceFindMany.mockResolvedValue([
