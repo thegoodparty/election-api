@@ -383,6 +383,50 @@ describe('CampaignPlanContextService', () => {
     expect(result.relevant_election_date).toBe('2026-06-02')
   })
 
+  it('when the looked-up race is a runoff, general_election_date reflects the sibling general not the runoff date', async () => {
+    // A runoff is its own distinct stage, not a substitute for the general.
+    // relevant_election_date carries the runoff date so the consumer knows
+    // which election the user is looking at; general_election_date reports
+    // the actual general from a sibling race (or null when no sibling exists).
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-09-15T00:00:00Z'),
+        isPrimary: false,
+        isRunoff: true,
+      }),
+    )
+    raceFindMany.mockResolvedValue([
+      {
+        electionDate: new Date('2026-08-25T00:00:00Z'),
+        isPrimary: false,
+        isRunoff: false,
+      },
+    ])
+
+    const result = await service.getCampaignPlanContext(baseRequest())
+
+    expect(result.relevant_election_date).toBe('2026-09-15')
+    expect(result.general_election_date).toBe('2026-08-25')
+    expect(result.primary_election_date).toBeNull()
+  })
+
+  it('when the looked-up race is a runoff with no sibling general, general_election_date is null', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-09-15T00:00:00Z'),
+        isPrimary: false,
+        isRunoff: true,
+      }),
+    )
+    raceFindMany.mockResolvedValue([])
+
+    const result = await service.getCampaignPlanContext(baseRequest())
+
+    expect(result.relevant_election_date).toBe('2026-09-15')
+    expect(result.general_election_date).toBeNull()
+    expect(result.primary_election_date).toBeNull()
+  })
+
   it('echoes the user_* fields verbatim from the request body', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
     const req = baseRequest({
