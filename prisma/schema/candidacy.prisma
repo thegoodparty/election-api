@@ -14,9 +14,11 @@ model Candidacy {
   slug         String   @unique // slugify firstName-lastName-normalizedPositionName
 
   // Candidacy
-  firstName String  @map("first_name")
-  lastName  String  @map("last_name")
-  party     String? // Use index 0 of parties array
+  firstName     String  @map("first_name")
+  lastName      String  @map("last_name")
+  party         String? // Use index 0 of parties array
+  gpCandidateId String? @map("gp_candidate_id") // Canonical civics candidate ID
+  isIncumbent   Boolean? @map("is_incumbent")
 
   // Race for state, and potentially longest geoid Place on Race?
   placeName String? @map("place_name")

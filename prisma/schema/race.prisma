@@ -37,13 +37,22 @@ model Race {
   salary                  String?       @map("salary")
   subAreaName             String?       @map("sub_area_name")
   subAreaValue            String?       @map("sub_area_value")
+  // Race-level civics attributes (DATA-1922)
+  numberOfSeats           Int?          @map("number_of_seats")
+  winNumber               Int?          @map("win_number") // BallotReady viability_score.win_number; null for nearly all small non-partisan local races
+  isPartisan              Boolean?      @map("is_partisan")
+  officeType              String?       @map("office_type")
+  officialOfficeName      String?       @map("official_office_name")
   // PositionElection
   frequency               Int[]         @map("frequency")
 
   // Relations
   Place       Place?      @relation(fields: [placeId], references: [id])
   placeId     String?     @map("place_id") @db.Uuid
+  Position    Position?   @relation(fields: [positionId], references: [id])
+  positionId  String?     @map("position_id") @db.Uuid
   Candidacies Candidacy[]
 
   @@index([slug])
+  @@index([positionId])
 }
