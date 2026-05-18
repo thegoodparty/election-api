@@ -43,30 +43,30 @@ type RaceRow = {
 const baseRequest = (
   overrides: Partial<CampaignPlanContextRequestDto> = {},
 ): CampaignPlanContextRequestDto => ({
-  brDatabaseId: 2027085,
+  brDatabaseId: 1000001,
   user: {
-    id: 328682,
-    email: 'electsarahbellperson@gmail.com',
-    firstName: 'Sarah',
-    lastName: 'Person',
-    fullName: 'Sarah Person',
+    id: 12345,
+    email: 'alice@example.com',
+    firstName: 'Alice',
+    lastName: 'Example',
+    fullName: 'Alice Example',
     phoneNumber: null,
     partyAffiliation: 'Nonpartisan',
     isIncumbent: null,
-    createdAt: '2026-05-13T17:26:43.445',
+    createdAt: '2026-01-01T00:00:00.000',
   },
   ...overrides,
 })
 
 const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
   id: 'race-uuid-1',
-  brDatabaseId: 2027085,
+  brDatabaseId: 1000001,
   electionDate: new Date('2026-08-25T00:00:00Z'),
   state: 'AL',
   isPrimary: false,
   isRunoff: false,
   positionId: 'pos-uuid-1',
-  positionNames: ['Bessemer City Council - District 3'],
+  positionNames: ['Example City Council - District 1'],
   normalizedPositionName: 'City Legislature',
   numberOfSeats: 1,
   winNumber: null,
@@ -75,10 +75,10 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
   officialOfficeName: 'City Legislature',
   Candidacies: [
     {
-      gpCandidateId: 'a504033d-11c9-a654-6566-54dceb59c19f',
-      firstName: 'Sarah',
-      lastName: 'Person',
-      email: 'electsarahbellperson@gmail.com',
+      gpCandidateId: 'gp-cand-uuid-1',
+      firstName: 'Alice',
+      lastName: 'Example',
+      email: 'alice@example.com',
       party: 'Nonpartisan',
     },
   ],
@@ -134,7 +134,7 @@ describe('CampaignPlanContextService', () => {
     await expect(
       service.getCampaignPlanContext(baseRequest()),
     ).rejects.toThrow(
-      new NotFoundException('Race not found for brDatabaseId=2027085'),
+      new NotFoundException('Race not found for brDatabaseId=1000001'),
     )
   })
 
@@ -145,14 +145,14 @@ describe('CampaignPlanContextService', () => {
 
     expect(result).toEqual({
       candidate_count: 1,
-      candidate_office: 'Bessemer City Council - District 3',
+      candidate_office: 'Example City Council - District 1',
       candidates: [
         {
-          gp_candidate_id: 'a504033d-11c9-a654-6566-54dceb59c19f',
-          first_name: 'Sarah',
-          last_name: 'Person',
-          full_name: 'Sarah Person',
-          email: 'electsarahbellperson@gmail.com',
+          gp_candidate_id: 'gp-cand-uuid-1',
+          first_name: 'Alice',
+          last_name: 'Example',
+          full_name: 'Alice Example',
+          email: 'alice@example.com',
           party: 'Nonpartisan',
           is_user: true,
         },
@@ -168,13 +168,13 @@ describe('CampaignPlanContextService', () => {
       projected_turnout: 2272,
       relevant_election_date: '2026-08-25',
       state: 'AL',
-      user_created_at: '2026-05-13T17:26:43.445',
-      user_email: 'electsarahbellperson@gmail.com',
-      user_first_name: 'Sarah',
-      user_full_name: 'Sarah Person',
-      user_id: 328682,
+      user_created_at: '2026-01-01T00:00:00.000',
+      user_email: 'alice@example.com',
+      user_first_name: 'Alice',
+      user_full_name: 'Alice Example',
+      user_id: 12345,
       user_is_incumbent: null,
-      user_last_name: 'Person',
+      user_last_name: 'Example',
       user_party_affiliation: 'Nonpartisan',
       user_phone_number: null,
       win_number_effective: 1159,
@@ -220,9 +220,9 @@ describe('CampaignPlanContextService', () => {
         Candidacies: [
           {
             gpCandidateId: 'gp-1',
-            firstName: 'Sarah',
-            lastName: 'Person',
-            email: '  ElectSarahBellPerson@Gmail.com  ',
+            firstName: 'Alice',
+            lastName: 'Example',
+            email: '  Alice@Example.COM  ',
             party: 'Nonpartisan',
           },
         ],
