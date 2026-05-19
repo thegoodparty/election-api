@@ -18,7 +18,7 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   async getCampaignPlanContext(
     dto: CampaignPlanContextRequestDto,
   ): Promise<CampaignPlanContextResponse> {
-    const { brDatabaseId, user } = dto
+    const { brDatabaseId } = dto
 
     // brDatabaseId is unique in practice (the dbt mart's
     // unique_int__enhanced_race_br_database_id test enforces 1:1 with BR's
@@ -85,7 +85,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     const contactsNeededEstimate =
       winNumberEffective !== null ? 5 * winNumberEffective : null
 
-    const userEmail = user.email ?? null
     const candidates: CampaignPlanContextCandidate[] = race.Candidacies.map(
       (c) => ({
         gp_candidate_id: c.gpCandidateId,
@@ -94,7 +93,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
         full_name: `${c.firstName} ${c.lastName}`.trim(),
         email: c.email,
         party: c.party,
-        is_user: this.isSameEmail(c.email, userEmail),
       }),
     )
 
@@ -116,15 +114,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
       projected_turnout: projectedTurnout,
       relevant_election_date: this.toIsoDate(race.electionDate),
       state: race.state,
-      user_created_at: user.createdAt ?? null,
-      user_email: userEmail,
-      user_first_name: user.firstName ?? null,
-      user_full_name: user.fullName ?? null,
-      user_id: user.id ?? null,
-      user_is_incumbent: user.isIncumbent ?? null,
-      user_last_name: user.lastName ?? null,
-      user_party_affiliation: user.partyAffiliation ?? null,
-      user_phone_number: user.phoneNumber ?? null,
       win_number_effective: winNumberEffective,
       win_number_estimate: winNumberEstimate,
     }
@@ -209,11 +198,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     if (projectedTurnout === null) return null
     const seats = numberOfSeats && numberOfSeats > 0 ? numberOfSeats : 1
     return Math.ceil((projectedTurnout * 0.51) / seats)
-  }
-
-  private isSameEmail(a: string | null, b: string | null): boolean {
-    if (!a || !b) return false
-    return a.trim().toLowerCase() === b.trim().toLowerCase()
   }
 
   private composeCandidateOffice(

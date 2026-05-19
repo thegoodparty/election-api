@@ -18,20 +18,7 @@ describe('CampaignPlanContextController', () => {
   })
 
   it('forwards the body to the service and returns its result', async () => {
-    const body: CampaignPlanContextRequestDto = {
-      brDatabaseId: 2027085,
-      user: {
-        id: 1,
-        email: 'a@b.com',
-        firstName: 'A',
-        lastName: 'B',
-        fullName: 'A B',
-        phoneNumber: null,
-        partyAffiliation: 'Nonpartisan',
-        isIncumbent: null,
-        createdAt: null,
-      },
-    }
+    const body: CampaignPlanContextRequestDto = { brDatabaseId: 1000001 }
     const expected: Partial<CampaignPlanContextResponse> = {
       candidate_count: 0,
       candidates: [],

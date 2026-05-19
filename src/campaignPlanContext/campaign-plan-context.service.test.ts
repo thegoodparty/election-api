@@ -44,17 +44,6 @@ const baseRequest = (
   overrides: Partial<CampaignPlanContextRequestDto> = {},
 ): CampaignPlanContextRequestDto => ({
   brDatabaseId: 1000001,
-  user: {
-    id: 12345,
-    email: 'alice@example.com',
-    firstName: 'Alice',
-    lastName: 'Example',
-    fullName: 'Alice Example',
-    phoneNumber: null,
-    partyAffiliation: 'Nonpartisan',
-    isIncumbent: null,
-    createdAt: '2026-01-01T00:00:00.000',
-  },
   ...overrides,
 })
 
@@ -154,7 +143,6 @@ describe('CampaignPlanContextService', () => {
           full_name: 'Alice Example',
           email: 'alice@example.com',
           party: 'Nonpartisan',
-          is_user: true,
         },
       ],
       civics_win_number: null,
@@ -168,21 +156,12 @@ describe('CampaignPlanContextService', () => {
       projected_turnout: 2272,
       relevant_election_date: '2026-08-25',
       state: 'AL',
-      user_created_at: '2026-01-01T00:00:00.000',
-      user_email: 'alice@example.com',
-      user_first_name: 'Alice',
-      user_full_name: 'Alice Example',
-      user_id: 12345,
-      user_is_incumbent: null,
-      user_last_name: 'Example',
-      user_party_affiliation: 'Nonpartisan',
-      user_phone_number: null,
       win_number_effective: 1159,
       win_number_estimate: 1159,
     })
   })
 
-  it('marks is_user=false on every candidate when the request email does not match', async () => {
+  it('returns every candidate in the race regardless of party', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
         Candidacies: [
@@ -204,56 +183,13 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(
-      baseRequest({
-        user: { ...baseRequest().user, email: 'someone-else@example.com' },
-      }),
-    )
-
-    expect(result.candidates.every((c) => c.is_user === false)).toBe(true)
-    expect(result.candidate_count).toBe(2)
-  })
-
-  it('matches is_user case-insensitively and ignores surrounding whitespace', async () => {
-    raceFindFirst.mockResolvedValue(
-      baseRace({
-        Candidacies: [
-          {
-            gpCandidateId: 'gp-1',
-            firstName: 'Alice',
-            lastName: 'Example',
-            email: '  Alice@Example.COM  ',
-            party: 'Nonpartisan',
-          },
-        ],
-      }),
-    )
-
     const result = await service.getCampaignPlanContext(baseRequest())
 
-    expect(result.candidates[0].is_user).toBe(true)
-  })
-
-  it('returns is_user=false when either candidate.email or request.user.email is null', async () => {
-    raceFindFirst.mockResolvedValue(
-      baseRace({
-        Candidacies: [
-          {
-            gpCandidateId: 'gp-1',
-            firstName: 'Anon',
-            lastName: 'Candidate',
-            email: null,
-            party: null,
-          },
-        ],
-      }),
-    )
-
-    const result = await service.getCampaignPlanContext(
-      baseRequest({ user: { ...baseRequest().user, email: null } }),
-    )
-
-    expect(result.candidates[0].is_user).toBe(false)
+    expect(result.candidate_count).toBe(2)
+    expect(result.candidates.map((c) => c.first_name).sort()).toEqual([
+      'Alice',
+      'Bob',
+    ])
   })
 
   it('prefers civics_win_number over the derived estimate for win_number_effective', async () => {
@@ -506,37 +442,6 @@ describe('CampaignPlanContextService', () => {
     expect(result.relevant_election_date).toBe('2026-09-15')
     expect(result.general_election_date).toBeNull()
     expect(result.primary_election_date).toBeNull()
-  })
-
-  it('echoes the user_* fields verbatim from the request body', async () => {
-    raceFindFirst.mockResolvedValue(baseRace())
-    const req = baseRequest({
-      user: {
-        id: 42,
-        email: 'someone@example.com',
-        firstName: 'First',
-        lastName: 'Last',
-        fullName: 'First Last',
-        phoneNumber: '555-1212',
-        partyAffiliation: 'Independent',
-        isIncumbent: true,
-        createdAt: '2025-01-01T00:00:00Z',
-      },
-    })
-
-    const result = await service.getCampaignPlanContext(req)
-
-    expect(result).toMatchObject({
-      user_id: 42,
-      user_email: 'someone@example.com',
-      user_first_name: 'First',
-      user_last_name: 'Last',
-      user_full_name: 'First Last',
-      user_phone_number: '555-1212',
-      user_party_affiliation: 'Independent',
-      user_is_incumbent: true,
-      user_created_at: '2025-01-01T00:00:00Z',
-    })
   })
 
   it('falls back to normalizedPositionName for candidate_office when positionNames is empty', async () => {
