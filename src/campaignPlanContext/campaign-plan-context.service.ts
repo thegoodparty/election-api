@@ -43,7 +43,9 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
             firstName: true,
             lastName: true,
             email: true,
+            websiteUrl: true,
             party: true,
+            isIncumbent: true,
           },
         },
         Position: {
@@ -97,7 +99,9 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
         last_name: c.lastName,
         full_name: `${c.firstName} ${c.lastName}`.trim(),
         email: c.email,
+        website_url: c.websiteUrl,
         party: c.party,
+        is_incumbent: c.isIncumbent,
       }),
     )
 

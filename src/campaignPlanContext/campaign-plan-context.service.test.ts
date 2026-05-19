@@ -29,7 +29,9 @@ type RaceRow = {
     firstName: string
     lastName: string
     email: string | null
+    websiteUrl: string | null
     party: string | null
+    isIncumbent: boolean | null
   }>
   Position: {
     id: string
@@ -72,7 +74,9 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
       firstName: 'Alice',
       lastName: 'Example',
       email: 'alice@example.com',
+      websiteUrl: 'https://alice.example.com',
       party: 'Nonpartisan',
+      isIncumbent: false,
     },
   ],
   Position: {
@@ -146,7 +150,9 @@ describe('CampaignPlanContextService', () => {
           last_name: 'Example',
           full_name: 'Alice Example',
           email: 'alice@example.com',
+          website_url: 'https://alice.example.com',
           party: 'Nonpartisan',
+          is_incumbent: false,
         },
       ],
       civics_win_number: null,
@@ -174,14 +180,18 @@ describe('CampaignPlanContextService', () => {
             firstName: 'Alice',
             lastName: 'Other',
             email: 'alice@example.com',
+            websiteUrl: null,
             party: 'Nonpartisan',
+            isIncumbent: true,
           },
           {
             gpCandidateId: 'gp-2',
             firstName: 'Bob',
             lastName: 'Other',
             email: 'bob@example.com',
+            websiteUrl: null,
             party: 'Nonpartisan',
+            isIncumbent: false,
           },
         ],
       }),
@@ -194,6 +204,12 @@ describe('CampaignPlanContextService', () => {
       'Alice',
       'Bob',
     ])
+    expect(
+      result.candidates.find((c) => c.first_name === 'Alice')?.is_incumbent,
+    ).toBe(true)
+    expect(
+      result.candidates.find((c) => c.first_name === 'Bob')?.is_incumbent,
+    ).toBe(false)
   })
 
   it('prefers civics_win_number over the derived estimate for win_number_effective', async () => {

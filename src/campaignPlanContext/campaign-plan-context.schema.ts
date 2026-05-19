@@ -20,7 +20,9 @@ export type CampaignPlanContextCandidate = {
   last_name: string
   full_name: string
   email: string | null
+  website_url: string | null
   party: string | null
+  is_incumbent: boolean | null
 }
 
 export type CampaignPlanContextResponse = {

@@ -10,6 +10,7 @@
 
 ALTER TABLE "Candidacy"
   ADD COLUMN     "email" TEXT,
+  ADD COLUMN     "website_url" TEXT,
   ADD COLUMN     "gp_candidate_id" TEXT;
 
 ALTER TABLE "Race"
