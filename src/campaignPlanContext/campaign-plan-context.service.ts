@@ -7,6 +7,15 @@ import {
   CampaignPlanContextResponse,
 } from './campaign-plan-context.schema'
 
+// Plurality win threshold. A candidate needs > 50% of votes to win; we
+// estimate the bar at 51% to give the consumer a small buffer over the
+// raw majority.
+const WIN_THRESHOLD = 0.51
+
+// Voter contact targets are typically sized at ~5x the win number to
+// account for response rate and persuasion attrition.
+const CONTACTS_NEEDED_MULTIPLIER = 5
+
 @Injectable()
 export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   constructor(
@@ -20,16 +29,10 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   ): Promise<CampaignPlanContextResponse> {
     const { brDatabaseId } = dto
 
-    // brDatabaseId is unique in practice (the dbt mart's
-    // unique_int__enhanced_race_br_database_id test enforces 1:1 with BR's
-    // race.database_id), but there's no @unique constraint in the Prisma
-    // schema to enforce that here. orderBy is defense-in-depth — if a dup
-    // ever slips in, we pin a deterministic survivor.
-    //
-    // ProjectedTurnouts can have multiple rows per (electionYear,
-    // electionCode) when the model has been re-run with new versions; order
-    // by inferenceAt desc so the .find() in resolveProjectedTurnout picks
-    // the latest snapshot.
+    // orderBys are defense-in-depth: brDatabaseId has no @unique constraint
+    // (the dbt mart enforces it 1:1 upstream); ProjectedTurnouts can have
+    // multiple model_version rows per (electionYear, electionCode) where we
+    // want the latest.
     const race = await this.model.findFirst({
       where: { brDatabaseId },
       orderBy: { electionDate: 'asc' },
@@ -83,7 +86,9 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     )
     const winNumberEffective = race.winNumber ?? winNumberEstimate
     const contactsNeededEstimate =
-      winNumberEffective !== null ? 5 * winNumberEffective : null
+      winNumberEffective !== null
+        ? CONTACTS_NEEDED_MULTIPLIER * winNumberEffective
+        : null
 
     const candidates: CampaignPlanContextCandidate[] = race.Candidacies.map(
       (c) => ({
@@ -126,7 +131,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     isRunoff: boolean | null,
     excludeRaceId: string,
   ): Promise<{ primaryDate: Date | null; generalDate: Date | null }> {
-    // Seed with the looked-up race's own date for whichever stage it represents.
     let primaryDate: Date | null = isPrimary ? electionDate : null
     let generalDate: Date | null = !isPrimary && !isRunoff ? electionDate : null
 
@@ -138,9 +142,6 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     const yearStart = new Date(Date.UTC(year, 0, 1))
     const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
 
-    // orderBy keeps primaryDate / generalDate stable if a data error ever
-    // produces multiple sibling rows with the same stage flag — same
-    // defense-in-depth reasoning as the parent findFirst lookup.
     const siblings = await this.client.race.findMany({
       where: {
         positionId,
@@ -196,8 +197,9 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     numberOfSeats: number | null,
   ): number | null {
     if (projectedTurnout === null) return null
-    const seats = numberOfSeats && numberOfSeats > 0 ? numberOfSeats : 1
-    return Math.ceil((projectedTurnout * 0.51) / seats)
+    const seats =
+      numberOfSeats !== null && numberOfSeats > 0 ? numberOfSeats : 1
+    return Math.ceil((projectedTurnout * WIN_THRESHOLD) / seats)
   }
 
   private composeCandidateOffice(

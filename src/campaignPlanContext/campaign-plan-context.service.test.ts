@@ -5,6 +5,10 @@ import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.s
 import { CampaignPlanContextService } from './campaign-plan-context.service'
 import { CampaignPlanContextRequestDto } from './campaign-plan-context.schema'
 
+// Hand-rolled subset of the fields the service reads, rather than a full
+// Prisma.RaceGetPayload<{include: ...}> — the latter would force every
+// fixture to include all Race scalars (createdAt, slug, positionGeoid,
+// etc.) that the service doesn't touch.
 type RaceRow = {
   id: string
   brDatabaseId: number
