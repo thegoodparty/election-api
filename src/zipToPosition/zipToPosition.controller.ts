@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { SearchPositionsQueryDTO } from './zipToPosition.schema'
 import { ZipToPositionService } from './zipToPosition.service'
 import { RaceListItem } from './zipToPosition.types'
@@ -19,5 +19,12 @@ export class ZipToPositionController {
       electionDateFrom: query.electionDateFrom,
       electionDateTo: query.electionDateTo,
     })
+  }
+
+  @Get(':brPositionId/zip-codes')
+  async getZipCodes(
+    @Param('brPositionId') brPositionId: string,
+  ): Promise<string[]> {
+    return this.zipToPosition.getZipCodesByBrPositionId(brPositionId)
   }
 }
