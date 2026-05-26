@@ -94,27 +94,15 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
   }
 
   /**
-   * Resolve a filing fee directly from a Race row identified by its
-   * BallotReady GraphQL Node ID (`br_hash_id`). Unlike the Position-based
-   * `lookupFilingFee` in PositionsService, this path doesn't depend on
-   * Position.placeId being populated — the campaign carries the BR race hash
-   * on `details.raceId`, so we read filing_requirements off the Race row
-   * directly and run the existing extractor.
+   * Resolve a filing fee for a Race by its BallotReady hash (`br_hash_id`).
+   * Bypasses the Position-based `lookupFilingFee`, which depends on
+   * `Position.placeId` not being populated in our data today.
    *
-   * `brHashId` has no `@unique` constraint in the schema, and Race rows
-   * carry `isPrimary` / `isRunoff` flags — so the same hash can in
-   * principle map to multiple rows. We sort general → primary → runoff
-   * (asc on each boolean, with nulls last per Postgres default) and pick
-   * the first row, which gives a deterministic result without depending
-   * on whichever row Postgres happens to deliver first.
+   * `brHashId` isn't unique in the schema, so order by isPrimary/isRunoff
+   * (general → primary → runoff) and take one for a deterministic pick.
    *
-   * Returns an all-null result for both "no Race matched" and "Race
-   * matched but BallotReady has no fee data" (the latter via
-   * `extractFilingFee(null, ...)`). The two cases are intentionally
-   * indistinguishable on the wire — this endpoint is opt-in enrichment
-   * for gp-api's `fetchLiveRaceTargetMetrics`, which treats both as
-   * "no fee available." If a future consumer needs to discriminate, the
-   * existing `extractionSource` discriminator field has room.
+   * Returns all-nulls for both "no match" and "matched but BR has no fee" —
+   * gp-api treats them identically.
    */
   async findFilingFeeByBrHashId(brHashId: string): Promise<FilingFeeResult> {
     const races = await this.model.findMany({
