@@ -98,19 +98,32 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
    * BallotReady GraphQL Node ID (`br_hash_id`). Unlike the Position-based
    * `lookupFilingFee` in PositionsService, this path doesn't depend on
    * Position.placeId being populated — the campaign carries the BR race hash
-   * on `details.raceId`, which uniquely identifies one Race row, so we can
-   * read filing_requirements off it directly and run the existing extractor.
+   * on `details.raceId`, so we read filing_requirements off the Race row
+   * directly and run the existing extractor.
    *
-   * Returns an empty result (filingFee: null, filingRequirementsText: null)
-   * when no matching Race exists, distinct from "matched but couldn't
-   * extract a clean fee" — that case carries the raw text through so the
-   * UI can still show "click for full text from BallotReady".
+   * `brHashId` has no `@unique` constraint in the schema, and Race rows
+   * carry `isPrimary` / `isRunoff` flags — so the same hash can in
+   * principle map to multiple rows. We sort general → primary → runoff
+   * (asc on each boolean, with nulls last per Postgres default) and pick
+   * the first row, which gives a deterministic result without depending
+   * on whichever row Postgres happens to deliver first.
+   *
+   * Returns an all-null result for both "no Race matched" and "Race
+   * matched but BallotReady has no fee data" (the latter via
+   * `extractFilingFee(null, ...)`). The two cases are intentionally
+   * indistinguishable on the wire — this endpoint is opt-in enrichment
+   * for gp-api's `fetchLiveRaceTargetMetrics`, which treats both as
+   * "no fee available." If a future consumer needs to discriminate, the
+   * existing `extractionSource` discriminator field has room.
    */
   async findFilingFeeByBrHashId(brHashId: string): Promise<FilingFeeResult> {
-    const race = await this.model.findFirst({
+    const races = await this.model.findMany({
       where: { brHashId },
       select: { filingRequirements: true, salary: true },
+      orderBy: [{ isPrimary: 'asc' }, { isRunoff: 'asc' }],
+      take: 1,
     })
+    const race = races[0]
     if (!race) {
       return {
         filingFee: null,
