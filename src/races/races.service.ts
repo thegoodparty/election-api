@@ -8,6 +8,10 @@ import { RaceFilterDto } from './races.schema'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { Prisma } from '@prisma/client'
 import { getDedupedRacesBySlug } from './races.util'
+import {
+  extractFilingFee,
+  FilingFeeResult,
+} from 'src/positions/util/filingFee.util'
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
@@ -87,6 +91,34 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       return races
     }
     return getDedupedRacesBySlug(races)
+  }
+
+  /**
+   * Resolve a filing fee directly from a Race row identified by its
+   * BallotReady GraphQL Node ID (`br_hash_id`). Unlike the Position-based
+   * `lookupFilingFee` in PositionsService, this path doesn't depend on
+   * Position.placeId being populated — the campaign carries the BR race hash
+   * on `details.raceId`, which uniquely identifies one Race row, so we can
+   * read filing_requirements off it directly and run the existing extractor.
+   *
+   * Returns an empty result (filingFee: null, filingRequirementsText: null)
+   * when no matching Race exists, distinct from "matched but couldn't
+   * extract a clean fee" — that case carries the raw text through so the
+   * UI can still show "click for full text from BallotReady".
+   */
+  async findFilingFeeByBrHashId(brHashId: string): Promise<FilingFeeResult> {
+    const race = await this.model.findFirst({
+      where: { brHashId },
+      select: { filingRequirements: true, salary: true },
+    })
+    if (!race) {
+      return {
+        filingFee: null,
+        filingRequirementsText: null,
+        extractionSource: null,
+      }
+    }
+    return extractFilingFee(race.filingRequirements, race.salary)
   }
 
   private buildPlaceInclude(
