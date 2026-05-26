@@ -108,7 +108,14 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
     const races = await this.model.findMany({
       where: { brHashId },
       select: { filingRequirements: true, salary: true },
-      orderBy: [{ isPrimary: 'asc' }, { isRunoff: 'asc' }],
+      // Postgres sorts NULLs before `false` in ASC order, so an imported
+      // row with isPrimary=NULL would beat a real general (false). Force
+      // NULLs last to keep the general → primary → runoff preference
+      // robust against missing flags in upstream data.
+      orderBy: [
+        { isPrimary: { sort: 'asc', nulls: 'last' } },
+        { isRunoff: { sort: 'asc', nulls: 'last' } },
+      ],
       take: 1,
     })
     const race = races[0]

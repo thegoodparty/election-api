@@ -26,7 +26,10 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
     expect(raceFindMany).toHaveBeenCalledWith({
       where: { brHashId: 'Z2lk-missing' },
       select: { filingRequirements: true, salary: true },
-      orderBy: [{ isPrimary: 'asc' }, { isRunoff: 'asc' }],
+      orderBy: [
+        { isPrimary: { sort: 'asc', nulls: 'last' } },
+        { isRunoff: { sort: 'asc', nulls: 'last' } },
+      ],
       take: 1,
     })
     expect(result).toEqual({
@@ -48,7 +51,10 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
 
     expect(raceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        orderBy: [{ isPrimary: 'asc' }, { isRunoff: 'asc' }],
+        orderBy: [
+          { isPrimary: { sort: 'asc', nulls: 'last' } },
+          { isRunoff: { sort: 'asc', nulls: 'last' } },
+        ],
         take: 1,
       }),
     )
@@ -89,7 +95,7 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
     )
   })
 
-  it('extracts $0 when filing_requirements declares no fee', async () => {
+  it('extracts $0 via direct_dollar when filing_requirements contains $0', async () => {
     raceFindMany.mockResolvedValue([
       {
         filingRequirements: 'Filing Fee = $0; petition required.',
@@ -97,12 +103,27 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
       },
     ])
 
-    const result = await service.findFilingFeeByBrHashId('Z2lk-no-fee')
+    const result = await service.findFilingFeeByBrHashId('Z2lk-zero-dollar')
 
-    // $0 is a direct dollar match — the "no fee" textual branch is the
-    // fallback for rows with no $ at all.
     expect(result.filingFee).toBe(0)
     expect(result.extractionSource).toBe('direct_dollar')
+  })
+
+  it('returns filingFee 0 via no_fee when text says no fee without a dollar sign', async () => {
+    raceFindMany.mockResolvedValue([
+      {
+        filingRequirements: 'No filing fee required; petition signatures only.',
+        salary: null,
+      },
+    ])
+
+    const result = await service.findFilingFeeByBrHashId('Z2lk-no-fee')
+
+    expect(result.filingFee).toBe(0)
+    expect(result.extractionSource).toBe('no_fee')
+    expect(result.filingRequirementsText).toBe(
+      'No filing fee required; petition signatures only.',
+    )
   })
 
   it('computes pct_of_salary when filing_requirements has a percentage and salary is parseable', async () => {
