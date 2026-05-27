@@ -418,6 +418,45 @@ describe('CampaignPlanContextService', () => {
     expect(lt.toISOString().slice(0, 10)).toBe('2027-07-15')
   })
 
+  it('clamps the sibling-window day to the last day of the target month for month-end electionDates', async () => {
+    // setUTCMonth on Aug 31 - 6 months overflows from "Feb 31" to Mar 3,
+    // shifting the window start 3 days too late and excluding siblings
+    // on Feb 28/Mar 1/Mar 2. The clamped helper must produce Feb 28.
+    raceFindFirst.mockResolvedValue(
+      baseRace({ electionDate: new Date('2025-08-31T00:00:00Z') }),
+    )
+    raceFindMany.mockResolvedValue([])
+
+    await service.getCampaignPlanContext(baseRequest())
+
+    const callArgs = raceFindMany.mock.calls[0][0]
+    const gte = callArgs.where.electionDate.gte as Date
+    const lt = callArgs.where.electionDate.lt as Date
+    expect(gte.toISOString().slice(0, 10)).toBe('2025-02-28')
+    expect(lt.toISOString().slice(0, 10)).toBe('2026-02-28')
+  })
+
+  it('skips sibling rows with null isPrimary/isRunoff flags instead of misclassifying them as general', async () => {
+    // dbt can land null flags on TS-found sentinel rows. Without the
+    // strict-boolean guard, `!null === true` would let a null-flag
+    // sibling claim generalDate before a real general had a chance.
+    raceFindFirst.mockResolvedValue(baseRace())
+    raceFindMany.mockResolvedValue([
+      {
+        electionDate: new Date('2026-07-10T00:00:00Z'),
+        isPrimary: null,
+        isRunoff: null,
+      },
+    ])
+
+    const result = await service.getCampaignPlanContext(baseRequest())
+
+    // baseRace is a general on 2026-08-25, so generalDate is already
+    // populated from the looked-up race; primaryDate stays null.
+    expect(result.primary_election_date).toBeNull()
+    expect(result.general_election_date).toBe('2026-08-25')
+  })
+
   it('when the looked-up race is the primary, fills general_election_date from a sibling', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({

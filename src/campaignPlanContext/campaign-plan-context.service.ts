@@ -160,10 +160,8 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     // years (the loop assigns the earliest matching primary/general it
     // sees). ±6 months catches realistic stage pairs (typically <4
     // months apart) without crossing into adjacent cycles.
-    const windowStart = new Date(electionDate)
-    windowStart.setUTCMonth(windowStart.getUTCMonth() - 6)
-    const windowEnd = new Date(electionDate)
-    windowEnd.setUTCMonth(windowEnd.getUTCMonth() + 6)
+    const windowStart = this.addMonthsClamped(electionDate, -6)
+    const windowEnd = this.addMonthsClamped(electionDate, 6)
 
     const siblings = await this.client.race.findMany({
       where: {
@@ -175,15 +173,39 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
       orderBy: { electionDate: 'asc' },
     })
 
+    // Require explicit booleans on stage flags. A sibling with
+    // isPrimary=null / isRunoff=null would otherwise match the general
+    // branch via `!null === true` and silently claim generalDate. dbt
+    // can land null flags on TS-found sentinel races, so this guard
+    // matters in practice.
     for (const sibling of siblings) {
-      if (sibling.isPrimary && !primaryDate) {
+      if (sibling.isPrimary === true && !primaryDate) {
         primaryDate = sibling.electionDate
-      } else if (!sibling.isPrimary && !sibling.isRunoff && !generalDate) {
+      } else if (
+        sibling.isPrimary === false &&
+        sibling.isRunoff === false &&
+        !generalDate
+      ) {
         generalDate = sibling.electionDate
       }
     }
 
     return { primaryDate, generalDate }
+  }
+
+  // Add `months` (negative or positive) to a date in UTC, clamping the
+  // day to the last valid day of the target month. JS's native
+  // setUTCMonth overflows (e.g. Aug 31 - 6 months → "Feb 31" → Mar 3),
+  // which shifts month-end window boundaries by 2-3 days and silently
+  // excludes siblings at the edge.
+  private addMonthsClamped(date: Date, months: number): Date {
+    const result = new Date(date)
+    const targetMonth = result.getUTCMonth() + months
+    const year = result.getUTCFullYear() + Math.floor(targetMonth / 12)
+    const month = ((targetMonth % 12) + 12) % 12
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+    result.setUTCFullYear(year, month, Math.min(result.getUTCDate(), lastDay))
+    return result
   }
 
   private resolveProjectedTurnout(
