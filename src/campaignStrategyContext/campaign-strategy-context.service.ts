@@ -7,11 +7,6 @@ import {
   CampaignStrategyContextResponse,
 } from './campaign-strategy-context.schema'
 
-// Plurality win threshold. A candidate needs > 50% of votes to win; we
-// estimate the bar at 51% to give the consumer a small buffer over the
-// raw majority.
-const WIN_THRESHOLD = 0.51
-
 // Voter contact targets are typically sized at ~5x the win number to
 // account for response rate and persuasion attrition.
 const CONTACTS_NEEDED_MULTIPLIER = 5
@@ -91,10 +86,7 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       race.state,
     )
 
-    const winNumberEstimate = this.computeWinNumberEstimate(
-      projectedTurnout,
-      race.numberOfSeats,
-    )
+    const winNumberEstimate = this.computeWinNumberEstimate(projectedTurnout)
     const winNumberEffective = race.winNumber ?? winNumberEstimate
     const contactsNeededEstimate =
       winNumberEffective !== null
@@ -239,12 +231,13 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
 
   private computeWinNumberEstimate(
     projectedTurnout: number | null,
-    numberOfSeats: number | null,
   ): number | null {
     if (projectedTurnout === null) return null
-    const seats =
-      numberOfSeats !== null && numberOfSeats > 0 ? numberOfSeats : 1
-    return Math.ceil((projectedTurnout * WIN_THRESHOLD) / seats)
+    // Simple majority threshold: floor(turnout / 2) + 1 is the minimum
+    // vote count that guarantees winning a head-to-head majority. Do
+    // not divide by numberOfSeats; consumers that need a per-seat or
+    // Droop-quota multi-seat estimate compute their own.
+    return Math.floor(projectedTurnout / 2) + 1
   }
 
   private composeCandidateOffice(
