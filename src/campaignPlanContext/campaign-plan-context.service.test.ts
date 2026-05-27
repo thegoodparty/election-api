@@ -347,7 +347,7 @@ describe('CampaignPlanContextService', () => {
     )
   })
 
-  it('pins a deterministic race via orderBy electionDate asc on the brHashId lookup', async () => {
+  it('pins a deterministic race via stage-preference ordering on the brHashId lookup', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
     await service.getCampaignPlanContext(baseRequest())
@@ -355,7 +355,10 @@ describe('CampaignPlanContextService', () => {
     expect(raceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { brHashId: 'br-race-hash-1' },
-        orderBy: { electionDate: 'asc' },
+        orderBy: [
+          { isPrimary: { sort: 'asc', nulls: 'last' } },
+          { isRunoff: { sort: 'asc', nulls: 'last' } },
+        ],
       }),
     )
   })

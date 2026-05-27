@@ -29,13 +29,24 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   ): Promise<CampaignPlanContextResponse> {
     const { brHashId } = dto
 
-    // orderBys are defense-in-depth: brHashId has no @unique constraint
-    // (the dbt mart enforces it 1:1 upstream); ProjectedTurnouts can have
-    // multiple model_version rows per (electionYear, electionCode) where we
-    // want the latest.
+    // brHashId has no @unique constraint (the dbt mart enforces it 1:1
+    // upstream). If a re-import or BR-side quirk ever lands two rows for
+    // the same hash, prefer the general (both flags false) over primary
+    // over runoff so race-level fields (electionDate, filing window, win
+    // numbers) reflect the stage the campaign plan is anchored on. Matches
+    // RacesService.findFilingFeeByBrHashId so both brHashId-based lookups
+    // resolve to the same row. NULLS LAST guards against imported rows
+    // with NULL flags beating a real general (false) in ASC order.
+    //
+    // ProjectedTurnouts uses orderBy: inferenceAt desc to keep
+    // resolveProjectedTurnout's .find() picking the latest snapshot when
+    // multiple model_version rows share a (electionYear, electionCode).
     const race = await this.model.findFirst({
       where: { brHashId },
-      orderBy: { electionDate: 'asc' },
+      orderBy: [
+        { isPrimary: { sort: 'asc', nulls: 'last' } },
+        { isRunoff: { sort: 'asc', nulls: 'last' } },
+      ],
       include: {
         Candidacies: {
           select: {
