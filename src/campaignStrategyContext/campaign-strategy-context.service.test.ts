@@ -270,6 +270,37 @@ describe('CampaignStrategyContextService', () => {
     expect(result.win_number_estimate).toBe(1137)
   })
 
+  it('returns null win_number_estimate when projected_turnout is 0', async () => {
+    // Postgres ProjectedTurnout.projectedTurnout is unconstrained Int;
+    // a stored 0 would otherwise produce win_number_estimate = 1
+    // ("1 vote needed to win a race with 0 projected voters"), which
+    // is misleading signal for the LLM.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 0,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_turnout).toBe(0)
+    expect(result.win_number_estimate).toBeNull()
+    expect(result.win_number_effective).toBeNull()
+    expect(result.contacts_needed_estimate).toBeNull()
+  })
+
   it('falls back to LocalOrMunicipal when no ProjectedTurnout row matches the election year/code', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
