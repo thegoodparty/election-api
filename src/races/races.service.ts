@@ -8,6 +8,10 @@ import { RaceFilterDto } from './races.schema'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { Prisma } from '@prisma/client'
 import { getDedupedRacesBySlug } from './races.util'
+import {
+  extractFilingFee,
+  FilingFeeResult,
+} from 'src/positions/util/filingFee.util'
 
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
@@ -87,6 +91,42 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
       return races
     }
     return getDedupedRacesBySlug(races)
+  }
+
+  /**
+   * Resolve a filing fee for a Race by its BallotReady hash (`br_hash_id`).
+   * Bypasses the Position-based `lookupFilingFee`, which depends on
+   * `Position.placeId` not being populated in our data today.
+   *
+   * `brHashId` isn't unique in the schema, so order by isPrimary/isRunoff
+   * (general → primary → runoff) and take one for a deterministic pick.
+   *
+   * Returns all-nulls for both "no match" and "matched but BR has no fee" —
+   * gp-api treats them identically.
+   */
+  async findFilingFeeByBrHashId(brHashId: string): Promise<FilingFeeResult> {
+    const races = await this.model.findMany({
+      where: { brHashId },
+      select: { filingRequirements: true, salary: true },
+      // Postgres sorts NULLs before `false` in ASC order, so an imported
+      // row with isPrimary=NULL would beat a real general (false). Force
+      // NULLs last to keep the general → primary → runoff preference
+      // robust against missing flags in upstream data.
+      orderBy: [
+        { isPrimary: { sort: 'asc', nulls: 'last' } },
+        { isRunoff: { sort: 'asc', nulls: 'last' } },
+      ],
+      take: 1,
+    })
+    const race = races[0]
+    if (!race) {
+      return {
+        filingFee: null,
+        filingRequirementsText: null,
+        extractionSource: null,
+      }
+    }
+    return extractFilingFee(race.filingRequirements, race.salary)
   }
 
   private buildPlaceInclude(
