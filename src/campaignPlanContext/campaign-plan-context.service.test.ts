@@ -11,7 +11,6 @@ import { CampaignPlanContextRequestDto } from './campaign-plan-context.schema'
 // etc.) that the service doesn't touch.
 type RaceRow = {
   id: string
-  brDatabaseId: number
   electionDate: Date
   state: string
   isPrimary: boolean | null
@@ -49,13 +48,12 @@ type RaceRow = {
 const baseRequest = (
   overrides: Partial<CampaignPlanContextRequestDto> = {},
 ): CampaignPlanContextRequestDto => ({
-  brDatabaseId: 1000001,
+  brHashId: 'br-race-hash-1',
   ...overrides,
 })
 
 const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
   id: 'race-uuid-1',
-  brDatabaseId: 1000001,
   electionDate: new Date('2026-08-25T00:00:00Z'),
   state: 'AL',
   isPrimary: false,
@@ -125,13 +123,13 @@ describe('CampaignPlanContextService', () => {
     })
   })
 
-  it('throws NotFoundException when no race matches brDatabaseId', async () => {
+  it('throws NotFoundException when no race matches brHashId', async () => {
     raceFindFirst.mockResolvedValue(null)
 
     await expect(
       service.getCampaignPlanContext(baseRequest()),
     ).rejects.toThrow(
-      new NotFoundException('Race not found for brDatabaseId=1000001'),
+      new NotFoundException('Race not found for brHashId=br-race-hash-1'),
     )
   })
 
@@ -349,14 +347,14 @@ describe('CampaignPlanContextService', () => {
     )
   })
 
-  it('pins a deterministic race via orderBy electionDate asc on the brDatabaseId lookup', async () => {
+  it('pins a deterministic race via orderBy electionDate asc on the brHashId lookup', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
     await service.getCampaignPlanContext(baseRequest())
 
     expect(raceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { brDatabaseId: 1000001 },
+        where: { brHashId: 'br-race-hash-1' },
         orderBy: { electionDate: 'asc' },
       }),
     )

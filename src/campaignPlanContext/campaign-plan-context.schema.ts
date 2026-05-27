@@ -1,12 +1,14 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-// Input is just the BR race id. User-side fields (user_id, user_email,
-// etc.) live in the sign-up flow on the caller (gp-api); the
-// election-api endpoint stays purely about election data.
+// Input is the BallotReady race hash (`Race.brHashId`, a base64-encoded
+// gid://... value). gp-api stores this on `campaign.details.raceId` for
+// every onboarded candidate; pass it through verbatim. User-side fields
+// live in the sign-up flow on the caller; the election-api endpoint
+// stays purely about election data.
 const campaignPlanContextRequestSchema = z
   .object({
-    brDatabaseId: z.coerce.number().int().positive(),
+    brHashId: z.string().min(1),
   })
   .strict()
 

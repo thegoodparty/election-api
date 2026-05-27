@@ -27,14 +27,14 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
   async getCampaignPlanContext(
     dto: CampaignPlanContextRequestDto,
   ): Promise<CampaignPlanContextResponse> {
-    const { brDatabaseId } = dto
+    const { brHashId } = dto
 
-    // orderBys are defense-in-depth: brDatabaseId has no @unique constraint
+    // orderBys are defense-in-depth: brHashId has no @unique constraint
     // (the dbt mart enforces it 1:1 upstream); ProjectedTurnouts can have
     // multiple model_version rows per (electionYear, electionCode) where we
     // want the latest.
     const race = await this.model.findFirst({
-      where: { brDatabaseId },
+      where: { brHashId },
       orderBy: { electionDate: 'asc' },
       include: {
         Candidacies: {
@@ -63,9 +63,7 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
     })
 
     if (!race) {
-      throw new NotFoundException(
-        `Race not found for brDatabaseId=${brDatabaseId}`,
-      )
+      throw new NotFoundException(`Race not found for brHashId=${brHashId}`)
     }
 
     const { primaryDate, generalDate } = await this.lookupSiblingStageDates(

@@ -18,7 +18,7 @@ describe('CampaignPlanContextController', () => {
   })
 
   it('forwards the body to the service and returns its result', async () => {
-    const body: CampaignPlanContextRequestDto = { brDatabaseId: 1000001 }
+    const body: CampaignPlanContextRequestDto = { brHashId: 'br-race-hash-1' }
     const expected: Partial<CampaignPlanContextResponse> = {
       candidate_count: 0,
       candidates: [],
