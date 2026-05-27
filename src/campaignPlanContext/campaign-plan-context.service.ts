@@ -151,15 +151,25 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
       return { primaryDate, generalDate }
     }
 
-    const year = electionDate.getUTCFullYear()
-    const yearStart = new Date(Date.UTC(year, 0, 1))
-    const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
+    // Window the sibling lookup ±6 months around the race's own
+    // electionDate rather than calendar year. A calendar-year window
+    // misses cross-year cycles (e.g. Louisiana jungle primaries in
+    // Oct/Nov feeding a Dec runoff or Jan-of-next-year general). A wider
+    // multi-year window would risk pulling in an unrelated cycle's
+    // primary for positions that hold elections in both odd and even
+    // years (the loop assigns the earliest matching primary/general it
+    // sees). ±6 months catches realistic stage pairs (typically <4
+    // months apart) without crossing into adjacent cycles.
+    const windowStart = new Date(electionDate)
+    windowStart.setUTCMonth(windowStart.getUTCMonth() - 6)
+    const windowEnd = new Date(electionDate)
+    windowEnd.setUTCMonth(windowEnd.getUTCMonth() + 6)
 
     const siblings = await this.client.race.findMany({
       where: {
         positionId,
         id: { not: excludeRaceId },
-        electionDate: { gte: yearStart, lt: yearEnd },
+        electionDate: { gte: windowStart, lt: windowEnd },
       },
       select: { electionDate: true, isPrimary: true, isRunoff: true },
       orderBy: { electionDate: 'asc' },

@@ -375,7 +375,7 @@ describe('CampaignPlanContextService', () => {
     )
   })
 
-  it('fills primary_election_date from a sibling primary race within the same calendar year', async () => {
+  it('fills primary_election_date from a sibling primary race within the lookup window', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
     raceFindMany.mockResolvedValue([
       {
@@ -397,6 +397,25 @@ describe('CampaignPlanContextService', () => {
         }),
       }),
     )
+  })
+
+  it('windows the sibling lookup ±6 months around the race electionDate so cross-year stage pairs are captured', async () => {
+    // Louisiana-style cycle: jungle primary in Nov 2026 feeds a Jan 2027
+    // general. A calendar-year window anchored on 2027 would miss the
+    // 2026 primary. The relative ±6-month window must reach back into
+    // the prior year and forward into the next.
+    raceFindFirst.mockResolvedValue(
+      baseRace({ electionDate: new Date('2027-01-15T00:00:00Z') }),
+    )
+    raceFindMany.mockResolvedValue([])
+
+    await service.getCampaignPlanContext(baseRequest())
+
+    const callArgs = raceFindMany.mock.calls[0][0]
+    const gte = callArgs.where.electionDate.gte as Date
+    const lt = callArgs.where.electionDate.lt as Date
+    expect(gte.toISOString().slice(0, 10)).toBe('2026-07-15')
+    expect(lt.toISOString().slice(0, 10)).toBe('2027-07-15')
   })
 
   it('when the looked-up race is the primary, fills general_election_date from a sibling', async () => {
