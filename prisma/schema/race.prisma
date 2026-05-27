@@ -43,6 +43,7 @@ model Race {
   isPartisan              Boolean?      @map("is_partisan")
   officeType              String?       @map("office_type")
   officialOfficeName      String?       @map("official_office_name")
+  officeLevel             String?       @map("office_level") // Civics (HubSpot-sourced) office level — distinct from BR positionLevel above
   // PositionElection
   frequency               Int[]         @map("frequency")
 
