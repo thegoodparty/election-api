@@ -154,7 +154,7 @@ describe('CampaignStrategyContextService', () => {
         },
       ],
       civics_win_number: null,
-      contacts_needed_estimate: 5795,
+      contacts_needed_estimate: 5685,
       general_election_date: '2026-08-25',
       number_of_seats: 1,
       office_level: null,
@@ -164,8 +164,8 @@ describe('CampaignStrategyContextService', () => {
       projected_turnout: 2272,
       relevant_election_date: '2026-08-25',
       state: 'AL',
-      win_number_effective: 1159,
-      win_number_estimate: 1159,
+      win_number_effective: 1137,
+      win_number_estimate: 1137,
     })
   })
 
@@ -216,7 +216,7 @@ describe('CampaignStrategyContextService', () => {
     const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.civics_win_number).toBe(800)
-    expect(result.win_number_estimate).toBe(1159) // ceil(2272 * 0.51 / 1)
+    expect(result.win_number_estimate).toBe(1137) // floor(2272 / 2) + 1
     expect(result.win_number_effective).toBe(800)
     expect(result.contacts_needed_estimate).toBe(4000) // 5 * 800
   })
@@ -250,22 +250,63 @@ describe('CampaignStrategyContextService', () => {
     expect(result.contacts_needed_estimate).toBe(2500)
   })
 
-  it('divides by number_of_seats when computing win_number_estimate', async () => {
+  it('ignores number_of_seats when computing win_number_estimate', async () => {
+    // Multi-seat at-large races use the same simple-majority threshold
+    // as single-seat; consumers that need a per-seat or Droop-quota
+    // multi-seat estimate compute their own. floor(2272 / 2) + 1 = 1137
+    // regardless of seats.
     raceFindFirst.mockResolvedValue(baseRace({ numberOfSeats: 3 }))
 
     const result = await service.getCampaignStrategyContext(baseRequest())
 
-    // ceil(2272 * 0.51 / 3) = ceil(386.24) = 387
-    expect(result.win_number_estimate).toBe(387)
+    expect(result.win_number_estimate).toBe(1137)
   })
 
-  it('treats null number_of_seats as 1 when computing win_number_estimate', async () => {
+  it('does not depend on number_of_seats being non-null', async () => {
     raceFindFirst.mockResolvedValue(baseRace({ numberOfSeats: null }))
 
     const result = await service.getCampaignStrategyContext(baseRequest())
 
-    expect(result.win_number_estimate).toBe(1159)
+    expect(result.win_number_estimate).toBe(1137)
   })
+
+  it.each([
+    { label: 'zero', projectedTurnout: 0 },
+    { label: 'negative', projectedTurnout: -1 },
+  ])(
+    'returns null win_number_estimate when projected_turnout is $label',
+    async ({ projectedTurnout }) => {
+      // Postgres ProjectedTurnout.projectedTurnout is an unconstrained
+      // Int with no upstream sign validation. A stored 0 would otherwise
+      // produce win_number_estimate = 1 ("1 vote needed to win 0
+      // voters"); negatives produce 0 or negative estimates. All are
+      // misleading signal vs. null.
+      raceFindFirst.mockResolvedValue(
+        baseRace({
+          Position: {
+            id: 'pos-uuid-1',
+            district: {
+              id: 'dist-uuid-1',
+              ProjectedTurnouts: [
+                {
+                  electionYear: 2026,
+                  electionCode: ElectionCode.LocalOrMunicipal,
+                  projectedTurnout,
+                },
+              ],
+            },
+          },
+        }),
+      )
+
+      const result = await service.getCampaignStrategyContext(baseRequest())
+
+      expect(result.projected_turnout).toBe(projectedTurnout)
+      expect(result.win_number_estimate).toBeNull()
+      expect(result.win_number_effective).toBeNull()
+      expect(result.contacts_needed_estimate).toBeNull()
+    },
+  )
 
   it('falls back to LocalOrMunicipal when no ProjectedTurnout row matches the election year/code', async () => {
     raceFindFirst.mockResolvedValue(
