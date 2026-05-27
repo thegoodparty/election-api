@@ -55,4 +55,5 @@ model Race {
 
   @@index([slug])
   @@index([positionId])
+  @@index([brHashId])
 }
