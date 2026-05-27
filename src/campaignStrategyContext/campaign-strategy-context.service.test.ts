@@ -2,8 +2,8 @@ import { NotFoundException } from '@nestjs/common'
 import { ElectionCode } from '@prisma/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
-import { CampaignPlanContextService } from './campaign-plan-context.service'
-import { CampaignPlanContextRequestDto } from './campaign-plan-context.schema'
+import { CampaignStrategyContextService } from './campaign-strategy-context.service'
+import { CampaignStrategyContextRequestDto } from './campaign-strategy-context.schema'
 
 // Hand-rolled subset of the fields the service reads, rather than a full
 // Prisma.RaceGetPayload<{include: ...}> — the latter would force every
@@ -46,8 +46,8 @@ type RaceRow = {
 }
 
 const baseRequest = (
-  overrides: Partial<CampaignPlanContextRequestDto> = {},
-): CampaignPlanContextRequestDto => ({
+  overrides: Partial<CampaignStrategyContextRequestDto> = {},
+): CampaignStrategyContextRequestDto => ({
   brHashId: 'br-race-hash-1',
   ...overrides,
 })
@@ -93,8 +93,8 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
   ...overrides,
 })
 
-describe('CampaignPlanContextService', () => {
-  let service: CampaignPlanContextService
+describe('CampaignStrategyContextService', () => {
+  let service: CampaignStrategyContextService
   let raceFindFirst: ReturnType<typeof vi.fn>
   let raceFindMany: ReturnType<typeof vi.fn>
   let projectedTurnoutService: Pick<
@@ -110,7 +110,7 @@ describe('CampaignPlanContextService', () => {
         .fn()
         .mockReturnValue(ElectionCode.LocalOrMunicipal),
     }
-    service = new CampaignPlanContextService(
+    service = new CampaignStrategyContextService(
       projectedTurnoutService as ProjectedTurnoutService,
     )
     Object.defineProperty(service, '_prisma', {
@@ -127,7 +127,7 @@ describe('CampaignPlanContextService', () => {
     raceFindFirst.mockResolvedValue(null)
 
     await expect(
-      service.getCampaignPlanContext(baseRequest()),
+      service.getCampaignStrategyContext(baseRequest()),
     ).rejects.toThrow(
       new NotFoundException('Race not found for brHashId=br-race-hash-1'),
     )
@@ -136,7 +136,7 @@ describe('CampaignPlanContextService', () => {
   it('returns the example-output shape end-to-end for a single-candidate non-partisan race', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result).toEqual({
       candidate_count: 1,
@@ -195,7 +195,7 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.candidate_count).toBe(2)
     expect(result.candidates.map((c) => c.first_name).sort()).toEqual([
@@ -213,7 +213,7 @@ describe('CampaignPlanContextService', () => {
   it('prefers civics_win_number over the derived estimate for win_number_effective', async () => {
     raceFindFirst.mockResolvedValue(baseRace({ winNumber: 800 }))
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.civics_win_number).toBe(800)
     expect(result.win_number_estimate).toBe(1159) // ceil(2272 * 0.51 / 1)
@@ -226,7 +226,7 @@ describe('CampaignPlanContextService', () => {
       baseRace({ Position: { id: 'pos-uuid-1', district: null } }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.projected_turnout).toBeNull()
     expect(result.win_number_estimate).toBeNull()
@@ -242,7 +242,7 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.projected_turnout).toBeNull()
     expect(result.win_number_estimate).toBeNull()
@@ -253,7 +253,7 @@ describe('CampaignPlanContextService', () => {
   it('divides by number_of_seats when computing win_number_estimate', async () => {
     raceFindFirst.mockResolvedValue(baseRace({ numberOfSeats: 3 }))
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     // ceil(2272 * 0.51 / 3) = ceil(386.24) = 387
     expect(result.win_number_estimate).toBe(387)
@@ -262,7 +262,7 @@ describe('CampaignPlanContextService', () => {
   it('treats null number_of_seats as 1 when computing win_number_estimate', async () => {
     raceFindFirst.mockResolvedValue(baseRace({ numberOfSeats: null }))
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.win_number_estimate).toBe(1159)
   })
@@ -286,7 +286,7 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.projected_turnout).toBeNull()
   })
@@ -320,7 +320,7 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.projected_turnout).toBe(3000)
   })
@@ -328,7 +328,7 @@ describe('CampaignPlanContextService', () => {
   it('passes orderBy inferenceAt desc through to the Prisma include for ProjectedTurnouts', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
-    await service.getCampaignPlanContext(baseRequest())
+    await service.getCampaignStrategyContext(baseRequest())
 
     expect(raceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -350,7 +350,7 @@ describe('CampaignPlanContextService', () => {
   it('pins a deterministic race via stage-preference ordering on the brHashId lookup', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
-    await service.getCampaignPlanContext(baseRequest())
+    await service.getCampaignStrategyContext(baseRequest())
 
     expect(raceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -366,7 +366,7 @@ describe('CampaignPlanContextService', () => {
   it('passes orderBy electionDate asc through to the sibling-race findMany', async () => {
     raceFindFirst.mockResolvedValue(baseRace())
 
-    await service.getCampaignPlanContext(baseRequest())
+    await service.getCampaignStrategyContext(baseRequest())
 
     expect(raceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -385,7 +385,7 @@ describe('CampaignPlanContextService', () => {
       },
     ])
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.primary_election_date).toBe('2026-06-02')
     expect(result.general_election_date).toBe('2026-08-25')
@@ -409,7 +409,7 @@ describe('CampaignPlanContextService', () => {
     )
     raceFindMany.mockResolvedValue([])
 
-    await service.getCampaignPlanContext(baseRequest())
+    await service.getCampaignStrategyContext(baseRequest())
 
     const callArgs = raceFindMany.mock.calls[0][0]
     const gte = callArgs.where.electionDate.gte as Date
@@ -427,7 +427,7 @@ describe('CampaignPlanContextService', () => {
     )
     raceFindMany.mockResolvedValue([])
 
-    await service.getCampaignPlanContext(baseRequest())
+    await service.getCampaignStrategyContext(baseRequest())
 
     const callArgs = raceFindMany.mock.calls[0][0]
     const gte = callArgs.where.electionDate.gte as Date
@@ -449,7 +449,7 @@ describe('CampaignPlanContextService', () => {
       },
     ])
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     // baseRace is a general on 2026-08-25, so generalDate is already
     // populated from the looked-up race; primaryDate stays null.
@@ -472,7 +472,7 @@ describe('CampaignPlanContextService', () => {
       },
     ])
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.primary_election_date).toBe('2026-06-02')
     expect(result.general_election_date).toBe('2026-08-25')
@@ -499,7 +499,7 @@ describe('CampaignPlanContextService', () => {
       },
     ])
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.relevant_election_date).toBe('2026-09-15')
     expect(result.general_election_date).toBe('2026-08-25')
@@ -516,7 +516,7 @@ describe('CampaignPlanContextService', () => {
     )
     raceFindMany.mockResolvedValue([])
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.relevant_election_date).toBe('2026-09-15')
     expect(result.general_election_date).toBeNull()
@@ -531,7 +531,7 @@ describe('CampaignPlanContextService', () => {
       }),
     )
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.candidate_office).toBe('City Legislature')
   })
@@ -539,7 +539,7 @@ describe('CampaignPlanContextService', () => {
   it('skips sibling-date lookup when the race has no positionId', async () => {
     raceFindFirst.mockResolvedValue(baseRace({ positionId: null }))
 
-    const result = await service.getCampaignPlanContext(baseRequest())
+    const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(raceFindMany).not.toHaveBeenCalled()
     expect(result.primary_election_date).toBeNull()

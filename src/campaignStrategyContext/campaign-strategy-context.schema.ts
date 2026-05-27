@@ -6,17 +6,17 @@ import { z } from 'zod'
 // every onboarded candidate; pass it through verbatim. User-side fields
 // live in the sign-up flow on the caller; the election-api endpoint
 // stays purely about election data.
-const campaignPlanContextRequestSchema = z
+const campaignStrategyContextRequestSchema = z
   .object({
     brHashId: z.string().min(1),
   })
   .strict()
 
-export class CampaignPlanContextRequestDto extends createZodDto(
-  campaignPlanContextRequestSchema,
+export class CampaignStrategyContextRequestDto extends createZodDto(
+  campaignStrategyContextRequestSchema,
 ) {}
 
-export type CampaignPlanContextCandidate = {
+export type CampaignStrategyContextCandidate = {
   gp_candidate_id: string | null
   first_name: string
   last_name: string
@@ -27,10 +27,10 @@ export type CampaignPlanContextCandidate = {
   is_incumbent: boolean | null
 }
 
-export type CampaignPlanContextResponse = {
+export type CampaignStrategyContextResponse = {
   candidate_count: number
   candidate_office: string | null
-  candidates: CampaignPlanContextCandidate[]
+  candidates: CampaignStrategyContextCandidate[]
   civics_win_number: number | null
   contacts_needed_estimate: number | null
   general_election_date: string | null

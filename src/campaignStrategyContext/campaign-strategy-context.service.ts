@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import {
-  CampaignPlanContextCandidate,
-  CampaignPlanContextRequestDto,
-  CampaignPlanContextResponse,
-} from './campaign-plan-context.schema'
+  CampaignStrategyContextCandidate,
+  CampaignStrategyContextRequestDto,
+  CampaignStrategyContextResponse,
+} from './campaign-strategy-context.schema'
 
 // Plurality win threshold. A candidate needs > 50% of votes to win; we
 // estimate the bar at 51% to give the consumer a small buffer over the
@@ -17,16 +17,16 @@ const WIN_THRESHOLD = 0.51
 const CONTACTS_NEEDED_MULTIPLIER = 5
 
 @Injectable()
-export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
+export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race) {
   constructor(
     private readonly projectedTurnoutService: ProjectedTurnoutService,
   ) {
     super()
   }
 
-  async getCampaignPlanContext(
-    dto: CampaignPlanContextRequestDto,
-  ): Promise<CampaignPlanContextResponse> {
+  async getCampaignStrategyContext(
+    dto: CampaignStrategyContextRequestDto,
+  ): Promise<CampaignStrategyContextResponse> {
     const { brHashId } = dto
 
     // brHashId has no @unique constraint (the dbt mart enforces it 1:1
@@ -101,7 +101,7 @@ export class CampaignPlanContextService extends createPrismaBase(MODELS.Race) {
         ? CONTACTS_NEEDED_MULTIPLIER * winNumberEffective
         : null
 
-    const candidates: CampaignPlanContextCandidate[] = race.Candidacies.map(
+    const candidates: CampaignStrategyContextCandidate[] = race.Candidacies.map(
       (c) => ({
         gp_candidate_id: c.gpCandidateId,
         first_name: c.firstName,
