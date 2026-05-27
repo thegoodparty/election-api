@@ -270,36 +270,43 @@ describe('CampaignStrategyContextService', () => {
     expect(result.win_number_estimate).toBe(1137)
   })
 
-  it('returns null win_number_estimate when projected_turnout is 0', async () => {
-    // Postgres ProjectedTurnout.projectedTurnout is unconstrained Int;
-    // a stored 0 would otherwise produce win_number_estimate = 1
-    // ("1 vote needed to win a race with 0 projected voters"), which
-    // is misleading signal for the LLM.
-    raceFindFirst.mockResolvedValue(
-      baseRace({
-        Position: {
-          id: 'pos-uuid-1',
-          district: {
-            id: 'dist-uuid-1',
-            ProjectedTurnouts: [
-              {
-                electionYear: 2026,
-                electionCode: ElectionCode.LocalOrMunicipal,
-                projectedTurnout: 0,
-              },
-            ],
+  it.each([
+    { label: 'zero', projectedTurnout: 0 },
+    { label: 'negative', projectedTurnout: -1 },
+  ])(
+    'returns null win_number_estimate when projected_turnout is $label',
+    async ({ projectedTurnout }) => {
+      // Postgres ProjectedTurnout.projectedTurnout is an unconstrained
+      // Int with no upstream sign validation. A stored 0 would otherwise
+      // produce win_number_estimate = 1 ("1 vote needed to win 0
+      // voters"); negatives produce 0 or negative estimates. All are
+      // misleading signal vs. null.
+      raceFindFirst.mockResolvedValue(
+        baseRace({
+          Position: {
+            id: 'pos-uuid-1',
+            district: {
+              id: 'dist-uuid-1',
+              ProjectedTurnouts: [
+                {
+                  electionYear: 2026,
+                  electionCode: ElectionCode.LocalOrMunicipal,
+                  projectedTurnout,
+                },
+              ],
+            },
           },
-        },
-      }),
-    )
+        }),
+      )
 
-    const result = await service.getCampaignStrategyContext(baseRequest())
+      const result = await service.getCampaignStrategyContext(baseRequest())
 
-    expect(result.projected_turnout).toBe(0)
-    expect(result.win_number_estimate).toBeNull()
-    expect(result.win_number_effective).toBeNull()
-    expect(result.contacts_needed_estimate).toBeNull()
-  })
+      expect(result.projected_turnout).toBe(projectedTurnout)
+      expect(result.win_number_estimate).toBeNull()
+      expect(result.win_number_effective).toBeNull()
+      expect(result.contacts_needed_estimate).toBeNull()
+    },
+  )
 
   it('falls back to LocalOrMunicipal when no ProjectedTurnout row matches the election year/code', async () => {
     raceFindFirst.mockResolvedValue(

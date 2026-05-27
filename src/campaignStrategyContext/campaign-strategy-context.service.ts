@@ -232,11 +232,13 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
   private computeWinNumberEstimate(
     projectedTurnout: number | null,
   ): number | null {
-    // Treat a stored 0 turnout as "unknown": the majority of 0 voters
-    // is 0, not 1, and "you need 1 vote to win" is misleading signal
-    // for the LLM. The Postgres column is an unconstrained Int so a
-    // 0 can flow through from the projection model.
-    if (projectedTurnout === null || projectedTurnout === 0) return null
+    // Treat any non-positive turnout as "unknown". The Postgres column
+    // is an unconstrained Int with no upstream sign validation, so
+    // values <= 0 can flow through from a bad projection run. The
+    // majority of 0 voters is 0, not 1; negative inputs produce 0 or
+    // negative win-number estimates — all are misleading signal for
+    // the LLM compared to null.
+    if (projectedTurnout === null || projectedTurnout <= 0) return null
     // Simple majority threshold: floor(turnout / 2) + 1 is the minimum
     // vote count that guarantees winning a head-to-head majority. Do
     // not divide by numberOfSeats; consumers that need a per-seat or
