@@ -36,11 +36,9 @@ type RaceRow = {
     id: string
     district: {
       id: string
-      VoterStats: {
-        registeredVoters: number | null
-        uniqueCellphones: number | null
-        uniqueLandlines: number | null
-      } | null
+      registeredVoters: number | null
+      uniqueCellphones: number | null
+      uniqueLandlines: number | null
       ProjectedTurnouts: Array<{
         electionYear: number
         electionCode: string
@@ -86,11 +84,9 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
     id: 'pos-uuid-1',
     district: {
       id: 'dist-uuid-1',
-      VoterStats: {
-        registeredVoters: 18000,
-        uniqueCellphones: 12500,
-        uniqueLandlines: 5500,
-      },
+      registeredVoters: 18000,
+      uniqueCellphones: 12500,
+      uniqueLandlines: 5500,
       ProjectedTurnouts: [
         {
           electionYear: 2026,
@@ -275,14 +271,20 @@ describe('CampaignStrategyContextService', () => {
     expect(result.unique_landlines).toBeNull()
   })
 
-  it('returns null voter-stats fields when the district has no VoterStats row', async () => {
+  it('returns null voter-stats fields when the district has null aggregate columns', async () => {
+    // Districts that exist in the mart but have no L2 aggregation row
+    // (e.g. turnout-only synthetic districts) land in Postgres with the
+    // three count columns NULL. ProjectedTurnouts can still be populated
+    // for those rows and should flow through normally.
     raceFindFirst.mockResolvedValue(
       baseRace({
         Position: {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,
@@ -311,11 +313,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: {
-              registeredVoters: 18000,
-              uniqueCellphones: null,
-              uniqueLandlines: null,
-            },
+            registeredVoters: 18000,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [],
           },
         },
@@ -341,7 +341,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,
@@ -371,7 +373,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,
@@ -397,7 +401,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2024,
@@ -468,7 +474,9 @@ describe('CampaignStrategyContextService', () => {
             id: 'pos-uuid-1',
             district: {
               id: 'dist-uuid-1',
-              VoterStats: null,
+              registeredVoters: null,
+              uniqueCellphones: null,
+              uniqueLandlines: null,
               ProjectedTurnouts: [
                 {
                   electionYear: 2026,
@@ -497,7 +505,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2024,
@@ -527,7 +537,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
-            VoterStats: null,
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,

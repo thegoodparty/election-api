@@ -58,7 +58,6 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
           include: {
             district: {
               include: {
-                VoterStats: true,
                 ProjectedTurnouts: {
                   orderBy: { inferenceAt: 'desc' },
                 },
@@ -112,7 +111,7 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       }),
     )
 
-    const voterStats = race.Position?.district?.VoterStats ?? null
+    const district = race.Position?.district ?? null
 
     return {
       candidate_count: candidates.length,
@@ -131,9 +130,9 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       primary_election_date: this.toIsoDate(primaryDate),
       projected_turnout: projectedTurnout,
       projected_voter_turnout: projectedVoterTurnout,
-      registered_voters: voterStats?.registeredVoters ?? null,
-      unique_cellphones: voterStats?.uniqueCellphones ?? null,
-      unique_landlines: voterStats?.uniqueLandlines ?? null,
+      registered_voters: district?.registeredVoters ?? null,
+      unique_cellphones: district?.uniqueCellphones ?? null,
+      unique_landlines: district?.uniqueLandlines ?? null,
       relevant_election_date: this.toIsoDate(race.electionDate),
       state: race.state,
       win_number_effective: winNumberEffective,
