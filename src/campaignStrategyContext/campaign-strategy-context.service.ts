@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { ElectionCode } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import {
@@ -264,7 +265,9 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
     }
     const electionYear = electionDate.getUTCFullYear()
     const match = district.ProjectedTurnouts.find(
-      (t) => t.electionYear === electionYear && t.electionCode === 'General',
+      (t) =>
+        t.electionYear === electionYear &&
+        t.electionCode === ElectionCode.General,
     )
     return match?.projectedTurnout ?? null
   }

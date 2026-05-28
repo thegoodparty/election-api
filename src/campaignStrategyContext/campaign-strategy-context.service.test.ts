@@ -257,6 +257,7 @@ describe('CampaignStrategyContextService', () => {
     expect(result.registered_voters).toBeNull()
     expect(result.unique_cellphones).toBeNull()
     expect(result.unique_landlines).toBeNull()
+    expect(result.projected_voter_turnout).toBeNull()
   })
 
   it('returns null voter-stats fields when the position has no district attached', async () => {
@@ -269,6 +270,7 @@ describe('CampaignStrategyContextService', () => {
     expect(result.registered_voters).toBeNull()
     expect(result.unique_cellphones).toBeNull()
     expect(result.unique_landlines).toBeNull()
+    expect(result.projected_voter_turnout).toBeNull()
   })
 
   it('returns null voter-stats fields when the district has null aggregate columns', async () => {
