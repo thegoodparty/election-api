@@ -1,0 +1,14 @@
+model DistrictVoterStats {
+    id                            String   @id @map("id") @db.Uuid
+    createdAt                     DateTime @default(now()) @map("created_at")
+    updatedAt                     DateTime @updatedAt @map("updated_at")
+    districtId                    String   @unique @map("district_id") @db.Uuid
+    registeredVoters              Int?     @map("registered_voters")
+    registeredVotersWithCellphone Int?     @map("registered_voters_with_cellphone")
+    registeredVotersWithLandline  Int?     @map("registered_voters_with_landline")
+
+    // Relations
+    district District @relation(fields: [districtId], references: [id])
+
+    @@map("DistrictVoterStats")
+}

@@ -36,6 +36,11 @@ type RaceRow = {
     id: string
     district: {
       id: string
+      VoterStats: {
+        registeredVoters: number | null
+        registeredVotersWithCellphone: number | null
+        registeredVotersWithLandline: number | null
+      } | null
       ProjectedTurnouts: Array<{
         electionYear: number
         electionCode: string
@@ -81,6 +86,11 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
     id: 'pos-uuid-1',
     district: {
       id: 'dist-uuid-1',
+      VoterStats: {
+        registeredVoters: 18000,
+        registeredVotersWithCellphone: 12500,
+        registeredVotersWithLandline: 5500,
+      },
       ProjectedTurnouts: [
         {
           electionYear: 2026,
@@ -162,6 +172,9 @@ describe('CampaignStrategyContextService', () => {
       official_office_name: 'City Legislature',
       primary_election_date: null,
       projected_turnout: 2272,
+      registered_voters: 18000,
+      registered_voters_with_cellphone: 12500,
+      registered_voters_with_landline: 5500,
       relevant_election_date: '2026-08-25',
       state: 'AL',
       win_number_effective: 1137,
@@ -234,6 +247,82 @@ describe('CampaignStrategyContextService', () => {
     expect(result.contacts_needed_estimate).toBeNull()
   })
 
+  it('returns null voter-stats fields when the race has no position attached', async () => {
+    raceFindFirst.mockResolvedValue(baseRace({ Position: null }))
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.registered_voters_with_cellphone).toBeNull()
+    expect(result.registered_voters_with_landline).toBeNull()
+  })
+
+  it('returns null voter-stats fields when the position has no district attached', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({ Position: { id: 'pos-uuid-1', district: null } }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.registered_voters_with_cellphone).toBeNull()
+    expect(result.registered_voters_with_landline).toBeNull()
+  })
+
+  it('returns null voter-stats fields when the district has no VoterStats row', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            VoterStats: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 2272,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.registered_voters_with_cellphone).toBeNull()
+    expect(result.registered_voters_with_landline).toBeNull()
+    // projected_turnout still comes through from ProjectedTurnouts
+    expect(result.projected_turnout).toBe(2272)
+  })
+
+  it('passes individual null voter-stats columns through as null', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            VoterStats: {
+              registeredVoters: 18000,
+              registeredVotersWithCellphone: null,
+              registeredVotersWithLandline: null,
+            },
+            ProjectedTurnouts: [],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBe(18000)
+    expect(result.registered_voters_with_cellphone).toBeNull()
+    expect(result.registered_voters_with_landline).toBeNull()
+  })
+
   it('still computes win_number_effective from civics_win_number when projected_turnout is null', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
@@ -287,6 +376,7 @@ describe('CampaignStrategyContextService', () => {
             id: 'pos-uuid-1',
             district: {
               id: 'dist-uuid-1',
+              VoterStats: null,
               ProjectedTurnouts: [
                 {
                   electionYear: 2026,
@@ -315,6 +405,7 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
+            VoterStats: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2024,
@@ -344,6 +435,7 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
+            VoterStats: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,
