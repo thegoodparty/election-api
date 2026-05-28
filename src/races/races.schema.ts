@@ -105,3 +105,16 @@ const raceFilterSchema = z
   .strict()
 
 export class RaceFilterDto extends createZodDto(raceFilterSchema) {}
+
+const brHashIdParamSchema = z.object({
+  // BallotReady GraphQL Node IDs are base64 strings of `gid://...`. They
+  // always decode from `Z2lkOi8v` (the encoded prefix `gid://`). We accept
+  // any non-empty string here and let the lookup decide whether it matches
+  // a real Race row; that keeps validation lenient enough to not block on
+  // unexpected format variations from BR while still rejecting empty input.
+  brHashId: z.string().trim().min(1, 'brHashId is required'),
+})
+
+export class GetRaceByBrHashIdParamsDTO extends createZodDto(
+  brHashIdParamSchema,
+) {}
