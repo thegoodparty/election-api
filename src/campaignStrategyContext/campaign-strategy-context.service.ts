@@ -247,6 +247,14 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
   // single voter-turnout baseline that win-number and contact targets are
   // sized against. Caller-provided include must order ProjectedTurnouts by
   // inferenceAt desc so the latest model snapshot wins on .find().
+  //
+  // ConsolidatedGeneral is the upstream code for off-cycle general elections
+  // in LA / MS / NJ / VA (odd years) and Kansas's quadrennial general. The
+  // upstream Projected_Turnout table stores rows for those state/date combos
+  // under ConsolidatedGeneral, not General — fall through so the off-cycle
+  // states still resolve a turnout instead of silently returning null. When
+  // both codes exist for the same district+year (rare but possible),
+  // General wins.
   private resolveGeneralProjectedTurnout(
     district:
       | {
@@ -264,11 +272,17 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       return null
     }
     const electionYear = electionDate.getUTCFullYear()
-    const match = district.ProjectedTurnouts.find(
-      (t) =>
-        t.electionYear === electionYear &&
-        t.electionCode === ElectionCode.General,
-    )
+    const match =
+      district.ProjectedTurnouts.find(
+        (t) =>
+          t.electionYear === electionYear &&
+          t.electionCode === ElectionCode.General,
+      ) ??
+      district.ProjectedTurnouts.find(
+        (t) =>
+          t.electionYear === electionYear &&
+          t.electionCode === ElectionCode.ConsolidatedGeneral,
+      )
     return match?.projectedTurnout ?? null
   }
 

@@ -423,6 +423,69 @@ describe('CampaignStrategyContextService', () => {
     expect(result.projected_voter_turnout).toBeNull()
   })
 
+  it('falls back to a ConsolidatedGeneral row when no General row exists for the year', async () => {
+    // LA / MS / NJ / VA odd-year generals and Kansas's quadrennial general
+    // are stored under ConsolidatedGeneral upstream. Without the fallback,
+    // projected_voter_turnout would silently be null for every race in
+    // those states.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.ConsolidatedGeneral,
+                projectedTurnout: 7500,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(7500)
+  })
+
+  it('prefers General over ConsolidatedGeneral when both exist for the same year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.ConsolidatedGeneral,
+                projectedTurnout: 7500,
+              },
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 8400,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(8400)
+  })
+
   it('still computes win_number_effective from civics_win_number when projected_turnout is null', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
