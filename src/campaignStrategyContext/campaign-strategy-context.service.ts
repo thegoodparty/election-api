@@ -87,6 +87,11 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       race.state,
     )
 
+    const projectedVoterTurnout = this.resolveGeneralProjectedTurnout(
+      race.Position?.district ?? null,
+      race.electionDate,
+    )
+
     const winNumberEstimate = this.computeWinNumberEstimate(projectedTurnout)
     const winNumberEffective = race.winNumber ?? winNumberEstimate
     const contactsNeededEstimate =
@@ -125,6 +130,7 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       official_office_name: race.officialOfficeName,
       primary_election_date: this.toIsoDate(primaryDate),
       projected_turnout: projectedTurnout,
+      projected_voter_turnout: projectedVoterTurnout,
       registered_voters: voterStats?.registeredVoters ?? null,
       registered_voters_with_cellphone:
         voterStats?.registeredVotersWithCellphone ?? null,
@@ -233,6 +239,35 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
     )
     const match = district.ProjectedTurnouts.find(
       (t) => t.electionYear === electionYear && t.electionCode === electionCode,
+    )
+    return match?.projectedTurnout ?? null
+  }
+
+  // projected_voter_turnout is anchored to the General-election turnout for
+  // the race's calendar year, regardless of whether the looked-up race is a
+  // primary, general, or runoff. The campaign-plan template uses this as the
+  // single voter-turnout baseline that win-number and contact targets are
+  // sized against. Caller-provided include must order ProjectedTurnouts by
+  // inferenceAt desc so the latest model snapshot wins on .find().
+  private resolveGeneralProjectedTurnout(
+    district:
+      | {
+          ProjectedTurnouts: Array<{
+            electionYear: number
+            electionCode: string
+            projectedTurnout: number
+          }>
+        }
+      | null
+      | undefined,
+    electionDate: Date,
+  ): number | null {
+    if (!district?.ProjectedTurnouts?.length) {
+      return null
+    }
+    const electionYear = electionDate.getUTCFullYear()
+    const match = district.ProjectedTurnouts.find(
+      (t) => t.electionYear === electionYear && t.electionCode === 'General',
     )
     return match?.projectedTurnout ?? null
   }

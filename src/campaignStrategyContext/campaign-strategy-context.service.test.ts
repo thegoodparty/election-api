@@ -97,6 +97,11 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
           electionCode: ElectionCode.LocalOrMunicipal,
           projectedTurnout: 2272,
         },
+        {
+          electionYear: 2026,
+          electionCode: ElectionCode.General,
+          projectedTurnout: 8400,
+        },
       ],
     },
   },
@@ -172,6 +177,7 @@ describe('CampaignStrategyContextService', () => {
       official_office_name: 'City Legislature',
       primary_election_date: null,
       projected_turnout: 2272,
+      projected_voter_turnout: 8400,
       registered_voters: 18000,
       registered_voters_with_cellphone: 12500,
       registered_voters_with_landline: 5500,
@@ -321,6 +327,92 @@ describe('CampaignStrategyContextService', () => {
     expect(result.registered_voters).toBe(18000)
     expect(result.registered_voters_with_cellphone).toBeNull()
     expect(result.registered_voters_with_landline).toBeNull()
+  })
+
+  it('projected_voter_turnout is anchored to the General row for the race year regardless of race stage', async () => {
+    // Primary race in March; projected_turnout uses LocalOrMunicipal (via
+    // determineElectionCode), but projected_voter_turnout always picks
+    // the General row.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-03-04T00:00:00Z'),
+        isPrimary: true,
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            VoterStats: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 1500,
+              },
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 8400,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(8400)
+  })
+
+  it('returns null projected_voter_turnout when no General row exists for the race year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            VoterStats: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 1500,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBeNull()
+  })
+
+  it('returns null projected_voter_turnout when the only General row is from a different year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-08-25T00:00:00Z'),
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            VoterStats: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2024,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 9999,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBeNull()
   })
 
   it('still computes win_number_effective from civics_win_number when projected_turnout is null', async () => {
