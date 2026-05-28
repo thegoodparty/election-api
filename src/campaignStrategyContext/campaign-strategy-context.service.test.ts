@@ -38,8 +38,8 @@ type RaceRow = {
       id: string
       VoterStats: {
         registeredVoters: number | null
-        registeredVotersWithCellphone: number | null
-        registeredVotersWithLandline: number | null
+        uniqueCellphones: number | null
+        uniqueLandlines: number | null
       } | null
       ProjectedTurnouts: Array<{
         electionYear: number
@@ -88,8 +88,8 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
       id: 'dist-uuid-1',
       VoterStats: {
         registeredVoters: 18000,
-        registeredVotersWithCellphone: 12500,
-        registeredVotersWithLandline: 5500,
+        uniqueCellphones: 12500,
+        uniqueLandlines: 5500,
       },
       ProjectedTurnouts: [
         {
@@ -179,8 +179,8 @@ describe('CampaignStrategyContextService', () => {
       projected_turnout: 2272,
       projected_voter_turnout: 8400,
       registered_voters: 18000,
-      registered_voters_with_cellphone: 12500,
-      registered_voters_with_landline: 5500,
+      unique_cellphones: 12500,
+      unique_landlines: 5500,
       relevant_election_date: '2026-08-25',
       state: 'AL',
       win_number_effective: 1137,
@@ -259,8 +259,8 @@ describe('CampaignStrategyContextService', () => {
     const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.registered_voters).toBeNull()
-    expect(result.registered_voters_with_cellphone).toBeNull()
-    expect(result.registered_voters_with_landline).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
   })
 
   it('returns null voter-stats fields when the position has no district attached', async () => {
@@ -271,8 +271,8 @@ describe('CampaignStrategyContextService', () => {
     const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.registered_voters).toBeNull()
-    expect(result.registered_voters_with_cellphone).toBeNull()
-    expect(result.registered_voters_with_landline).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
   })
 
   it('returns null voter-stats fields when the district has no VoterStats row', async () => {
@@ -298,8 +298,8 @@ describe('CampaignStrategyContextService', () => {
     const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.registered_voters).toBeNull()
-    expect(result.registered_voters_with_cellphone).toBeNull()
-    expect(result.registered_voters_with_landline).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
     // projected_turnout still comes through from ProjectedTurnouts
     expect(result.projected_turnout).toBe(2272)
   })
@@ -313,8 +313,8 @@ describe('CampaignStrategyContextService', () => {
             id: 'dist-uuid-1',
             VoterStats: {
               registeredVoters: 18000,
-              registeredVotersWithCellphone: null,
-              registeredVotersWithLandline: null,
+              uniqueCellphones: null,
+              uniqueLandlines: null,
             },
             ProjectedTurnouts: [],
           },
@@ -325,8 +325,8 @@ describe('CampaignStrategyContextService', () => {
     const result = await service.getCampaignStrategyContext(baseRequest())
 
     expect(result.registered_voters).toBe(18000)
-    expect(result.registered_voters_with_cellphone).toBeNull()
-    expect(result.registered_voters_with_landline).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
   })
 
   it('projected_voter_turnout is anchored to the General row for the race year regardless of race stage', async () => {

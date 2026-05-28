@@ -132,10 +132,8 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       projected_turnout: projectedTurnout,
       projected_voter_turnout: projectedVoterTurnout,
       registered_voters: voterStats?.registeredVoters ?? null,
-      registered_voters_with_cellphone:
-        voterStats?.registeredVotersWithCellphone ?? null,
-      registered_voters_with_landline:
-        voterStats?.registeredVotersWithLandline ?? null,
+      unique_cellphones: voterStats?.uniqueCellphones ?? null,
+      unique_landlines: voterStats?.uniqueLandlines ?? null,
       relevant_election_date: this.toIsoDate(race.electionDate),
       state: race.state,
       win_number_effective: winNumberEffective,

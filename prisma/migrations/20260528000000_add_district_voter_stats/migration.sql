@@ -12,8 +12,8 @@ CREATE TABLE "DistrictVoterStats" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "district_id" UUID NOT NULL,
     "registered_voters" INTEGER,
-    "registered_voters_with_cellphone" INTEGER,
-    "registered_voters_with_landline" INTEGER,
+    "unique_cellphones" INTEGER,
+    "unique_landlines" INTEGER,
 
     CONSTRAINT "DistrictVoterStats_pkey" PRIMARY KEY ("id")
 );
