@@ -36,6 +36,9 @@ type RaceRow = {
     id: string
     district: {
       id: string
+      registeredVoters: number | null
+      uniqueCellphones: number | null
+      uniqueLandlines: number | null
       ProjectedTurnouts: Array<{
         electionYear: number
         electionCode: string
@@ -81,11 +84,19 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
     id: 'pos-uuid-1',
     district: {
       id: 'dist-uuid-1',
+      registeredVoters: 18000,
+      uniqueCellphones: 12500,
+      uniqueLandlines: 5500,
       ProjectedTurnouts: [
         {
           electionYear: 2026,
           electionCode: ElectionCode.LocalOrMunicipal,
           projectedTurnout: 2272,
+        },
+        {
+          electionYear: 2026,
+          electionCode: ElectionCode.General,
+          projectedTurnout: 8400,
         },
       ],
     },
@@ -162,6 +173,10 @@ describe('CampaignStrategyContextService', () => {
       official_office_name: 'City Legislature',
       primary_election_date: null,
       projected_turnout: 2272,
+      projected_voter_turnout: 8400,
+      registered_voters: 18000,
+      unique_cellphones: 12500,
+      unique_landlines: 5500,
       relevant_election_date: '2026-08-25',
       state: 'AL',
       win_number_effective: 1137,
@@ -234,6 +249,286 @@ describe('CampaignStrategyContextService', () => {
     expect(result.contacts_needed_estimate).toBeNull()
   })
 
+  it('returns null voter-stats fields when the race has no position attached', async () => {
+    raceFindFirst.mockResolvedValue(baseRace({ Position: null }))
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
+    expect(result.projected_voter_turnout).toBeNull()
+  })
+
+  it('returns null voter-stats fields when the position has no district attached', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({ Position: { id: 'pos-uuid-1', district: null } }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
+    expect(result.projected_voter_turnout).toBeNull()
+  })
+
+  it('returns null voter-stats fields when the district has null aggregate columns', async () => {
+    // Districts that exist in the mart but have no L2 aggregation row
+    // (e.g. turnout-only synthetic districts) land in Postgres with the
+    // three count columns NULL. ProjectedTurnouts can still be populated
+    // for those rows and should flow through normally.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 2272,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBeNull()
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
+    // projected_turnout still comes through from ProjectedTurnouts
+    expect(result.projected_turnout).toBe(2272)
+  })
+
+  it('passes individual null voter-stats columns through as null', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: 18000,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.registered_voters).toBe(18000)
+    expect(result.unique_cellphones).toBeNull()
+    expect(result.unique_landlines).toBeNull()
+  })
+
+  it('projected_voter_turnout is anchored to the General row for the race year regardless of race stage', async () => {
+    // Primary race in March; projected_turnout uses LocalOrMunicipal (via
+    // determineElectionCode), but projected_voter_turnout always picks
+    // the General row.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-03-04T00:00:00Z'),
+        isPrimary: true,
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 1500,
+              },
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 8400,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(8400)
+  })
+
+  it('anchors projected_voter_turnout on the sibling General year for cross-year primary/general cycles', async () => {
+    // Louisiana-style Nov 2025 jungle primary feeding a Jan 2026 general.
+    // The Projected_Turnout row for the general lives at electionYear=2026,
+    // not 2025. The sibling-general date (filled by lookupSiblingStageDates)
+    // carries the correct year, so the resolver anchors on it instead of
+    // the looked-up race's own electionDate year.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2025-11-08T00:00:00Z'),
+        isPrimary: true,
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 9000,
+              },
+            ],
+          },
+        },
+      }),
+    )
+    raceFindMany.mockResolvedValue([
+      {
+        electionDate: new Date('2026-01-15T00:00:00Z'),
+        isPrimary: false,
+        isRunoff: false,
+      },
+    ])
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(9000)
+    expect(result.primary_election_date).toBe('2025-11-08')
+    expect(result.general_election_date).toBe('2026-01-15')
+  })
+
+  it('returns null projected_voter_turnout when no General row exists for the race year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.LocalOrMunicipal,
+                projectedTurnout: 1500,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBeNull()
+  })
+
+  it('returns null projected_voter_turnout when the only General row is from a different year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2026-08-25T00:00:00Z'),
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2024,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 9999,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBeNull()
+  })
+
+  it('falls back to a ConsolidatedGeneral row when no General row exists for the year', async () => {
+    // LA / MS / NJ / VA odd-year generals and Kansas's quadrennial general
+    // are stored under ConsolidatedGeneral upstream. Without the fallback,
+    // projected_voter_turnout would silently be null for every race in
+    // those states.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.ConsolidatedGeneral,
+                projectedTurnout: 7500,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(7500)
+  })
+
+  it('prefers General over ConsolidatedGeneral when both exist for the same year', async () => {
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.ConsolidatedGeneral,
+                projectedTurnout: 7500,
+              },
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 8400,
+              },
+            ],
+          },
+        },
+      }),
+    )
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(8400)
+  })
+
   it('still computes win_number_effective from civics_win_number when projected_turnout is null', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
@@ -287,6 +582,9 @@ describe('CampaignStrategyContextService', () => {
             id: 'pos-uuid-1',
             district: {
               id: 'dist-uuid-1',
+              registeredVoters: null,
+              uniqueCellphones: null,
+              uniqueLandlines: null,
               ProjectedTurnouts: [
                 {
                   electionYear: 2026,
@@ -315,6 +613,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2024,
@@ -344,6 +645,9 @@ describe('CampaignStrategyContextService', () => {
           id: 'pos-uuid-1',
           district: {
             id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
             ProjectedTurnouts: [
               {
                 electionYear: 2026,

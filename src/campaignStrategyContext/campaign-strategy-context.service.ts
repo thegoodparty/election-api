@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { ElectionCode } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import {
@@ -86,6 +87,21 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       race.state,
     )
 
+    // Pass the *general*'s date (when known) so the resolver anchors on
+    // the General row's year, not the looked-up race's year. Matters for
+    // cross-year primary->general cycles (e.g. Louisiana Nov 2025 primary
+    // feeds a Jan 2026 general — the Projected_Turnout row is filed
+    // under year=2026). generalDate is already computed by
+    // lookupSiblingStageDates above: it's race.electionDate when the
+    // looked-up race IS the general, the sibling general's date when
+    // the looked-up race is a primary/runoff with a known sibling, or
+    // null when no sibling is found. The ?? fallback keeps behavior
+    // unchanged for the no-sibling case.
+    const projectedVoterTurnout = this.resolveGeneralProjectedTurnout(
+      race.Position?.district ?? null,
+      generalDate ?? race.electionDate,
+    )
+
     const winNumberEstimate = this.computeWinNumberEstimate(projectedTurnout)
     const winNumberEffective = race.winNumber ?? winNumberEstimate
     const contactsNeededEstimate =
@@ -106,6 +122,8 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       }),
     )
 
+    const district = race.Position?.district ?? null
+
     return {
       candidate_count: candidates.length,
       candidate_office: this.composeCandidateOffice(
@@ -122,6 +140,10 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       official_office_name: race.officialOfficeName,
       primary_election_date: this.toIsoDate(primaryDate),
       projected_turnout: projectedTurnout,
+      projected_voter_turnout: projectedVoterTurnout,
+      registered_voters: district?.registeredVoters ?? null,
+      unique_cellphones: district?.uniqueCellphones ?? null,
+      unique_landlines: district?.uniqueLandlines ?? null,
       relevant_election_date: this.toIsoDate(race.electionDate),
       state: race.state,
       win_number_effective: winNumberEffective,
@@ -226,6 +248,51 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
     const match = district.ProjectedTurnouts.find(
       (t) => t.electionYear === electionYear && t.electionCode === electionCode,
     )
+    return match?.projectedTurnout ?? null
+  }
+
+  // projected_voter_turnout is anchored to the General-election turnout for
+  // the race's calendar year, regardless of whether the looked-up race is a
+  // primary, general, or runoff. The campaign-plan template uses this as the
+  // single voter-turnout baseline that win-number and contact targets are
+  // sized against. Caller-provided include must order ProjectedTurnouts by
+  // inferenceAt desc so the latest model snapshot wins on .find().
+  //
+  // ConsolidatedGeneral is the upstream code for off-cycle general elections
+  // in LA / MS / NJ / VA (odd years) and Kansas's quadrennial general. The
+  // upstream Projected_Turnout table stores rows for those state/date combos
+  // under ConsolidatedGeneral, not General — fall through so the off-cycle
+  // states still resolve a turnout instead of silently returning null. When
+  // both codes exist for the same district+year (rare but possible),
+  // General wins.
+  private resolveGeneralProjectedTurnout(
+    district:
+      | {
+          ProjectedTurnouts: Array<{
+            electionYear: number
+            electionCode: string
+            projectedTurnout: number
+          }>
+        }
+      | null
+      | undefined,
+    electionDate: Date,
+  ): number | null {
+    if (!district?.ProjectedTurnouts?.length) {
+      return null
+    }
+    const electionYear = electionDate.getUTCFullYear()
+    const match =
+      district.ProjectedTurnouts.find(
+        (t) =>
+          t.electionYear === electionYear &&
+          t.electionCode === ElectionCode.General,
+      ) ??
+      district.ProjectedTurnouts.find(
+        (t) =>
+          t.electionYear === electionYear &&
+          t.electionCode === ElectionCode.ConsolidatedGeneral,
+      )
     return match?.projectedTurnout ?? null
   }
 

@@ -40,6 +40,10 @@ export type CampaignStrategyContextResponse = {
   official_office_name: string | null
   primary_election_date: string | null
   projected_turnout: number | null
+  projected_voter_turnout: number | null
+  registered_voters: number | null
+  unique_cellphones: number | null
+  unique_landlines: number | null
   relevant_election_date: string | null
   state: string | null
   win_number_effective: number | null
