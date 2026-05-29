@@ -22,6 +22,7 @@ type RaceRow = {
   winNumber: number | null
   officeLevel: string | null
   officeType: string | null
+  partisanType: string | null
   officialOfficeName: string | null
   Candidacies: Array<{
     gpCandidateId: string | null
@@ -68,6 +69,7 @@ const baseRace = (overrides: Partial<RaceRow> = {}): RaceRow => ({
   winNumber: null,
   officeLevel: null,
   officeType: 'Other',
+  partisanType: 'nonpartisan',
   officialOfficeName: 'City Legislature',
   Candidacies: [
     {
@@ -170,6 +172,7 @@ describe('CampaignStrategyContextService', () => {
       number_of_seats: 1,
       office_level: null,
       office_type: 'Other',
+      partisan_type: 'nonpartisan',
       official_office_name: 'City Legislature',
       primary_election_date: null,
       projected_turnout: 2272,
