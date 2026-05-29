@@ -10,8 +10,11 @@ model District {
     // geographic identity columns above (District itself is L2-derived,
     // but these recompute every aggregation run).
     registeredVoters Int? @map("registered_voters")
-    // Distinct voters in this district whose L2 cellphone column is
-    // non-empty (uniqueness collapse is on lalvoterid, not phone number).
+    // Distinct cellphone numbers (votertelephones_cellphoneformatted)
+    // appearing on L2 voters in this district. Collapse is on the
+    // phone-number value itself, so two voters sharing a household
+    // phone count as one — matches per-channel send/dial costs
+    // downstream (SMS, robocall).
     uniqueCellphones Int? @map("unique_cellphones")
     // Same collapse semantics for the L2 landline column.
     uniqueLandlines  Int? @map("unique_landlines")
