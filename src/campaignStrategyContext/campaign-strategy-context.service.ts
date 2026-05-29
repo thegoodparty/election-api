@@ -87,9 +87,19 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       race.state,
     )
 
+    // Pass the *general*'s date (when known) so the resolver anchors on
+    // the General row's year, not the looked-up race's year. Matters for
+    // cross-year primary->general cycles (e.g. Louisiana Nov 2025 primary
+    // feeds a Jan 2026 general — the Projected_Turnout row is filed
+    // under year=2026). generalDate is already computed by
+    // lookupSiblingStageDates above: it's race.electionDate when the
+    // looked-up race IS the general, the sibling general's date when
+    // the looked-up race is a primary/runoff with a known sibling, or
+    // null when no sibling is found. The ?? fallback keeps behavior
+    // unchanged for the no-sibling case.
     const projectedVoterTurnout = this.resolveGeneralProjectedTurnout(
       race.Position?.district ?? null,
-      race.electionDate,
+      generalDate ?? race.electionDate,
     )
 
     const winNumberEstimate = this.computeWinNumberEstimate(projectedTurnout)

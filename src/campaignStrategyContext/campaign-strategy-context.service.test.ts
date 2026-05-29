@@ -368,6 +368,49 @@ describe('CampaignStrategyContextService', () => {
     expect(result.projected_voter_turnout).toBe(8400)
   })
 
+  it('anchors projected_voter_turnout on the sibling General year for cross-year primary/general cycles', async () => {
+    // Louisiana-style Nov 2025 jungle primary feeding a Jan 2026 general.
+    // The Projected_Turnout row for the general lives at electionYear=2026,
+    // not 2025. The sibling-general date (filled by lookupSiblingStageDates)
+    // carries the correct year, so the resolver anchors on it instead of
+    // the looked-up race's own electionDate year.
+    raceFindFirst.mockResolvedValue(
+      baseRace({
+        electionDate: new Date('2025-11-08T00:00:00Z'),
+        isPrimary: true,
+        Position: {
+          id: 'pos-uuid-1',
+          district: {
+            id: 'dist-uuid-1',
+            registeredVoters: null,
+            uniqueCellphones: null,
+            uniqueLandlines: null,
+            ProjectedTurnouts: [
+              {
+                electionYear: 2026,
+                electionCode: ElectionCode.General,
+                projectedTurnout: 9000,
+              },
+            ],
+          },
+        },
+      }),
+    )
+    raceFindMany.mockResolvedValue([
+      {
+        electionDate: new Date('2026-01-15T00:00:00Z'),
+        isPrimary: false,
+        isRunoff: false,
+      },
+    ])
+
+    const result = await service.getCampaignStrategyContext(baseRequest())
+
+    expect(result.projected_voter_turnout).toBe(9000)
+    expect(result.primary_election_date).toBe('2025-11-08')
+    expect(result.general_election_date).toBe('2026-01-15')
+  })
+
   it('returns null projected_voter_turnout when no General row exists for the race year', async () => {
     raceFindFirst.mockResolvedValue(
       baseRace({
