@@ -137,6 +137,7 @@ export class CampaignStrategyContextService extends createPrismaBase(MODELS.Race
       number_of_seats: race.numberOfSeats,
       office_level: race.officeLevel,
       office_type: race.officeType,
+      partisan_type: race.partisanType,
       official_office_name: race.officialOfficeName,
       primary_election_date: this.toIsoDate(primaryDate),
       projected_turnout: projectedTurnout,

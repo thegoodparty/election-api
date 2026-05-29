@@ -37,6 +37,7 @@ export type CampaignStrategyContextResponse = {
   number_of_seats: number | null
   office_level: string | null
   office_type: string | null
+  partisan_type: string | null
   official_office_name: string | null
   primary_election_date: string | null
   projected_turnout: number | null
