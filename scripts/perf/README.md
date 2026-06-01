@@ -1,13 +1,13 @@
 # scripts/perf/
 
-Performance tooling wrappers. Convenience scripts behind the canonical commands in the org-wide **performance-tools** cookbook (lives in [`thegoodparty/ai-rules`](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md) — this repo doesn't carry the submodule).
+Performance tooling wrappers. Convenience scripts behind the canonical commands in [`ai-rules/performance-tools.md`](../../ai-rules/performance-tools.md) (a submodule — run `git submodule update --init --recursive` once after clone if `ai-rules/` is empty).
 
 | Script | What it does | Cookbook section |
 |---|---|---|
-| `setup-check.sh` | Audit the local env — what can/can't be measured right now | [§11.6](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md#116-agents-in-fresh-worktrees) |
-| `bench-endpoint.sh` | Single-endpoint HTTP load test (autocannon) | [§1](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md#1-http-load--autocannon--how-does-this-endpoint-behave-under-load) |
-| `profile-cpu.sh` | V8 CPU profile of any node command (writes `.cpuprofile`) | [§3](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md#3-node-cpu-profile--built-in-v8-sampler--where-is-the-cpu-going) |
-| `explain.sh` | `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` against the configured DB | [§5](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md#5-database--explain-analyze--is-this-query-actually-using-the-index) |
+| `setup-check.sh` | Audit the local env — what can/can't be measured right now | §11.6 |
+| `bench-endpoint.sh` | Single-endpoint HTTP load test (autocannon) | §1 |
+| `profile-cpu.sh` | V8 CPU profile of any node command (writes `.cpuprofile`) | §3 |
+| `explain.sh` | `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` against the configured DB | §5 |
 
 Every script supports `-h` / `--help` and prints its prerequisites at the top of the help block.
 
@@ -31,6 +31,8 @@ The scripts try hard not to require global installs:
   brew install hyperfine        # mac
   cargo install hyperfine       # linux / cross-platform
   ```
+
+For agents working in a fresh `git worktree`, also see `ai-rules/performance-tools.md` §11.6 — `.env` and the `ai-rules` submodule are common first-time stumbling blocks.
 
 ## Examples
 
@@ -59,6 +61,6 @@ scripts/perf/explain.sh -f scripts/perf/slow.sql
 
 ## Critic tie-in
 
-Any PR that claims a performance improvement should include before/after numbers from one of these tools (or production telemetry). Without a measurement, the change is a refactor. See the [performance rules](https://github.com/thegoodparty/ai-rules/blob/main/performance.md) in the central ai-rules repo.
+Per the [performance critic rules](../../ai-rules/performance.md), any PR that claims a performance improvement should include before/after numbers from one of these tools (or production telemetry). Without a measurement, the change is a refactor.
 
-When the critic itself is an agent with shell access, it should run `setup-check.sh` first, then use any GREEN tool it has the prerequisites for (see the [readiness table](https://github.com/thegoodparty/ai-rules/blob/main/performance-tools.md#at-a-glance-tool-readiness) in the cookbook). It should never fabricate measurements.
+When the critic itself is an agent with shell access, it should run `setup-check.sh` first, then use any GREEN tool it has the prerequisites for (see the readiness table in `performance-tools.md`). It should never fabricate measurements.

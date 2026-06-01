@@ -127,8 +127,17 @@ else
   printf "  %s  node_modules missing (run: npm ci)\n" "$NO"
 fi
 
-# election-api does not carry the ai-rules submodule (see scripts/perf/README.md).
-note "ai-rules submodule intentionally not present in this repo — see scripts/perf/README.md for the GitHub link"
+if [[ -f ai-rules/performance.md ]]; then
+  printf "  %s  ai-rules/performance.md present (submodule initialized)\n" "$OK"
+elif [[ -f ai-rules/README.md ]]; then
+  printf "  %s  ai-rules submodule initialized but performance.md missing — pointer may be stale\n" "$WARN"
+  echo "       Update: (cd ai-rules && git fetch && git checkout origin/main)"
+elif [[ -e ai-rules ]] || git config -f .gitmodules --get submodule.ai-rules.url >/dev/null 2>&1; then
+  printf "  %s  ai-rules submodule NOT initialized\n" "$NO"
+  echo "       Run: git submodule update --init --recursive"
+else
+  note "ai-rules submodule not present in this repo"
+fi
 
 echo
 echo "Done. Anything marked ✗ above is a real blocker for the relevant tool."
