@@ -11,7 +11,7 @@
 #   PORT=3001 scripts/perf/setup-check.sh
 #
 # Env overrides:
-#   PORT                  (default 3000 — election-api code default)
+#   PORT                  (default 3000 — the gp-api dev server port)
 #   HOST                  (default localhost)
 #   PG_DOCKER_CONTAINER   (default goodparty-postgres)
 set -euo pipefail
@@ -30,6 +30,8 @@ NO="✗"
 WARN="⚠"
 
 check() {
+  # $1 = label, $2 = command (eval-safe), $3 = optional remediation hint
+  # Always returns 0 — the printed glyph is the result. Keeps `set -e` happy.
   local label="$1" cmd="$2" hint="${3:-}"
   if eval "$cmd" >/dev/null 2>&1; then
     printf "  %s  %s\n" "$OK" "$label"
@@ -45,8 +47,8 @@ note() {
 }
 
 echo
-echo "scripts/perf/ environment check (election-api)"
-echo "=============================================="
+echo "scripts/perf/ environment check"
+echo "================================"
 echo
 
 echo "Tools:"
@@ -72,9 +74,10 @@ else
     Darwin) echo "       Install: brew install libpq && brew link --force libpq" ;;
     Linux)  echo "       Install: apt install postgresql-client  (debian/ubuntu)" ;;
   esac
-  echo "       Or set PG_DOCKER_CONTAINER=<name> if your container has a different name."
+  echo "       Or: docker compose up -d  (per the repo's docker-compose.yml)"
 fi
 
+# DATABASE_URL resolution — same logic as explain.sh, but read-only.
 DBURL="${DATABASE_URL:-}"
 ENV_SRC=""
 if [[ -z "$DBURL" ]]; then
@@ -123,16 +126,16 @@ fi
 echo
 echo "App:"
 if command -v curl >/dev/null 2>&1; then
-  if curl -fsS -o /dev/null --max-time 2 "http://${HOST}:${PORT}/" 2>/dev/null \
-     || curl -fsS -o /dev/null --max-time 2 "http://${HOST}:${PORT}/health" 2>/dev/null; then
-    printf "  %s  election-api reachable at http://%s:%s\n" "$OK" "$HOST" "$PORT"
+  if curl -fsS -o /dev/null --max-time 2 "http://${HOST}:${PORT}/health" 2>/dev/null; then
+    printf "  %s  gp-api dev server reachable at http://%s:%s/health\n" "$OK" "$HOST" "$PORT"
   else
-    printf "  %s  no listener on http://%s:%s (start: npm run start)\n" "$WARN" "$HOST" "$PORT"
+    printf "  %s  no listener on http://%s:%s (start: npm run start:dev)\n" "$WARN" "$HOST" "$PORT"
   fi
 else
   note "curl not available — skipping server reachability check"
 fi
 
+# Repo-local node_modules + ai-rules submodule (helpful in fresh worktrees).
 echo
 echo "Repo state:"
 if [[ -d node_modules ]]; then
@@ -141,12 +144,24 @@ else
   printf "  %s  node_modules missing (run: npm ci)\n" "$NO"
 fi
 
-if [[ -f ai-rules/performance.md ]]; then
-  printf "  %s  ai-rules/performance.md present (submodule initialized)\n" "$OK"
+# Check the file these wrapper scripts actually reference: performance-tools.md
+# (the tools cookbook). performance.md is the critic rule; both should be
+# present on a healthy submodule pointer, but performance-tools.md is what
+# the scripts in this directory header-cite — so checking it gives a more
+# faithful "is the submodule aligned with what this toolchain depends on"
+# answer.
+if [[ -f ai-rules/performance-tools.md ]]; then
+  printf "  %s  ai-rules/performance-tools.md present (submodule initialized)\n" "$OK"
+  # Sanity-check the critic rule file too — different file, same submodule;
+  # if one is present and the other isn't, the pointer is partially stale.
+  if [[ ! -f ai-rules/performance.md ]]; then
+    printf "  %s  ai-rules/performance.md missing — submodule pointer may be partially stale\n" "$WARN"
+    echo "       Sync: git submodule update ai-rules"
+  fi
 elif [[ -f ai-rules/README.md ]]; then
-  printf "  %s  ai-rules submodule initialized but performance.md missing — submodule out of sync with the recorded pointer\n" "$WARN"
+  printf "  %s  ai-rules submodule initialized but performance-tools.md missing — submodule out of sync with the recorded pointer\n" "$WARN"
   echo "       Sync: git submodule update ai-rules"
-  echo "       (Don't 'git checkout origin/main' inside the submodule — that lands at a tree that may not contain performance.md.)"
+  echo "       (Don't 'git checkout origin/main' inside the submodule — that lands at a tree that may not contain performance-tools.md.)"
 elif [[ -e ai-rules ]] || git config -f .gitmodules --get submodule.ai-rules.url >/dev/null 2>&1; then
   printf "  %s  ai-rules submodule NOT initialized\n" "$NO"
   echo "       Run: git submodule update --init --recursive"
