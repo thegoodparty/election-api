@@ -6,6 +6,19 @@ model District {
     L2DistrictType String   @map("l2_district_type")
     L2DistrictName String   @map("l2_district_name")
 
+    // L2-derived voter aggregates. Refresh cadence differs from the
+    // geographic identity columns above (District itself is L2-derived,
+    // but these recompute every aggregation run).
+    registeredVoters Int? @map("registered_voters")
+    // Distinct cellphone numbers (votertelephones_cellphoneformatted)
+    // appearing on L2 voters in this district. Collapse is on the
+    // phone-number value itself, so two voters sharing a household
+    // phone count as one — matches per-channel send/dial costs
+    // downstream (SMS, robocall).
+    uniqueCellphones Int? @map("unique_cellphones")
+    // Same collapse semantics for the L2 landline column.
+    uniqueLandlines  Int? @map("unique_landlines")
+
     // Relations
     ProjectedTurnouts ProjectedTurnout[]
     Positions         Position[]
