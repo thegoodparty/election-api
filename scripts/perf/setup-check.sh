@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# Check that the local environment can run scripts/perf/*.sh end-to-end.
+# Backs up ai-rules/performance-tools.md §11.6 (Agents in fresh worktrees).
+#
+# Reports — does NOT install anything, does NOT start any service.
+# Exits 0 always; the report is informational. Treat any ✗ as something to
+# fix before claiming a measurement from the affected tool.
+#
+# Usage:
+#   scripts/perf/setup-check.sh
+#   PORT=3001 scripts/perf/setup-check.sh
+#
+# Env overrides:
+#   PORT                  (default 3000 — election-api code default)
+#   HOST                  (default localhost)
+#   PG_DOCKER_CONTAINER   (default goodparty-postgres)
+set -euo pipefail
+
+PORT="${PORT:-3000}"
+HOST="${HOST:-localhost}"
+CONTAINER="${PG_DOCKER_CONTAINER:-goodparty-postgres}"
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  sed -n '2,/^set -/p' "$0" | sed 's/^# \{0,1\}//;/^set -/d'
+  exit 0
+fi
+
+OK="✓"
+NO="✗"
+WARN="⚠"
+
+check() {
+  local label="$1" cmd="$2" hint="${3:-}"
+  if eval "$cmd" >/dev/null 2>&1; then
+    printf "  %s  %s\n" "$OK" "$label"
+  else
+    printf "  %s  %s\n" "$NO" "$label"
+    [[ -n "$hint" ]] && printf "       %s\n" "$hint"
+  fi
+  return 0
+}
+
+note() {
+  printf "  %s  %s\n" "$WARN" "$1"
+}
+
+echo
+echo "scripts/perf/ environment check (election-api)"
+echo "=============================================="
+echo
+
+echo "Tools:"
+check "node $(node --version 2>/dev/null || echo '(not found)')" \
+      'command -v node' \
+      'Install Node 22.x via nvm / fnm / mise.'
+check "autocannon (HTTP load — §1)" \
+      'command -v autocannon' \
+      'Falls back to: npx --yes autocannon (no install needed; first run is slow).'
+check "hyperfine (statistical bench — §0)" \
+      'command -v hyperfine' \
+      "Install: brew install hyperfine  (mac) | cargo install hyperfine (linux)."
+
+echo
+echo "Database:"
+if command -v psql >/dev/null 2>&1; then
+  check "psql on PATH" 'command -v psql'
+elif command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
+  printf "  %s  docker exec %s psql (host psql not on PATH — docker fallback available)\n" "$OK" "$CONTAINER"
+else
+  printf "  %s  no psql AND no '%s' container running\n" "$NO" "$CONTAINER"
+  case "$(uname -s)" in
+    Darwin) echo "       Install: brew install libpq && brew link --force libpq" ;;
+    Linux)  echo "       Install: apt install postgresql-client  (debian/ubuntu)" ;;
+  esac
+  echo "       Or set PG_DOCKER_CONTAINER=<name> if your container has a different name."
+fi
+
+DBURL="${DATABASE_URL:-}"
+ENV_SRC=""
+if [[ -z "$DBURL" ]]; then
+  if [[ -f ./.env ]]; then
+    ENV_SRC="./.env"
+  elif command -v git >/dev/null 2>&1; then
+    super="$(git rev-parse --show-superproject-working-tree 2>/dev/null || true)"
+    if [[ -n "$super" && -f "$super/.env" ]]; then
+      ENV_SRC="$super/.env"
+    else
+      cdir="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+      if [[ -n "$cdir" && -f "$(dirname "$cdir")/.env" ]]; then
+        ENV_SRC="$(dirname "$cdir")/.env"
+      fi
+    fi
+  fi
+  if [[ -n "$ENV_SRC" ]]; then
+    DBURL="$(grep -E '^DATABASE_URL[[:space:]]*=' "$ENV_SRC" | head -1 | sed 's/^[^=]*=//; s/^[\"\x27]//; s/[\"\x27]$//')"
+  fi
+fi
+if [[ -n "$DBURL" ]]; then
+  if [[ -n "$ENV_SRC" ]]; then
+    printf "  %s  DATABASE_URL resolvable (from %s)\n" "$OK" "$ENV_SRC"
+  else
+    printf "  %s  DATABASE_URL resolvable (from env)\n" "$OK"
+  fi
+else
+  printf "  %s  DATABASE_URL not found in env, ./.env, or parent worktree .env\n" "$NO"
+  echo "       Set: export DATABASE_URL=postgres://..."
+fi
+
+echo
+echo "App:"
+if command -v curl >/dev/null 2>&1; then
+  if curl -fsS -o /dev/null --max-time 2 "http://${HOST}:${PORT}/" 2>/dev/null \
+     || curl -fsS -o /dev/null --max-time 2 "http://${HOST}:${PORT}/health" 2>/dev/null; then
+    printf "  %s  election-api reachable at http://%s:%s\n" "$OK" "$HOST" "$PORT"
+  else
+    printf "  %s  no listener on http://%s:%s (start: npm run start)\n" "$WARN" "$HOST" "$PORT"
+  fi
+else
+  note "curl not available — skipping server reachability check"
+fi
+
+echo
+echo "Repo state:"
+if [[ -d node_modules ]]; then
+  printf "  %s  node_modules present\n" "$OK"
+else
+  printf "  %s  node_modules missing (run: npm ci)\n" "$NO"
+fi
+
+# election-api does not carry the ai-rules submodule (see scripts/perf/README.md).
+note "ai-rules submodule intentionally not present in this repo — see scripts/perf/README.md for the GitHub link"
+
+echo
+echo "Done. Anything marked ✗ above is a real blocker for the relevant tool."
+echo "Anything marked ⚠ is informational — usually fine for some tools, not for others."
+exit 0
