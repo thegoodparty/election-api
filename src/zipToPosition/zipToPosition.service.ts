@@ -3,6 +3,9 @@ import { Prisma } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { RaceListItem } from './zipToPosition.types'
 
+// Use || (not ??) so empty, zero, or non-numeric env values all fall back
+// to the default. DATA-1896 (commit f9b49dc) made this choice explicit;
+// to disable the filter, set a tiny positive value, not 0.
 const PCT_DISTRICTZIP_TO_ZIP_THRESHOLD =
   Number(process.env.PCT_DISTRICTZIP_TO_ZIP_THRESHOLD) || 0.005
 
