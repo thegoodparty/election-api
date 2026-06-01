@@ -162,6 +162,7 @@ describe('ZipToPositionService.getZipCodesByBrPositionId', () => {
   let findMany: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-05-12T12:00:00Z'))
     findUnique = vi.fn()
     findMany = vi.fn().mockResolvedValue([])

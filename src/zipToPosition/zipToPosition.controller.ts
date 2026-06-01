@@ -1,5 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common'
-import { SearchPositionsQueryDTO } from './zipToPosition.schema'
+import {
+  GetZipCodesByBrPositionIdParamsDTO,
+  SearchPositionsQueryDTO,
+} from './zipToPosition.schema'
 import { ZipToPositionService } from './zipToPosition.service'
 import { RaceListItem } from './zipToPosition.types'
 
@@ -23,8 +26,8 @@ export class ZipToPositionController {
 
   @Get(':brPositionId/zip-codes')
   async getZipCodes(
-    @Param('brPositionId') brPositionId: string,
+    @Param() params: GetZipCodesByBrPositionIdParamsDTO,
   ): Promise<string[]> {
-    return this.zipToPosition.getZipCodesByBrPositionId(brPositionId)
+    return this.zipToPosition.getZipCodesByBrPositionId(params.brPositionId)
   }
 }
