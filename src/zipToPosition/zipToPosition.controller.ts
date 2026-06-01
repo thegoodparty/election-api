@@ -24,7 +24,7 @@ export class ZipToPositionController {
     })
   }
 
-  @Get(':brPositionId/zip-codes')
+  @Get('by-ballotready-id/:brPositionId/zip-codes')
   async getZipCodes(
     @Param() params: GetZipCodesByBrPositionIdParamsDTO,
   ): Promise<string[]> {
