@@ -156,6 +156,86 @@ describe('ZipToPositionService', () => {
   })
 })
 
+describe('ZipToPositionService.getZipCodesByBrPositionId', () => {
+  let service: ZipToPositionService
+  let findUnique: ReturnType<typeof vi.fn>
+  let findMany: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-12T12:00:00Z'))
+    findUnique = vi.fn()
+    findMany = vi.fn().mockResolvedValue([])
+    service = new ZipToPositionService()
+    Object.defineProperty(service, '_prisma', {
+      value: {
+        zipToPosition: { findMany },
+        position: { findUnique },
+      },
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('throws NotFoundException when no Position matches brPositionId', async () => {
+    findUnique.mockResolvedValue(null)
+
+    await expect(
+      service.getZipCodesByBrPositionId('br-missing'),
+    ).rejects.toThrowError(/Position br-missing not found/)
+    expect(findMany).not.toHaveBeenCalled()
+  })
+
+  it('queries ZipToPosition by positionId, future elections, threshold, non-null zip', async () => {
+    findUnique.mockResolvedValue({ id: 'position-uuid-1' })
+
+    await service.getZipCodesByBrPositionId('br-pos-1')
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { brPositionId: 'br-pos-1' },
+      select: { id: true },
+    })
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        positionId: 'position-uuid-1',
+        electionDate: { gte: new Date('2026-05-12T00:00:00Z') },
+        OR: [
+          { pctDistrictzipToZip: null },
+          { pctDistrictzipToZip: { gte: 0.005 } },
+        ],
+        zipCode: { not: null },
+      },
+      select: { zipCode: true },
+      distinct: ['zipCode'],
+    })
+  })
+
+  it('returns sorted zip codes and drops any null rows from results', async () => {
+    findUnique.mockResolvedValue({ id: 'position-uuid-1' })
+    findMany.mockResolvedValue([
+      { zipCode: '90212' },
+      { zipCode: null },
+      { zipCode: '90210' },
+      { zipCode: '90211' },
+    ])
+
+    const result = await service.getZipCodesByBrPositionId('br-pos-1')
+
+    expect(result).toEqual(['90210', '90211', '90212'])
+  })
+
+  it('returns an empty array when no rows match', async () => {
+    findUnique.mockResolvedValue({ id: 'position-uuid-1' })
+    findMany.mockResolvedValue([])
+
+    const result = await service.getZipCodesByBrPositionId('br-pos-1')
+
+    expect(result).toEqual([])
+  })
+})
+
 describe.skipIf(process.env.CI === 'true')(
   'ZipToPositionService (integration)',
   () => {

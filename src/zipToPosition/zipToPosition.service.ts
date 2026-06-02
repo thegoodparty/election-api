@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { RaceListItem } from './zipToPosition.types'
 
+// Use || (not ??) so empty, zero, or non-numeric env values all fall back
+// to the default. DATA-1896 (commit f9b49dc) made this choice explicit;
+// to disable the filter, set a tiny positive value, not 0.
 const PCT_DISTRICTZIP_TO_ZIP_THRESHOLD =
   Number(process.env.PCT_DISTRICTZIP_TO_ZIP_THRESHOLD) || 0.005
 
@@ -69,5 +72,37 @@ export class ZipToPositionService extends createPrismaBase(
       city: row.position.place?.name ?? null,
       district: row.district === '' ? null : row.district,
     }))
+  }
+
+  async getZipCodesByBrPositionId(brPositionId: string): Promise<string[]> {
+    const position = await this.client.position.findUnique({
+      where: { brPositionId },
+      select: { id: true },
+    })
+    if (!position) {
+      throw new NotFoundException(`Position ${brPositionId} not found`)
+    }
+
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+
+    const rows = await this.model.findMany({
+      where: {
+        positionId: position.id,
+        electionDate: { gte: today },
+        OR: [
+          { pctDistrictzipToZip: null },
+          { pctDistrictzipToZip: { gte: PCT_DISTRICTZIP_TO_ZIP_THRESHOLD } },
+        ],
+        zipCode: { not: null },
+      },
+      select: { zipCode: true },
+      distinct: ['zipCode'],
+    })
+
+    return rows
+      .map((r) => r.zipCode)
+      .filter((z): z is string => z !== null)
+      .sort()
   }
 }
