@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { PrismaService } from '../prisma.service'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '../../generated/prisma'
 import { lowerFirst } from 'lodash'
 
 export const MODELS = Prisma.ModelName

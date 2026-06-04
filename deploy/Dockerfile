@@ -74,10 +74,14 @@ COPY package.json package-lock.json ./
 RUN npm ci --only=production --ignore-scripts
 
 # Copy only necessary files to the runtime image
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY module-alias.js ./
+# The Prisma client is generated to a custom output dir (src/generated/prisma)
+# which holds the client JS, its bundled runtime, and the query-engine binary.
+# `nest build` only transpiles .ts, so it is not emitted into dist; copy it to
+# the path the compiled code resolves at runtime (dist/src/generated/prisma).
+COPY --from=builder /app/src/generated/prisma ./dist/src/generated/prisma
 
 # Copy the entrypoint script and ensure it's executable
 COPY deploy/entrypoint.sh /app/entrypoint.sh

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 import { createZodDto } from 'nestjs-zod'
 import { candidacyColumns } from 'src/candidacies/candidacies.schema'
 import { placeColumns } from 'src/places/places.schema'

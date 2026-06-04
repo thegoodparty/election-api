@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common'
-import { ElectionCode } from '@prisma/client'
+import { ElectionCode } from '../generated/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import { CampaignStrategyContextService } from './campaign-strategy-context.service'

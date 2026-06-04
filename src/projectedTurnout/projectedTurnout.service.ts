@@ -4,7 +4,7 @@ import {
   ProjectedTurnoutManyQueryDTO,
   ProjectedTurnoutUniqueDTO,
 } from './projectedTurnout.schema'
-import { ElectionCode } from '@prisma/client'
+import { ElectionCode } from '../generated/prisma'
 
 @Injectable()
 export class ProjectedTurnoutService extends createPrismaBase(

@@ -8,7 +8,7 @@ import {
   GetDistrictsDTO,
   GetDistrictTypesDTO,
 } from './districts.schema'
-import { Prisma, ElectionCode as EC } from '@prisma/client'
+import { Prisma, ElectionCode as EC } from '../generated/prisma'
 import { NotFoundException } from '@nestjs/common'
 
 export class DistrictsService extends createPrismaBase(MODELS.District) {
