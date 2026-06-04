@@ -40,6 +40,9 @@ jobs:
           pulumi-version: "^3"
 
       - run: npm ci
+      # The Prisma client is generated to a gitignored custom output dir
+      # (src/generated/prisma); generate it explicitly before tests.
+      - run: npx prisma generate
       - run: npm run test
 
       - name: Build and push Docker image
