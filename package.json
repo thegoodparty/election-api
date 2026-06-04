@@ -62,6 +62,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^9.39.4",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
@@ -76,11 +78,11 @@
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
-    "eslint": "^8.0.0",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "globals": "^16.0.0",
+    "globals": "^17.4.0",
     "libpg-query": "^16.3.0",
     "node-gyp": "^11.1.0",
     "pino-pretty": "^13.1.3",
