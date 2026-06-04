@@ -1,4 +1,4 @@
-import '../../module-alias'
+import '../module-alias'
 import './configrc'
 import { HttpAdapterHost, NestFactory } from '@nestjs/core'
 import {

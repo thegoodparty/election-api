@@ -2,6 +2,9 @@
 dist/
 api/dist
 
+# generated prisma client (per-package output dir)
+src/generated/
+
 # Node.js runtime environment
 node_modules
 nestjs/node_modules

@@ -5,7 +5,7 @@ import {
   MODELS,
 } from 'src/prisma/util/prisma.util'
 import { CandidacyFilterDto } from './candidacies.schema'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 
 @Injectable()
 export class CandidaciesService extends createPrismaBase(MODELS.Candidacy) {

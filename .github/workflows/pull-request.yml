@@ -18,5 +18,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      # The Prisma client is generated to a gitignored custom output dir
+      # (src/generated/prisma); generate it explicitly before type-check/tests.
+      - run: npx prisma generate
       - run: npx tsc --noEmit
       - run: npm run test

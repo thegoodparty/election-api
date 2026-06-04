@@ -6,7 +6,7 @@ import {
 } from 'src/prisma/util/prisma.util'
 import { RaceFilterDto } from './races.schema'
 import { PrismaService } from 'src/prisma/prisma.service'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 import { getDedupedRacesBySlug } from './races.util'
 import {
   extractFilingFee,
