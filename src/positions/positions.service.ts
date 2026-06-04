@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
-import { District, Position, Prisma, ProjectedTurnout } from '@prisma/client'
+import { District, Position, Prisma, ProjectedTurnout } from '../generated/prisma'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import { PositionWithOptionalDistrict } from './positions.types'

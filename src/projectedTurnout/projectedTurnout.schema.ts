@@ -1,6 +1,6 @@
 import { STATE_CODES } from 'src/shared/constants/states'
 import { z } from 'zod'
-import { ElectionCode } from '@prisma/client'
+import { ElectionCode } from '../generated/prisma'
 import { createZodDto } from 'nestjs-zod'
 
 const ElectionEnum = z.nativeEnum(ElectionCode)

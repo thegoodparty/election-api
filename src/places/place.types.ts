@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 
 export const SLUG_COLUMN_NAME = 'slug'
 export const POSITION_NAMES_COLUMN_NAME = 'positionNames'

@@ -1,4 +1,4 @@
-import { Prisma, ElectionCode as EC } from '@prisma/client'
+import { Prisma, ElectionCode as EC } from '../generated/prisma'
 import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { z } from 'zod'

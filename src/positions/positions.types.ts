@@ -1,4 +1,4 @@
-import { Position, ProjectedTurnout } from '@prisma/client'
+import { Position, ProjectedTurnout } from '../generated/prisma'
 import type { FilingFeeExtractionSource } from './util/filingFee.util'
 
 export type PositionWithOptionalDistrict = Pick<

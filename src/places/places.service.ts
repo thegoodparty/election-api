@@ -5,7 +5,7 @@ import {
   MODELS,
 } from 'src/prisma/util/prisma.util'
 import { PlaceFilterDto } from './places.schema'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 import {
   hasChildren,
   hasParent,

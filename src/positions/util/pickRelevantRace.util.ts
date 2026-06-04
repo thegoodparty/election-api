@@ -1,4 +1,4 @@
-import type { Race } from '@prisma/client'
+import type { Race } from '../../generated/prisma'
 
 /**
  * One BallotReady Position can correspond to many Race rows: separate primary
