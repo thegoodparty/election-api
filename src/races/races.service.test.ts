@@ -25,7 +25,13 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
 
     expect(raceFindMany).toHaveBeenCalledWith({
       where: { brHashId: 'Z2lk-missing' },
-      select: { filingRequirements: true, salary: true },
+      select: {
+        filingRequirements: true,
+        salary: true,
+        filingOfficeAddress: true,
+        filingPhoneNumber: true,
+        paperworkInstructions: true,
+      },
       orderBy: [
         { isPrimary: { sort: 'asc', nulls: 'last' } },
         { isRunoff: { sort: 'asc', nulls: 'last' } },
@@ -36,6 +42,9 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
       filingFee: null,
       filingRequirementsText: null,
       extractionSource: null,
+      filingOfficeAddress: null,
+      filingPhoneNumber: null,
+      paperworkInstructions: null,
     })
   })
 
@@ -155,5 +164,47 @@ describe('RacesService.findFilingFeeByBrHashId', () => {
     expect(result.filingRequirementsText).toBe(
       'Petition signatures required; see town clerk.',
     )
+  })
+
+  it('maps the structured filing-office contact off the matched Race row', async () => {
+    raceFindMany.mockResolvedValue([
+      {
+        filingRequirements: 'Filing fee: $30.',
+        salary: null,
+        filingOfficeAddress: '123 Main St, Springfield, IL 62701',
+        filingPhoneNumber: '(217) 555-0100',
+        paperworkInstructions: 'File with the county clerk in person.',
+      },
+    ])
+
+    const result = await service.findFilingFeeByBrHashId('Z2lk-office')
+
+    expect(result.filingOfficeAddress).toBe(
+      '123 Main St, Springfield, IL 62701',
+    )
+    expect(result.filingPhoneNumber).toBe('(217) 555-0100')
+    expect(result.paperworkInstructions).toBe(
+      'File with the county clerk in person.',
+    )
+    // Fee extraction still runs alongside the office mapping.
+    expect(result.filingFee).toBe(30)
+  })
+
+  it('returns null office fields when BallotReady left them blank', async () => {
+    raceFindMany.mockResolvedValue([
+      {
+        filingRequirements: 'Filing fee: $30.',
+        salary: null,
+        filingOfficeAddress: null,
+        filingPhoneNumber: null,
+        paperworkInstructions: null,
+      },
+    ])
+
+    const result = await service.findFilingFeeByBrHashId('Z2lk-no-office')
+
+    expect(result.filingOfficeAddress).toBeNull()
+    expect(result.filingPhoneNumber).toBeNull()
+    expect(result.paperworkInstructions).toBeNull()
   })
 })

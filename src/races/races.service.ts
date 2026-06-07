@@ -13,6 +13,19 @@ import {
   FilingFeeResult,
 } from 'src/positions/util/filingFee.util'
 
+/**
+ * Filing-fee result widened with the structured filing-office contact that
+ * gp-api surfaces on the Pro-upgrade filing-instructions screen. The three
+ * office fields come straight off the matched `Race` row (sourced from
+ * BallotReady); the fee fields come from `extractFilingFee`. All nullable —
+ * BallotReady leaves them blank for many races.
+ */
+export interface FilingDetailsByBrHashResult extends FilingFeeResult {
+  filingOfficeAddress: string | null
+  filingPhoneNumber: string | null
+  paperworkInstructions: string | null
+}
+
 @Injectable()
 export class RacesService extends createPrismaBase(MODELS.Race) {
   constructor(private readonly prisma: PrismaService) {
@@ -104,10 +117,18 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
    * Returns all-nulls for both "no match" and "matched but BR has no fee" —
    * gp-api treats them identically.
    */
-  async findFilingFeeByBrHashId(brHashId: string): Promise<FilingFeeResult> {
+  async findFilingFeeByBrHashId(
+    brHashId: string,
+  ): Promise<FilingDetailsByBrHashResult> {
     const races = await this.model.findMany({
       where: { brHashId },
-      select: { filingRequirements: true, salary: true },
+      select: {
+        filingRequirements: true,
+        salary: true,
+        filingOfficeAddress: true,
+        filingPhoneNumber: true,
+        paperworkInstructions: true,
+      },
       // Postgres sorts NULLs before `false` in ASC order, so an imported
       // row with isPrimary=NULL would beat a real general (false). Force
       // NULLs last to keep the general → primary → runoff preference
@@ -124,9 +145,17 @@ export class RacesService extends createPrismaBase(MODELS.Race) {
         filingFee: null,
         filingRequirementsText: null,
         extractionSource: null,
+        filingOfficeAddress: null,
+        filingPhoneNumber: null,
+        paperworkInstructions: null,
       }
     }
-    return extractFilingFee(race.filingRequirements, race.salary)
+    return {
+      ...extractFilingFee(race.filingRequirements, race.salary),
+      filingOfficeAddress: race.filingOfficeAddress,
+      filingPhoneNumber: race.filingPhoneNumber,
+      paperworkInstructions: race.paperworkInstructions,
+    }
   }
 
   private buildPlaceInclude(

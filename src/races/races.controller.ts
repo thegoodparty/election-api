@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common'
-import { RacesService } from './races.service'
+import { FilingDetailsByBrHashResult, RacesService } from './races.service'
 import { GetRaceByBrHashIdParamsDTO, RaceFilterDto } from './races.schema'
-import { FilingFeeResult } from 'src/positions/util/filingFee.util'
 
 @Controller('races')
 export class RacesController {
@@ -22,7 +21,7 @@ export class RacesController {
   @Get('by-br-hash-id/:brHashId/filing-fee')
   async getFilingFeeByBrHashId(
     @Param() params: GetRaceByBrHashIdParamsDTO,
-  ): Promise<FilingFeeResult> {
+  ): Promise<FilingDetailsByBrHashResult> {
     return this.racesService.findFilingFeeByBrHashId(params.brHashId)
   }
 }
