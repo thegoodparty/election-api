@@ -54,3 +54,11 @@ export const SearchPositionsQuerySchema = z
 export class SearchPositionsQueryDTO extends createZodDto(
   SearchPositionsQuerySchema,
 ) {}
+
+const getZipCodesByBrPositionIdParamsSchema = z.object({
+  brPositionId: z.string().min(1, 'brPositionId is required'),
+})
+
+export class GetZipCodesByBrPositionIdParamsDTO extends createZodDto(
+  getZipCodesByBrPositionIdParamsSchema,
+) {}
