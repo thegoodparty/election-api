@@ -39,7 +39,7 @@ model Race {
   subAreaValue            String?       @map("sub_area_value")
   // Race-level civics attributes (DATA-1922)
   numberOfSeats           Int?          @map("number_of_seats")
-  winNumber               Int?          @map("win_number") // BallotReady viability_score.win_number; null for nearly all small non-partisan local races
+  winNumber               Int?          @map("win_number") // HubSpot-archive-sourced path-to-victory number (like officeLevel below). Only present for 2023-2025 archived races; BallotReady supplies no win number, so this is null for all current/upcoming races and services fall back to a computed estimate.
   isPartisan              Boolean?      @map("is_partisan")
   officeType              String?       @map("office_type")
   officialOfficeName      String?       @map("official_office_name")

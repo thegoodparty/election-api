@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { ElectionCode } from '@prisma/client'
+import { ElectionCode } from '../generated/prisma'
 import { createPrismaBase, MODELS } from 'src/prisma/util/prisma.util'
 import { ProjectedTurnoutService } from 'src/projectedTurnout/projectedTurnout.service'
 import {

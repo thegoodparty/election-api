@@ -2,6 +2,7 @@ generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "linux-musl"]
   previewFeatures = ["prismaSchemaFolder"]
+  output          = "../../src/generated/prisma"
 }
 
 generator json {

@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod'
 import { STATE_CODES } from 'src/shared/constants/states'
 import { toUpper } from 'src/shared/util/strings.util'
 import { z } from 'zod'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma'
 
 export const candidacyColumns = Object.values(
   Prisma.CandidacyScalarFieldEnum,
